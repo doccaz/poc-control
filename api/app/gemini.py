@@ -1,7 +1,9 @@
 import math
+import time
 
 from google import genai
 from google.genai import types
+from google.genai import errors as genai_errors
 from pydantic import BaseModel
 
 from app.config import settings
@@ -107,20 +109,38 @@ Responda só com os dados pedidos, em português, sem inventar itens que não te
 """
 
 
+_RETRY_CODES = {429, 500, 503}
+
+
 def extrair_itens_poc(pdf_bytes: bytes) -> ExtracaoPoc:
     client = _client()
-    response = client.models.generate_content(
-        model=_TEXT_MODEL,
-        contents=[
-            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-            _EXTRACAO_PROMPT,
-        ],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=ExtracaoPoc,
-        ),
-    )
-    parsed = response.parsed
-    if isinstance(parsed, ExtracaoPoc):
-        return parsed
-    return ExtracaoPoc.model_validate_json(response.text)
+    tentativas = 4
+    espera = 5
+    ultimo_erro: Exception | None = None
+
+    for tentativa in range(tentativas):
+        try:
+            response = client.models.generate_content(
+                model=_TEXT_MODEL,
+                contents=[
+                    types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                    _EXTRACAO_PROMPT,
+                ],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=ExtracaoPoc,
+                ),
+            )
+            parsed = response.parsed
+            if isinstance(parsed, ExtracaoPoc):
+                return parsed
+            return ExtracaoPoc.model_validate_json(response.text)
+        except genai_errors.APIError as exc:
+            ultimo_erro = exc
+            if getattr(exc, "code", None) not in _RETRY_CODES or tentativa == tentativas - 1:
+                raise
+            time.sleep(espera)
+            espera *= 2
+
+    assert ultimo_erro is not None
+    raise ultimo_erro
