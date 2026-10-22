@@ -57,6 +57,69 @@ export interface ProcedimentoDetail extends ProcedimentoListItem {
   secoes: Secao[];
 }
 
+export type StatusExtracao = "extraindo" | "pronto" | "erro";
+export type StatusPoc = "ativa" | "concluida" | "suspensa";
+export type StatusItem = "pendente" | "em_andamento" | "concluido" | "bloqueado" | "nao_aplicavel";
+export type CondicaoItem = "suse" | "cliente" | "lateral";
+
+export interface PocListItem {
+  id: string;
+  titulo: string;
+  cliente: string;
+  status: StatusPoc;
+  status_extracao: StatusExtracao;
+  created_at: string;
+  total_itens: number;
+  itens_concluidos: number;
+}
+
+export interface Fase {
+  numero: number;
+  titulo: string;
+  descricao: string;
+}
+
+export interface ItemPoc {
+  id: string;
+  codigo: string;
+  titulo: string;
+  descricao: string | null;
+  criterio_aceite: string | null;
+  categoria: string | null;
+  fase: number;
+  ref: string | null;
+  conducao: CondicaoItem | null;
+  status: StatusItem;
+  ordem: number;
+}
+
+export interface PrerequisitoPoc {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  atendido: boolean;
+  ordem: number;
+}
+
+export interface PocDetail extends PocListItem {
+  escopo: string | null;
+  erro_extracao: string | null;
+  fases: Fase[];
+  itens: ItemPoc[];
+  prerequisitos: PrerequisitoPoc[];
+}
+
+export interface ItemUpdatePayload {
+  titulo?: string;
+  descricao?: string;
+  criterio_aceite?: string;
+  categoria?: string;
+  fase?: number;
+  ref?: string;
+  conducao?: CondicaoItem | null;
+  status?: StatusItem;
+}
+
 export const api = {
   login: (email: string, password: string) =>
     request<User>("/api/auth/login", {
@@ -76,5 +139,23 @@ export const api = {
     request<UsuarioListItem>("/api/users", {
       method: "POST",
       body: JSON.stringify({ email, password, is_admin: isAdmin }),
+    }),
+
+  listarPocs: () => request<PocListItem[]>("/api/pocs"),
+  obterPoc: (id: string) => request<PocDetail>(`/api/pocs/${id}`),
+  criarPoc: (form: FormData) => request<PocListItem>("/api/pocs", { method: "POST", body: form }),
+  atualizarItem: (pocId: string, itemId: string, payload: ItemUpdatePayload) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  removerItem: (pocId: string, itemId: string) =>
+    fetch(`/api/pocs/${pocId}/itens/${itemId}`, { method: "DELETE", credentials: "include" }).then((res) => {
+      if (!res.ok) throw new ApiError(res.status, "Não foi possível remover o item");
+    }),
+  atualizarPrerequisito: (pocId: string, prereqId: string, atendido: boolean) =>
+    request<PrerequisitoPoc>(`/api/pocs/${pocId}/prerequisitos/${prereqId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ atendido }),
     }),
 };

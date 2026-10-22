@@ -10,6 +10,10 @@ export function Dashboard({ user }: { user: User }) {
       <p className="muted">Bem-vindo ao POC Control.</p>
 
       <div className="shortcut-grid">
+        <Link to="/pocs" className="shortcut-card">
+          <strong>POCs</strong>
+          <span>Acompanhe a execução das POCs em andamento.</span>
+        </Link>
         <Link to="/procedimentos" className="shortcut-card">
           <strong>Procedimentos</strong>
           <span>Base de conhecimento validada para as POCs.</span>

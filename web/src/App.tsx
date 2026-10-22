@@ -8,6 +8,9 @@ import { Procedimentos } from "./pages/Procedimentos";
 import { ProcedimentoUpload } from "./pages/ProcedimentoUpload";
 import { ProcedimentoView } from "./pages/ProcedimentoView";
 import { Usuarios } from "./pages/Usuarios";
+import { Pocs } from "./pages/Pocs";
+import { PocUpload } from "./pages/PocUpload";
+import { PocDetail } from "./pages/PocDetail";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -32,6 +35,9 @@ export function App() {
         <Route path="procedimentos" element={<Procedimentos />} />
         <Route path="procedimentos/novo" element={<ProcedimentoUpload />} />
         <Route path="procedimentos/:id" element={<ProcedimentoView />} />
+        <Route path="pocs" element={<Pocs />} />
+        <Route path="pocs/novo" element={<PocUpload />} />
+        <Route path="pocs/:id" element={<PocDetail />} />
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

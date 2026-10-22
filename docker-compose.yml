@@ -26,6 +26,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     volumes:
       - ./seed:/app/seed:ro
+      - ./uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy

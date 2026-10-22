@@ -3,12 +3,14 @@ from sqlalchemy import text
 
 from app.auth import router as auth_router
 from app.db import SessionLocal
+from app.pocs.router import router as pocs_router
 from app.procedimentos.router import router as procedimentos_router
 from app.users import router as users_router
 
 app = FastAPI(title="POC Control")
 app.include_router(auth_router)
 app.include_router(procedimentos_router)
+app.include_router(pocs_router)
 app.include_router(users_router)
 
 

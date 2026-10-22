@@ -19,6 +19,9 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
             POC Control
           </NavLink>
           <nav className="navbar-links">
+            <NavLink to="/pocs" className={navLinkClass}>
+              POCs
+            </NavLink>
             <NavLink to="/procedimentos" className={navLinkClass}>
               Procedimentos
             </NavLink>

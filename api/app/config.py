@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     gemini_api_key: str = ""
 
+    uploads_dir: str = "/app/uploads"
+
     @property
     def database_url(self) -> str:
         return (
