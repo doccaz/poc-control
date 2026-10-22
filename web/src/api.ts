@@ -24,6 +24,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export interface User {
   id: string;
   email: string;
+  is_admin: boolean;
+}
+
+export interface UsuarioListItem {
+  id: string;
+  email: string;
+  is_admin: boolean;
+  created_at: string;
 }
 
 export interface ProcedimentoListItem {
@@ -62,4 +70,11 @@ export const api = {
   obterProcedimento: (id: string) => request<ProcedimentoDetail>(`/api/procedimentos/${id}`),
   criarProcedimento: (form: FormData) =>
     request<ProcedimentoListItem>("/api/procedimentos", { method: "POST", body: form }),
+
+  listarUsuarios: () => request<UsuarioListItem[]>("/api/users"),
+  criarUsuario: (email: string, password: string, isAdmin: boolean) =>
+    request<UsuarioListItem>("/api/users", {
+      method: "POST",
+      body: JSON.stringify({ email, password, is_admin: isAdmin }),
+    }),
 };

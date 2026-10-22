@@ -24,3 +24,9 @@ def get_current_user(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuário não encontrado")
 
     return user
+
+
+def get_current_admin_user(user: User = Depends(get_current_user)) -> User:
+    if not user.is_admin:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Apenas administradores podem fazer isso")
+    return user

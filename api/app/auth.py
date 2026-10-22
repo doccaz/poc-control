@@ -19,6 +19,7 @@ class LoginRequest(BaseModel):
 class UserOut(BaseModel):
     id: str
     email: str
+    is_admin: bool
 
 
 @router.post("/login", response_model=UserOut)
@@ -35,7 +36,7 @@ def login(payload: LoginRequest, response: Response, db: Session = Depends(get_d
         samesite="lax",
         max_age=settings.session_max_age_seconds,
     )
-    return UserOut(id=str(user.id), email=user.email)
+    return UserOut(id=str(user.id), email=user.email, is_admin=user.is_admin)
 
 
 @router.post("/logout")
@@ -46,4 +47,4 @@ def logout(response: Response):
 
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)):
-    return UserOut(id=str(user.id), email=user.email)
+    return UserOut(id=str(user.id), email=user.email, is_admin=user.is_admin)

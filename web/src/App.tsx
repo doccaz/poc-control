@@ -7,6 +7,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Procedimentos } from "./pages/Procedimentos";
 import { ProcedimentoUpload } from "./pages/ProcedimentoUpload";
 import { ProcedimentoView } from "./pages/ProcedimentoView";
+import { Usuarios } from "./pages/Usuarios";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -31,6 +32,7 @@ export function App() {
         <Route path="procedimentos" element={<Procedimentos />} />
         <Route path="procedimentos/novo" element={<ProcedimentoUpload />} />
         <Route path="procedimentos/:id" element={<ProcedimentoView />} />
+        <Route path="usuarios" element={<Usuarios />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

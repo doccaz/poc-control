@@ -15,36 +15,46 @@ export function ProcedimentoView() {
       .catch(() => setErro("Não foi possível carregar o procedimento"));
   }, [id]);
 
-  if (erro) return <p style={{ color: "red" }}>{erro}</p>;
-  if (!procedimento) return <p>Carregando...</p>;
+  if (erro) return <p className="alert alert-error">{erro}</p>;
+  if (!procedimento) return <p className="muted">Carregando...</p>;
 
   return (
     <div>
-      <h1>{procedimento.titulo}</h1>
-      <p>
-        <strong>Cliente:</strong> {procedimento.cliente_origem ?? "—"} · <strong>Status:</strong>{" "}
-        {procedimento.status} · <strong>Versão:</strong> {procedimento.versao}
-      </p>
-      <p>
-        <strong>Tags:</strong> {procedimento.tags.join(", ") || "—"}
-      </p>
+      <div className="page-header">
+        <h1>{procedimento.titulo}</h1>
+        <span className={`badge badge-${procedimento.status}`}>{procedimento.status}</span>
+      </div>
 
-      <h2>Seções indexadas</h2>
-      <ul>
-        {procedimento.secoes.map((s, i) => (
-          <li key={i} style={{ marginLeft: s.heading_level === 3 ? 16 : 0 }}>
-            {s.heading_title}
-          </li>
-        ))}
-      </ul>
+      <div className="card">
+        <p>
+          <strong>Cliente:</strong> {procedimento.cliente_origem ?? "—"} &nbsp;·&nbsp;{" "}
+          <strong>Versão:</strong> {procedimento.versao}
+        </p>
+        <p>
+          <strong>Tags:</strong> {procedimento.tags.join(", ") || "—"}
+        </p>
+      </div>
 
-      <h2>Conteúdo original</h2>
-      <iframe
-        title={procedimento.titulo}
-        sandbox="allow-same-origin"
-        srcDoc={procedimento.html_original}
-        style={{ width: "100%", height: "70vh", border: "1px solid #ccc" }}
-      />
+      <div className="card">
+        <h2>Seções indexadas</h2>
+        <ul className="secoes-list">
+          {procedimento.secoes.map((s, i) => (
+            <li key={i} className={s.heading_level === 3 ? "sub" : undefined}>
+              {s.heading_title}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="card">
+        <h2>Conteúdo original</h2>
+        <iframe
+          title={procedimento.titulo}
+          sandbox="allow-same-origin"
+          srcDoc={procedimento.html_original}
+          className="html-frame"
+        />
+      </div>
     </div>
   );
 }

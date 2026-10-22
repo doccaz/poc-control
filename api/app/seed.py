@@ -8,10 +8,15 @@ def seed_admin_user() -> None:
     try:
         user = db.query(User).filter(User.email == settings.admin_email).first()
         if user is None:
-            user = User(email=settings.admin_email, password_hash=settings.admin_password_hash)
+            user = User(
+                email=settings.admin_email,
+                password_hash=settings.admin_password_hash,
+                is_admin=True,
+            )
             db.add(user)
-        elif user.password_hash != settings.admin_password_hash:
+        else:
             user.password_hash = settings.admin_password_hash
+            user.is_admin = True
         db.commit()
     finally:
         db.close()

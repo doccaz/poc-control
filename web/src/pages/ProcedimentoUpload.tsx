@@ -38,62 +38,70 @@ export function ProcedimentoUpload() {
 
   return (
     <div>
-      <h1>Novo procedimento</h1>
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 480 }}
-      >
-        <label>
-          Título
-          <input
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            required
-            style={{ display: "block", width: "100%" }}
-          />
-        </label>
-        <label>
-          Tags (separadas por vírgula)
-          <input
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            style={{ display: "block", width: "100%" }}
-          />
-        </label>
-        <label>
-          Cliente de origem
-          <input
-            value={clienteOrigem}
-            onChange={(e) => setClienteOrigem(e.target.value)}
-            style={{ display: "block", width: "100%" }}
-          />
-        </label>
-        <label>
-          Status
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            style={{ display: "block", width: "100%" }}
-          >
-            <option value="rascunho">Rascunho</option>
-            <option value="validado">Validado</option>
-          </select>
-        </label>
-        <label>
-          Arquivo HTML
-          <input
-            type="file"
-            accept=".html,text/html"
-            onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
-            required
-            style={{ display: "block" }}
-          />
-        </label>
-        {erro && <p style={{ color: "red" }}>{erro}</p>}
-        <button type="submit" disabled={enviando}>
-          {enviando ? "Enviando..." : "Salvar"}
-        </button>
-      </form>
+      <div className="page-header">
+        <h1>Novo procedimento</h1>
+      </div>
+
+      <div className="card">
+        <form onSubmit={handleSubmit} className="form">
+          <div className="field">
+            <label htmlFor="titulo">Título</label>
+            <input
+              id="titulo"
+              className="input"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="tags">Tags</label>
+            <input
+              id="tags"
+              className="input"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="k3s, Argo CD, OpenShift"
+            />
+            <p className="field-hint">Separadas por vírgula.</p>
+          </div>
+          <div className="field">
+            <label htmlFor="cliente">Cliente de origem</label>
+            <input
+              id="cliente"
+              className="input"
+              value={clienteOrigem}
+              onChange={(e) => setClienteOrigem(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="status">Status</label>
+            <select
+              id="status"
+              className="input"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="rascunho">Rascunho</option>
+              <option value="validado">Validado</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="arquivo">Arquivo HTML</label>
+            <input
+              id="arquivo"
+              type="file"
+              accept=".html,text/html"
+              onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+              required
+            />
+          </div>
+          {erro && <p className="alert alert-error">{erro}</p>}
+          <button type="submit" className="btn btn-primary" disabled={enviando}>
+            {enviando ? "Enviando..." : "Salvar"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

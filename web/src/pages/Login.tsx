@@ -22,38 +22,39 @@ export function Login({ onLogin }: { onLogin: (user: User) => void }) {
   }
 
   return (
-    <div style={{ maxWidth: 320, margin: "10vh auto", fontFamily: "sans-serif" }}>
-      <h1>POC Control</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            E-mail
+    <div className="login-shell">
+      <div className="login-card">
+        <h1>POC Control</h1>
+        <form onSubmit={handleSubmit} className="form">
+          <div className="field">
+            <label htmlFor="login-email">E-mail</label>
             <input
+              id="login-email"
               type="email"
+              className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{ display: "block", width: "100%" }}
+              autoFocus
             />
-          </label>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            Senha
+          </div>
+          <div className="field">
+            <label htmlFor="login-password">Senha</label>
             <input
+              id="login-password"
               type="password"
+              className="input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{ display: "block", width: "100%" }}
             />
-          </label>
-        </div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
-      </form>
+          </div>
+          {error && <p className="alert alert-error">{error}</p>}
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
