@@ -10,7 +10,7 @@ from app.config import settings
 
 EMBEDDING_DIM = 1536
 _MODEL = "gemini-embedding-001"
-_TEXT_MODEL = "gemini-flash-latest"
+_TEXT_MODEL = "gemini-3.8-flash"
 
 
 def _client() -> genai.Client:
