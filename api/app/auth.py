@@ -1,0 +1,49 @@
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from pydantic import BaseModel, EmailStr
+from sqlalchemy.orm import Session
+
+from app.config import settings
+from app.db import get_db
+from app.deps import SESSION_COOKIE_NAME, get_current_user
+from app.models import User
+from app.security import create_session_cookie, verify_password
+
+router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserOut(BaseModel):
+    id: str
+    email: str
+
+
+@router.post("/login", response_model=UserOut)
+def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email).first()
+    if user is None or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "E-mail ou senha inválidos")
+
+    token = create_session_cookie(user.id)
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=settings.session_max_age_seconds,
+    )
+    return UserOut(id=str(user.id), email=user.email)
+
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie(SESSION_COOKIE_NAME)
+    return {"status": "ok"}
+
+
+@router.get("/me", response_model=UserOut)
+def me(user: User = Depends(get_current_user)):
+    return UserOut(id=str(user.id), email=user.email)
