@@ -1,0 +1,326 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Integração do k3s com o Vault externo do cliente</title>
+<style>
+:root{--bg:#ffffff;--fg:#1c1e21;--muted:#5c6370;--border:#d9dde3;--card:#f6f7f9;--code:#f1f3f5;
+--chg:#c62828;--chgbg:rgba(198,40,40,.11);--link:#0b5cad;--warnbg:#fff6e0;--warnbd:#e0a100;--infobg:#eaf2fb;--infobd:#4a86c5;
+--k3s:#0f766e;--vault:#6d28d9;--ask:#b45309}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--fg:#e6e8eb;--muted:#9aa3ad;--border:#32373e;--card:#1d2024;--code:#1b1e22;
+--chg:#ff8a80;--chgbg:rgba(255,138,128,.14);--link:#7db7f0;--warnbg:#2b2410;--warnbd:#c79200;--infobg:#14222f;--infobd:#4a86c5;
+--k3s:#4fd1c5;--vault:#b79cff;--ask:#f6ad55}}
+:root[data-theme="dark"]{--bg:#15171a;--fg:#e6e8eb;--muted:#9aa3ad;--border:#32373e;--card:#1d2024;--code:#1b1e22;
+--chg:#ff8a80;--chgbg:rgba(255,138,128,.14);--link:#7db7f0;--warnbg:#2b2410;--warnbd:#c79200;--infobg:#14222f;--infobd:#4a86c5;
+--k3s:#4fd1c5;--vault:#b79cff;--ask:#f6ad55}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px))}
+main{max-width:920px;margin:0 auto}
+h1{font-size:1.7rem;line-height:1.25;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 18px}
+h2{font-size:1.25rem;margin:34px 0 10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+h3{font-size:1.05rem;margin:22px 0 6px}
+p{margin:10px 0}
+ul,ol{padding-left:22px;margin:10px 0}li{margin:4px 0}
+code{font:0.88em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+.chg{color:var(--chg);background:var(--chgbg);font-weight:600;border-radius:3px;padding:0 3px}
+code .chg,pre .chg{padding:0 2px}
+.legend{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:12px 14px;margin:10px 0 18px}
+.tag{font-size:.72rem;font-weight:600;border:1px solid currentColor;border-radius:999px;padding:1px 9px;letter-spacing:.02em}
+.tag.k3s{color:var(--k3s)}.tag.vault{color:var(--vault)}.tag.ask{color:var(--ask)}
+.flow{list-style:none;padding:0;margin:0 0 6px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.flow li{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:8px 10px;margin:0;font-weight:600;font-size:.92rem}
+.flow b{display:inline-block;min-width:1.4em;color:var(--muted)}
+.flow small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;margin-top:2px}
+.note{border-left:4px solid var(--infobd);background:var(--infobg);border-radius:6px;padding:10px 14px;margin:14px 0}
+.note.warn{border-left-color:var(--warnbd);background:var(--warnbg)}
+.tw{overflow-x:auto;margin:12px 0;border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--border)}
+th{background:var(--card);font-weight:600}
+tr:last-child td{border-bottom:0}
+.code{position:relative;margin:12px 0}
+pre{margin:0;background:var(--code);border:1px solid var(--border);border-radius:8px;padding:12px 14px;overflow-x:auto;
+font:0.86rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre code{background:none;padding:0;font:inherit}
+.copy{position:absolute;top:6px;right:6px;font:600 .72rem system-ui,sans-serif;color:var(--muted);background:var(--card);
+border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer}
+.copy:hover{color:var(--fg)}
+@media (max-width:560px){h1{font-size:1.4rem}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Integração do k3s com o Vault externo do cliente</h1><p class="sub">Autenticação Kubernetes: os pods do k3s entram no Vault com o ServiceAccount e leem segredos.</p></header>
+<div class="legend"><span class="chg">&lt;EM_VERMELHO&gt;</span> Tudo o que aparece <strong>em vermelho</strong> é um valor que você, ou o cliente, precisa trocar. O que está em texto normal pode ser usado como está. Ao copiar um bloco, o texto vai com os sinais <code>&lt; &gt;</code>, para você ver o que falta trocar.</div>
+<ol class="flow"><li><b>1</b> Rede e certificado<small>k3s e Vault</small></li><li><b>2</b> Credencial de revisão<small>você, no k3s</small></li><li><b>3</b> Configuração no Vault<small>admin do cliente</small></li><li><b>4</b> Teste do login<small>você, num pod</small></li><li><b>5</b> Consumo pela aplicação<small>decisão</small></li><li><b>6</b> Limpeza<small>os dois lados</small></li></ol>
+<h2>Como funciona</h2>
+<ol><li>O pod do k3s apresenta ao Vault o <strong>token do ServiceAccount</strong> dele e o nome de um <strong>papel</strong> (role).</li><li>O Vault <strong>consulta a API do k3s</strong> (a API <code>TokenReview</code>) para confirmar que o token é válido. Para isso ele usa a <strong>credencial de revisão</strong> (passo 2).</li><li>Se o papel aceitar aquele ServiceAccount naquele namespace, o Vault devolve um <strong>token do Vault</strong>, com as permissões da <strong>política</strong> ligada ao papel.</li><li>Com esse token, o pod lê o segredo no caminho que a política permite.</li></ol>
+<div class="note warn">Por isso o Vault precisa <strong>alcançar a API do k3s</strong> (<code>https://&lt;IP_NODE_K3S&gt;:6443</code>), além de os pods alcançarem o Vault. Essa é a liberação de rede mais fácil de esquecer.</div>
+<h2>O que o cliente precisa fornecer<span class="tag ask">peça antes da sessão</span></h2>
+<p>Envie esta lista ao admin do Vault. Cada valor em vermelho é usado nos passos seguintes.</p>
+<div class="tw"><table><thead><tr><th>O que pedir</th><th>Marcador</th><th>Quem informa</th><th>Para que serve</th><th>Exemplo</th></tr></thead><tbody><tr><td>Endereço do Vault</td><td>—</td><td>Cliente (já informado)</td><td>Onde os pods e os testes se conectam. <strong>Sempre HTTPS</strong>: o login e o token do Vault não podem trafegar em HTTP</td><td><code>https://&lt;HOST_VAULT&gt;</code></td></tr><tr><td>CA do certificado do Vault</td><td>—</td><td>Você já tem</td><td>Os pods precisam confiar no certificado. O domínio <code>&lt;DOMINIO_APPS_OPENSHIFT&gt;</code> é o mesmo do Quay, então a CA provavelmente é a mesma</td><td><code>/etc/rancher/k3s/quay-ca.crt</code></td></tr><tr><td>Versão do Vault, e se é Enterprise</td><td>—</td><td>Cliente (já informado)</td><td>Vault <strong>1.13.3</strong>, <strong>sem</strong> Enterprise: não há namespaces, e o método Kubernetes não valida o emissor (<code>iss</code>) por padrão</td><td>Respondido</td></tr><tr><td>Nome de um <strong>novo</strong> método de autenticação para este cluster</td><td><span class="chg">&lt;MOUNT_K3S&gt;</span></td><td>Combinado: você sugere, o admin cria</td><td>O <strong>caminho</strong> onde o método Kubernetes é ativado no Vault, uma instância por cluster. O do OpenShift não serve, porque aponta para outro cluster (explicação no passo 3)</td><td><code>k3s-poc</code></td></tr><tr><td>Engine de segredos (KV): <strong>nome</strong> (a versão 1 já foi informada)</td><td><span class="chg">&lt;KV_MOUNT&gt;</span></td><td>Cliente (já existe)</td><td>Na versão 1, o caminho <strong>não</strong> leva <code>data/</code>. Falta só o nome do engine</td><td><code>secret</code></td></tr><tr><td>Caminho dos segredos da PoC</td><td><span class="chg">&lt;CAMINHO&gt;</span></td><td>Combinado: o ideal é uma pasta própria da PoC</td><td>A política dá leitura só nesse caminho</td><td><code>poc/email-corporativo</code></td></tr><tr><td>Nome da política</td><td><span class="chg">&lt;POLITICA&gt;</span></td><td>Admin cria, e você sugere o nome</td><td>Define o que o token do Vault pode ler</td><td><code>policy-k3s</code></td></tr><tr><td>Nome do papel (role)</td><td><span class="chg">&lt;PAPEL&gt;</span></td><td>Admin cria, e você sugere o nome</td><td>Liga o ServiceAccount e o namespace à política</td><td><code>role-k3s</code></td></tr><tr><td>ServiceAccount e namespace <strong>da aplicação real</strong></td><td><span class="chg">&lt;SA_DA_APP&gt;</span> e <span class="chg">&lt;NAMESPACE_DA_APP&gt;</span></td><td><strong>Você</strong>: são do k3s, e o admin do Vault não os tem</td><td>O papel só aceita essa identidade exata</td><td><code>default</code> e <code>email</code></td></tr><tr><td>Liberação de rede: <strong>k3s até o Vault</strong></td><td>—</td><td>Cliente</td><td>Os pods consultam o Vault</td><td>TCP 8200 (ou a porta usada)</td></tr><tr><td>Liberação de rede: <strong>Vault até a API do k3s</strong></td><td>—</td><td>Cliente</td><td>O Vault valida os tokens com o TokenReview</td><td>TCP 6443, para <code>&lt;IP_NODE_K3S&gt;</code></td></tr><tr><td>Quem aplica a configuração no Vault</td><td>—</td><td>Cliente</td><td>O passo 3 é feito por quem tem permissão no Vault</td><td>Admin do cliente</td></tr><tr><td>Um segredo de teste, <strong>sem dado sensível</strong></td><td>—</td><td>Cliente</td><td>Prova a leitura sem expor nada</td><td><code><span class="chg">&lt;CAMINHO&gt;</span>/teste</code></td></tr><tr><td>Como a aplicação consome o Vault</td><td>—</td><td>Cliente e time da aplicação</td><td>Define o passo 5 (Agent Injector, CSI, operador ou leitura direta)</td><td>—</td></tr></tbody></table></div>
+<h2>O que ressaltar</h2>
+<div class="tw"><table><thead><tr><th>Ponto</th><th>Por que importa</th><th>O que fazer</th></tr></thead><tbody><tr><td><strong>O Vault precisa alcançar o k3s</strong></td><td>O método Kubernetes valida o token do pod na API do cluster. Sem rede do Vault até <code>&lt;IP_NODE_K3S&gt;:6443</code>, todo login falha</td><td>Pedir a liberação (passo 1). Se o cliente não puder, existe a alternativa das chaves públicas (<code>pem_keys</code>), que é decisão do admin do Vault</td></tr><tr><td><strong>O mount do OpenShift não serve</strong></td><td>Ele guarda o endereço, a CA e a credencial de outro cluster</td><td>Criar um mount novo (<code><span class="chg">&lt;MOUNT_K3S&gt;</span></code>) e ajustar o caminho de autenticação nos manifests migrados</td></tr><tr><td><strong>A credencial de revisão é sensível</strong></td><td>O token do <code>vault-auth</code> não expira, e quem o tiver pode consultar o TokenReview do cluster</td><td>Entregar por canal seguro, <strong>não tirar print</strong>, e revogar ao fim. Para rotacionar, é preciso <strong>recriar o ServiceAccount</strong></td></tr><tr><td><strong>KV versão 1</strong></td><td>Na versão 1, o caminho da API e o da política <strong>não</strong> levam <code>data/</code> nem <code>metadata/</code>: cada segredo é lido em <code>/v1/&lt;engine&gt;/&lt;caminho&gt;</code></td><td>Usar o modelo de política do passo 3, que já é o da versão 1</td></tr><tr><td><strong>O papel casa a identidade exata</strong></td><td>O nome do ServiceAccount e o namespace precisam ser os mesmos do pod</td><td>Conferir <code>bound_service_account_*</code> no papel</td></tr><tr><td><strong>Use HTTPS, nunca HTTP</strong></td><td>O login envia o token do ServiceAccount, e o Vault devolve um token dele: em HTTP, os dois trafegam em texto. O endereço informado funcionava em <code>http://</code>, mas não deve ser usado assim</td><td>Usar <code>https://</code> e confiar na CA (provavelmente a mesma do Quay)</td></tr><tr><td><strong>O Vault provavelmente roda no OpenShift</strong></td><td>O endereço é uma Route do OpenShift (<code>&lt;DOMINIO_APPS_OPENSHIFT&gt;</code>). A conexão do Vault até o k3s sai, então, de um nó do OpenShift, como a do Argo. NetworkPolicy e EgressFirewall podem ser por namespace</td><td>Testar a partir do namespace do Vault (passo 1)</td></tr><tr><td><strong>O teste não imprime segredos</strong></td><td>Os logs do pod ficam no cluster</td><td>O pod de teste mostra só metadados do login e os <strong>nomes</strong> das chaves, nunca os valores</td></tr></tbody></table></div>
+<h2>1. Rede e certificado<span class="tag k3s">no nó do k3s</span></h2>
+<p><strong>Do k3s até o Vault.</strong> Use sempre <code>https</code>: o login envia o token do ServiceAccount e o Vault devolve um token dele, e em HTTP os dois trafegariam em texto. O endereço é <code>https://&lt;HOST_VAULT&gt;</code>. Primeiro, sem a CA. O esperado é o erro de certificado, que confirma o diagnóstico:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>curl -sS -o /dev/null -w "HTTP %{http_code}\n" --max-time 10 https://&lt;HOST_VAULT&gt;/v1/sys/health</code></pre></div>
+<p>O erro <code>SSL certificate problem</code> aparece porque o certificado é da CA do ingress do OpenShift. O domínio <code>&lt;DOMINIO_APPS_OPENSHIFT&gt;</code> é o mesmo do Quay, então a CA provavelmente é a mesma. Confirme o emissor:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>echo | openssl s_client -connect &lt;HOST_VAULT&gt;:443 2&gt;/dev/null | openssl x509 -noout -issuer</code></pre></div>
+<p><strong>Esperado:</strong> <code>issuer=CN = ingress-operator@...</code>, igual ao do Quay. Depois, teste com a CA do Quay:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>curl -sS -o /dev/null -w "HTTP %{http_code}\n" --max-time 10 --cacert /etc/rancher/k3s/quay-ca.crt https://&lt;HOST_VAULT&gt;/v1/sys/health</code></pre></div>
+<p><strong>Esperado:</strong> qualquer código HTTP prova que a rede e o TLS funcionam. Os mais comuns: <code>200</code> (Vault ativo), <code>429</code> (réplica em espera), <code>503</code> (selado) e <code>501</code> (não inicializado). <code>HTTP 000</code> indica que não houve resposta.</p>
+<div class="tw"><table><thead><tr><th>O que aparece</th><th>O que significa</th><th>O que fazer</th></tr></thead><tbody><tr><td><code>SSL certificate problem</code>, <strong>mesmo com</strong> <code>--cacert</code></td><td>A CA usada não é a que assinou o certificado do Vault (o emissor do <code>openssl</code> é outro)</td><td>Obter a cadeia do Vault, como no passo 2 do tutorial do Quay, e usar a CA certa</td></tr><tr><td><code>HTTP 000</code>, timeout ou <code>could not resolve host</code></td><td>Rede bloqueada, ou DNS não resolve o nome</td><td>Pedir a liberação nó → Vault, ou o ajuste do DNS</td></tr></tbody></table></div>
+<p><strong>Do Vault até o k3s.</strong> Como o endereço do Vault é uma Route do OpenShift, ele provavelmente roda no próprio OpenShift, e a conexão dele ao k3s sai de um nó do OpenShift, como a do Argo. Se a liberação feita para o Argo cobre todos os nós, talvez já valha, mas NetworkPolicy e EgressFirewall podem ser por namespace. O teste é feito <strong>pelo admin do cliente</strong>, a partir do servidor do Vault, ou de um pod no namespace do Vault (o pod de teste de rede do roteiro do Argo, trocando o namespace e o endereço):</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>curl -sk -o /dev/null -w "HTTP %{http_code}\n" --max-time 10 https://&lt;IP_NODE_K3S&gt;:6443/version</code></pre></div>
+<p><strong>Esperado:</strong> <code>HTTP 200</code>, <code>401</code> ou <code>403</code>. <code>HTTP 000</code> indica bloqueio: peça a liberação do Vault até <code>&lt;IP_NODE_K3S&gt;</code>, porta <code>6443</code>.</p>
+<h2>2. Credencial de revisão<span class="tag k3s">no nó do k3s</span></h2>
+<p>O Vault usa um ServiceAccount do k3s, com permissão só de revisar tokens (<code>system:auth-delegator</code>), para validar os tokens dos pods. Abra o arquivo:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/vault-auth.yaml</code></pre></div>
+<p>Cole este conteúdo e salve:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: vault-auth
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: vault-auth
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-auth-token
+  namespace: vault-auth
+  annotations:
+    kubernetes.io/service-account.name: vault-auth
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: vault-auth
+  namespace: vault-auth</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>kubectl apply -f /tmp/vault-auth.yaml
+kubectl auth can-i create tokenreviews.authentication.k8s.io --as=system:serviceaccount:vault-auth:vault-auth</code></pre></div>
+<p><strong>Esperado:</strong> quatro linhas <code>created</code> e, no <code>can-i</code>, <code>yes</code>.</p>
+<p><strong>Dados para o admin do Vault.</strong> São dois, e vão para o passo 3:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>cat /var/lib/rancher/k3s/server/tls/server-ca.crt
+kubectl -n vault-auth get secret vault-auth-token -o jsonpath='{.data.token}' | base64 -d; echo</code></pre></div>
+<ul><li>O primeiro é a <strong>CA do k3s</strong>. É pública, e pode ser enviada normalmente.</li><li>O segundo é o <strong>token de revisão</strong>. <strong>Não tire print dessa tela</strong>, entregue por canal seguro (por exemplo, um cofre de senhas) e limpe a tela em seguida com <code>clear</code>.</li></ul>
+<div class="note warn">Se o token for exposto, apagar só o Secret <strong>não</strong> o troca: esse tipo de token é determinístico, e o mesmo texto volta a valer. É preciso recriar o ServiceAccount (<code>kubectl -n vault-auth delete secret vault-auth-token</code>, depois <code>kubectl -n vault-auth delete serviceaccount vault-auth</code> e <code>kubectl apply -f /tmp/vault-auth.yaml</code>) e atualizar o Vault com o token novo.</div>
+<h2>3. Configuração no Vault<span class="tag vault">admin do cliente</span></h2>
+<p>Esta parte é feita por quem tem permissão no Vault. Os valores sensíveis vão em <strong>arquivos</strong>, criados no editor, e não na linha de comando. Na PoC, o caminho mais curto é usar o <strong>terminal do próprio pod do Vault</strong> (a CLI <code>vault</code> já está lá), como descrito em 3.0.</p>
+<h3>3.0 Preparar o terminal do pod do Vault</h3>
+<p>Abra o terminal do pod do Vault. A imagem é Alpine (BusyBox), então o editor é o <code>vi</code> simples: <strong>i</strong> para inserir, colar o texto, <strong>Esc</strong> e depois <code>:wq</code> + Enter para salvar. Para sair sem salvar, <code>:q!</code>.</p>
+<p><strong>a) Aceitar o certificado local.</strong> Dentro do pod, a CLI fala com <code>https://127.0.0.1:8200</code>, e o certificado do Vault não tem esse IP. Sem isto aparece <code>cannot validate certificate for 127.0.0.1 because it doesn't contain any IP SANs</code>. Vale só para este terminal:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>export VAULT_SKIP_VERIFY=true
+vault status</code></pre></div>
+<p><strong>Esperado:</strong> <code>Initialized true</code> e <code>Sealed false</code>.</p>
+<p><strong>b) Entrar como admin.</strong> O comando pede o token e <strong>não mostra</strong> o que for digitado. Não tire print dessa tela:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vault login</code></pre></div>
+<p><strong>c) Ver os métodos já existentes.</strong> O nome escolhido para o <code><span class="chg">&lt;MOUNT_K3S&gt;</span></code> não pode repetir um deles (a coluna <code>Path</code> termina em <code>/</code>):</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vault auth list</code></pre></div>
+<p><strong>d) Testar se o Vault alcança a API do k3s.</strong> É a rede do passo 1, vista do lado que importa. O <code>--no-check-certificate</code> só evita parar na CA, que ainda não está neste pod:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>wget -T 5 -O- --no-check-certificate https://&lt;IP_NODE_K3S&gt;:6443/version</code></pre></div>
+<ul><li>JSON com <code>gitVersion</code>: a rede está liberada.</li><li><code>401</code> ou <code>403</code>: também serve. O k3s respondeu, só não aceita consulta anônima.</li><li>Demora e termina em <code>timeout</code> ou <code>Connection refused</code>: o Vault <strong>não</strong> alcança o k3s. Peça a liberação de rede do Vault até <code>&lt;IP_NODE_K3S&gt;:6443</code> antes de seguir; o resto não funciona sem isso.</li></ul>
+
+<div class="note info"><strong>Valores adotados nesta PoC.</strong> Os comandos abaixo já usam estes nomes, e por isso não estão mais em vermelho. Para usar outros, troque em todos os blocos.<div class="tw"><table><thead><tr><th>Marcador</th><th>Valor</th><th>Origem</th></tr></thead><tbody><tr><td><code>MOUNT_K3S</code></td><td><code>poc-vault</code></td><td>Nome do método novo, escolhido por você</td></tr><tr><td><code>POLITICA</code></td><td><code>policy-k3s</code></td><td>Nome livre, criada no passo 3</td></tr><tr><td><code>KV_MOUNT</code></td><td><code>policy-k3s</code></td><td>Engine KV versão 1 que já existe no Vault (definido pelo cliente). Não é criado nesta PoC</td></tr><tr><td><code>CAMINHO</code></td><td><code>secret</code></td><td>Pasta dos segredos dentro do engine (definida pelo cliente)</td></tr><tr><td>ServiceAccount e namespace do teste</td><td><code>poc-k3s-vault</code></td><td>Criados no k3s (passo 4). O papel só aceita esse par exato</td></tr><tr><td><code>PAPEL</code></td><td><code>role-k3s</code></td><td>Nome livre, criado no passo 3</td></tr></tbody></table></div></div>
+<h3>O que é o <code>MOUNT_K3S</code></h3>
+<p>Um Vault pode ter vários <strong>métodos de autenticação</strong>, cada um ativado num <strong>caminho</strong> sob <code>auth/</code> (o chamado *mount*). O do OpenShift provavelmente está em <code>auth/kubernetes</code>, ou com outro nome, e guarda o endereço, a CA e a credencial <strong>do OpenShift</strong>. O k3s é outro cluster, então precisa do <strong>seu próprio método</strong>, ativado num caminho novo. O <code><span class="chg">&lt;MOUNT_K3S&gt;</span></code> é só o <strong>nome desse caminho</strong>, escolhido por você e pelo admin. Sugestão: <code>k3s-poc</code>.</p>
+<div class="tw"><table><thead><tr><th>Onde o <code><span class="chg">&lt;MOUNT_K3S&gt;</span></code> aparece</th><th>Para que</th></tr></thead><tbody><tr><td><code>vault auth enable -path=<span class="chg">&lt;MOUNT_K3S&gt;</span> kubernetes</code></td><td>Cria o método novo</td></tr><tr><td><code>auth/<span class="chg">&lt;MOUNT_K3S&gt;</span>/config</code> e <code>auth/<span class="chg">&lt;MOUNT_K3S&gt;</span>/role/<span class="chg">&lt;PAPEL&gt;</span></code></td><td>Configura o método e o papel</td></tr><tr><td><code>/v1/auth/<span class="chg">&lt;MOUNT_K3S&gt;</span>/login</code></td><td>A chamada de login que o pod faz</td></tr><tr><td>Anotação <code>vault.hashicorp.com/auth-path: auth/<span class="chg">&lt;MOUNT_K3S&gt;</span></code></td><td>Diz ao Agent Injector qual método usar</td></tr></tbody></table></div>
+<p>Para ver os métodos que já existem, o admin roda <code>vault auth list</code>. O nome escolhido <strong>não pode</strong> repetir um deles.</p>
+<h3>3.1 Os arquivos</h3>
+<p><strong>CA do k3s.</strong> Abra o arquivo e cole a CA que você enviou (de <code>-----BEGIN CERTIFICATE-----</code> até <code>-----END CERTIFICATE-----</code>):</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/k3s-ca.crt   # CA pública do k3s</code></pre></div>
+<p><strong>Token de revisão.</strong> Abra o arquivo e cole o token em <strong>uma linha só</strong>, sem espaços:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/reviewer.jwt   # token de revisão (sensível), em uma linha</code></pre></div>
+<p><strong>Política.</strong> Abra o arquivo e cole o conteúdo (modelo para KV versão 1, a do Vault do cliente):</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/policy-k3s.hcl   # política, nome POLITICA = policy-k3s</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>path "policy-k3s/secret/*" {   # policy-k3s = KV_MOUNT, secret = CAMINHO
+  capabilities = ["read", "list"]
+}</code></pre></div>
+<div class="note info">Na <strong>versão 1</strong> do KV, o caminho da política é o do próprio segredo, sem <code>data/</code> nem <code>metadata/</code>. O <code>/*</code> no fim cobre qualquer segredo dentro da pasta.</div>
+<p><strong>Papel.</strong> O papel diz ao Vault: "quem <strong>apresentar este ServiceAccount, neste namespace</strong>, recebe um token com <strong>esta política</strong>". Ele aceita o ServiceAccount do teste (passo 4) e o da aplicação real. Estes são os três valores do arquivo:</p>
+<div class="tw"><table><thead><tr><th>Marcador</th><th>O que é</th><th>Quem define</th><th>Onde descobrir</th></tr></thead><tbody><tr><td><span class="chg">&lt;POLITICA&gt;</span></td><td>O nome da <strong>política</strong> do Vault: o conjunto de permissões de leitura, do arquivo <code>policy-k3s.hcl</code> acima</td><td><strong>Criada agora</strong> pelo admin do Vault, com nome livre (sugestão <code>policy-k3s</code>). Pode-se reaproveitar a política que a aplicação já usa no OpenShift, mas ela libera os segredos <strong>reais</strong></td><td><code>vault policy list</code> lista as existentes. A do OpenShift aparece no papel dele: <code>vault read auth/&lt;método-do-OpenShift&gt;/role/&lt;papel&gt;</code>, no campo <code>token_policies</code></td></tr><tr><td><span class="chg">&lt;SA_DA_APP&gt;</span></td><td>O nome do <strong>ServiceAccount do Kubernetes</strong> com o qual os pods da aplicação rodam</td><td><strong>Você</strong>: é do k3s, vem do manifest da aplicação. O operador do Vault não tem essa informação</td><td>No Deployment, <code>spec.template.spec.serviceAccountName</code>. Se o campo não existir, é <code>default</code>, e o ideal é criar um ServiceAccount dedicado em vez de liberar o <code>default</code> para o Vault. No teste do passo 4 já usamos um: <code>poc-k3s-vault</code>. Comando: <code>kubectl get deploy &lt;app&gt; -n &lt;namespace&gt; -o jsonpath='{.spec.template.spec.serviceAccountName}'</code></td></tr><tr><td><span class="chg">&lt;NAMESPACE_DA_APP&gt;</span></td><td>O <strong>namespace do k3s</strong> onde a aplicação vai rodar</td><td><strong>Você</strong>: escolhe ou cria no k3s. <strong>Não</strong> é o namespace do OpenShift</td><td>No <code>destination.namespace</code> da Application do Argo, ou no namespace do Deployment</td></tr></tbody></table></div>
+<p>Abra o arquivo e cole o conteúdo. Para a PoC, o papel aceita só o ServiceAccount do teste (<code>poc-k3s-vault</code>, no namespace <code>poc-k3s-vault</code>) e liga à política <code>policy-k3s</code>. JSON não aceita comentários, então a explicação fica aqui. A aplicação real entra depois: acrescente o ServiceAccount e o namespace dela às duas listas e rode de novo o <code>vault write</code> do papel.</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/role.json   # papel, nome PAPEL = role-k3s</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>{
+  "bound_service_account_names": ["poc-k3s-vault"],
+  "bound_service_account_namespaces": ["poc-k3s-vault"],
+  "token_policies": ["policy-k3s"],
+  "token_ttl": "1h"
+}</code></pre></div>
+<p><strong>Segredo de teste.</strong> Abra o arquivo e cole o conteúdo, que não tem dado sensível:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/teste.json   # segredo de teste, sem dado sensível</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>{ "mensagem": "ok" }</code></pre></div>
+<h3>3.2 Os comandos</h3>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vault auth enable -path=poc-vault kubernetes   # cria o método de autenticação do k3s (MOUNT_K3S = poc-k3s-vault)
+vault policy write policy-k3s /tmp/policy-k3s.hcl   # grava a política (POLITICA = policy-k3s)
+vault write auth/poc-vault/config kubernetes_host=https://&lt;IP_NODE_K3S&gt;:6443 kubernetes_ca_cert=@/tmp/k3s-ca.crt token_reviewer_jwt=@/tmp/reviewer.jwt   # aponta o método para a API do k3s
+vault write auth/poc-vault/role/role-k3s @/tmp/role.json   # cria o papel (PAPEL = role-k3s)
+vault kv put -mount=policy-k3s secret/teste @/tmp/teste.json   # segredo de teste em policy-k3s/secret/teste (KV_MOUNT = policy-k3s, CAMINHO = secret)</code></pre></div>
+<p>O engine <code>policy-k3s</code> já existe, então não há comando para criá-lo. Confirme que ele é do tipo <code>kv</code>, versão 1 (<code>vault secrets list -detailed</code>). Se for versão 2, os caminhos mudam e levam <code>data/</code>. O mesmo pode ser feito pela interface web do Vault. <strong>Apague os arquivos</strong> ao terminar, porque um deles tem o token do k3s, e o <code>~/.vault-token</code> guarda o login de admin:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>rm -f /tmp/reviewer.jwt /tmp/k3s-ca.crt /tmp/policy-k3s.hcl /tmp/role.json /tmp/teste.json
+rm -f ~/.vault-token
+unset VAULT_SKIP_VERIFY</code></pre></div>
+<h3>3.3 Conferir</h3>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vault read auth/poc-vault/config   # confere o endereço do k3s e o token de revisão
+vault read auth/poc-vault/role/role-k3s   # confere o ServiceAccount, o namespace e a política
+vault kv get -mount=policy-k3s secret/teste   # confere o segredo de teste</code></pre></div>
+<p><strong>Esperado:</strong> a configuração mostra <code>kubernetes_host</code> igual a <code>https://&lt;IP_NODE_K3S&gt;:6443</code> e a indicação de que o token de revisão foi definido. O papel mostra os nomes e namespaces aceitos e a política.</p>
+<h3>3.4 Pela interface web ou pela API (o que foi usado na PoC)</h3>
+<p>Se a CLI <code>vault</code> não funcionar, os mesmos passos saem pela interface web. Os campos abaixo são os que foram preenchidos e validados no teste. Crie na ordem: método, política, papel e segredo.</p>
+<div class="tw"><table><thead><tr><th>Onde</th><th>Campo</th><th>Valor</th></tr></thead><tbody>
+<tr><td>Access → Auth Methods → Enable new method → Kubernetes</td><td>Path</td><td><code>poc-vault</code></td></tr>
+<tr><td>Método <code>poc-vault</code> → Configure</td><td>Kubernetes host</td><td><code>https://&lt;IP_NODE_K3S&gt;:6443</code></td></tr>
+<tr><td>(idem)</td><td>Kubernetes CA Certificate</td><td>Conteúdo de <code>/var/lib/rancher/k3s/server/tls/server-ca.crt</code>, com as linhas originais</td></tr>
+<tr><td>(idem)</td><td>Token Reviewer JWT</td><td>Token do <code>vault-auth-token</code> (passo 2), em uma linha</td></tr>
+<tr><td>Policies → Create ACL policy</td><td>Name</td><td><code>policy-k3s</code></td></tr>
+<tr><td>(idem)</td><td>Conteúdo</td><td><code>path "policy-k3s/secret/*" {</code> com <code>capabilities = ["read", "list"]</code>. O <code>/*</code> do final é obrigatório: sem ele a política só cobre o caminho <code>policy-k3s/secret</code> e a leitura de <code>.../teste</code> dá 403</td></tr>
+<tr><td>Método <code>poc-vault</code> → Roles → Create role</td><td>Name</td><td><code>role-k3s</code> (é o nome que o pod usa no login)</td></tr>
+<tr><td>(idem)</td><td>Alias name source, Audience</td><td>Vazios</td></tr>
+<tr><td>(idem)</td><td>Bound service account names</td><td><code>poc-k3s-vault</code>, e clicar em <strong>Add</strong></td></tr>
+<tr><td>(idem)</td><td>Bound service account namespaces</td><td><code>poc-k3s-vault</code>, e clicar em <strong>Add</strong></td></tr>
+<tr><td>(idem) → Tokens</td><td>Generated Token's Policies</td><td><code>policy-k3s</code>, e clicar em <strong>Add</strong></td></tr>
+<tr><td>(idem) → Tokens</td><td>Generated Token's Initial TTL</td><td><code>1h</code> (os demais campos de Tokens ficam vazios)</td></tr>
+<tr><td>Secrets → engine <code>policy-k3s</code> → Create secret</td><td>Path for this secret, Key, Value</td><td><code>secret/teste</code>, <code>mensagem</code>, <code>ok</code></td></tr>
+</tbody></table></div>
+<p>Pela <strong>API</strong> (por exemplo, no terminal do pod do Vault), o caminho de cada passo é este. O corpo é o JSON do mesmo nome do arquivo:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vpost sys/auth/poc-vault /tmp/auth.json   # corpo: {"type":"kubernetes"}
+vpost sys/policies/acl/policy-k3s /tmp/policy.json   # corpo: {"policy":"path \"policy-k3s/secret/*\" { capabilities = [\"read\", \"list\"] }"}
+vpost auth/poc-vault/config /tmp/config.json   # host, CA (com \n) e token de revisão
+vpost auth/poc-vault/role/role-k3s /tmp/role.json   # mesmo role.json do passo 3.1
+vpost policy-k3s/secret/teste /tmp/teste.json   # {"mensagem":"ok"}</code></pre></div>
+<p>Um <code>403 permission denied</code> nesses comandos quer dizer que o token usado não tem permissão de admin para esse caminho (criar métodos de autenticação exige <code>sudo</code> em <code>sys/auth/*</code>). Mudar o método (CLI, interface ou API) não resolve.</p>
+<div class="note info"><strong>Se o cliente não puder liberar o Vault até o k3s:</strong> a documentação do Vault descreve o parâmetro <code>pem_keys</code> (chaves públicas do cluster) como alternativa ao <code>kubernetes_ca_cert</code> para um Vault fora do Kubernetes, e diz que nem toda instalação do Kubernetes expõe essas chaves. Eu não confirmei como isso se comporta no k3s sem conexão com o cluster. A decisão e o teste ficam com o admin do Vault.</div>
+<h2>4. Teste do login<span class="tag k3s">no k3s, num pod</span></h2>
+<p>Um pod de teste faz o login com o próprio ServiceAccount e lê o segredo de teste. O script usa só <code>sh</code> e <code>curl</code> (não precisa de <code>jq</code>), então serve qualquer imagem que tenha o <code>curl</code>. Na linha <code>image:</code> do pod, use uma imagem que o nó consiga baixar (por exemplo, da Quay). Para conferir antes: <code>kubectl run chk -n poc-k3s-vault --rm -it --restart=Never --image=&lt;IMAGEM&gt; --command -- sh -c 'which curl'</code>.</p>
+<p><strong>4.1 Namespace e ServiceAccount.</strong> Abra o arquivo, cole o conteúdo e salve:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/poc-k3s-vault-base.yaml</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: poc-k3s-vault
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: poc-k3s-vault
+  namespace: poc-k3s-vault</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>kubectl apply -f /tmp/poc-k3s-vault-base.yaml</code></pre></div>
+<p><strong>4.2 A CA do Vault</strong>, para o pod confiar no certificado. A forma mais segura é usar a <strong>cadeia que o próprio Vault apresenta</strong>, que já traz a raiz (<code>ingress-operator</code>). No nó do k3s:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>openssl s_client -connect &lt;HOST_VAULT&gt;:443 -showcerts &lt;/dev/null 2&gt;/dev/null | awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' &gt; /tmp/vault-ca.crt   # cadeia do Vault, com a raiz
+openssl crl2pkcs7 -nocrl -certfile /tmp/vault-ca.crt | openssl pkcs7 -print_certs -noout   # o último deve ter subject igual ao issuer (raiz)
+curl -sS -o /dev/null -w "HTTP %{http_code}\n" --max-time 10 --cacert /tmp/vault-ca.crt https://&lt;HOST_VAULT&gt;/v1/sys/health   # qualquer código HTTP confirma</code></pre></div>
+<p>Se o último certificado não for uma raiz (<code>subject</code> diferente do <code>issuer</code>) ou o <code>curl</code> der erro de certificado, o servidor não envia a raiz: peça a CA do ingress ao time do OpenShift e cole no arquivo com o <code>vi</code>. A CA do Quay só serve se for a mesma raiz.</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>kubectl create configmap vault-ca -n poc-k3s-vault --from-file=ca.crt=/tmp/vault-ca.crt</code></pre></div>
+<p><strong>4.3 O pod.</strong> Abra o arquivo, cole o conteúdo, troque o nome e a tag da imagem (em vermelho) e salve:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vi /tmp/poc-k3s-vault-pod.yaml</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: poc-k3s-vault
+  namespace: poc-k3s-vault
+spec:
+  serviceAccountName: poc-k3s-vault
+  restartPolicy: Never
+  containers:
+  - name: teste
+    image: &lt;REGISTRY_QUAY&gt;/<span class="chg">&lt;IMAGEM&gt;</span>:<span class="chg">&lt;TAG&gt;</span>   # imagem da Quay com sh e curl
+    command: ["sh", "-c"]
+    args:
+    - |
+      JWT=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+      RESP=$(curl -sS --max-time 15 --cacert /vault-ca/ca.crt -X POST -d "{\"jwt\":\"$JWT\",\"role\":\"role-k3s\"}" https://&lt;HOST_VAULT&gt;/v1/auth/poc-vault/login)   # papel role-k3s, método poc-vault
+      echo "== login (sem o token) =="
+      echo "$RESP" | sed 's/"client_token":"[^"]*"/"client_token":"***"/'   # esconde o token do Vault
+      TOKEN=$(echo "$RESP" | sed -n 's/.*"client_token":"\([^"]*\)".*/\1/p')   # extrai o token sem jq
+      echo "== leitura do segredo =="
+      curl -sS -o /dev/null -w "HTTP %{http_code}\n" --max-time 15 --cacert /vault-ca/ca.crt -H "X-Vault-Token: $TOKEN" https://&lt;HOST_VAULT&gt;/v1/policy-k3s/secret/teste   # só o código HTTP, sem mostrar o valor
+      echo "== o que a política deste token libera (diagnóstico) =="
+      curl -sS --max-time 15 --cacert /vault-ca/ca.crt -H "X-Vault-Token: $TOKEN" https://&lt;HOST_VAULT&gt;/v1/sys/internal/ui/resultant-acl   # lista os caminhos que o token pode acessar
+    volumeMounts:
+    - name: vault-ca
+      mountPath: /vault-ca
+  volumes:
+  - name: vault-ca
+    configMap:
+      name: vault-ca</code></pre></div>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>kubectl apply -f /tmp/poc-k3s-vault-pod.yaml
+kubectl get pod poc-k3s-vault -n poc-k3s-vault
+kubectl logs poc-k3s-vault -n poc-k3s-vault</code></pre></div>
+<p>Espere alguns segundos até o pod terminar (<code>Completed</code>) e leia os logs.</p>
+<p><strong>Esperado:</strong> na seção do login, um JSON com <code>token_policies</code> incluindo <code>policy-k3s</code> e um <code>lease_duration</code>, com o token mascarado (<code>***</code>); na leitura, <code>HTTP 200</code>.</p>
+<h3>4.4 Evidência da PoC e diagnóstico do 403 na leitura</h3>
+<p>No teste feito, o <strong>login funcionou</strong>, e a leitura do segredo devolveu <strong>HTTP 403</strong>. O login devolveu estes dados, e cada um prova um item da configuração:</p>
+<div class="tw"><table><thead><tr><th>O que o login devolveu</th><th>O que isso prova</th></tr></thead><tbody>
+<tr><td>Resposta do endereço <code>/v1/auth/poc-vault/login</code></td><td>O método <code>poc-vault</code> existe, e a CA e o endereço do Vault estão certos (TLS ok)</td></tr>
+<tr><td><code>metadata.role</code> = <code>role-k3s</code></td><td>O nome do papel no pod é o mesmo do Vault</td></tr>
+<tr><td><code>service_account_name</code> e <code>service_account_namespace</code> = <code>poc-k3s-vault</code></td><td>O papel aceita o ServiceAccount e o namespace do pod</td></tr>
+<tr><td>O próprio sucesso do login</td><td>O Vault alcança <code>&lt;IP_NODE_K3S&gt;:6443</code> e o token de revisão e a CA do k3s estão certos</td></tr>
+<tr><td><code>token_policies</code> = <code>["default","policy-k3s"]</code></td><td>O papel liga o token à política <code>policy-k3s</code></td></tr>
+</tbody></table></div>
+<p>Com isso, tudo que depende do <strong>nome do método, do papel, do ServiceAccount e do namespace</strong> está compatível. O <code>403</code> está só na <strong>política contra o caminho lido</strong>: o Vault confere a política <em>antes</em> de ver se o segredo existe. Um segredo inexistente com política certa dá <code>404</code>, e nunca <code>403</code>. Logo, o caminho pedido (<code>/v1/policy-k3s/secret/teste</code>) não casa com nenhuma regra da <code>policy-k3s</code>.</p>
+<p>O bloco "o que a política deste token libera", no final do log do pod, mostra as regras reais do token (em <code>glob_paths</code> e <code>exact_paths</code>). Compare com o caminho lido:</p>
+<div class="tw"><table><thead><tr><th>O que aparece em <code>glob_paths</code> / <code>exact_paths</code></th><th>Causa</th><th>Correção</th></tr></thead><tbody>
+<tr><td>Não aparece <code>policy-k3s/secret/</code> com <code>capabilities</code> contendo <code>read</code></td><td>A política salva não é a esperada (caminho antigo, sem <code>/*</code>, aspas erradas)</td><td>Reabrir a política <code>policy-k3s</code> e deixar exatamente o texto do passo 3.1</td></tr>
+<tr><td>Aparece <code>policy-k3s/data/secret/</code></td><td>O engine é <strong>KV versão 2</strong></td><td>No KV v2, a política e a URL do pod levam <code>data/</code>: política <code>policy-k3s/data/secret/*</code> e leitura em <code>/v1/policy-k3s/data/secret/teste</code></td></tr>
+<tr><td>Aparece outro engine ou pasta (por exemplo, <code>secret/policy-k3s/</code>)</td><td>O cliente informou o caminho em outra ordem: o <strong>primeiro</strong> trecho é o engine, o resto é a pasta</td><td>Confirmar em <strong>Secrets</strong> o nome do engine e onde o segredo está, e usar o mesmo caminho na política e na URL do pod</td></tr>
+<tr><td>Aparece <code>policy-k3s/secret/*</code> com <code>read</code>, mas o 403 continua</td><td>O segredo está num engine montado em outro caminho (o <code>secret</code> é o <em>mount</em> inteiro)</td><td>Ver em <code>vget sys/mounts</code> se existe o mount <code>policy-k3s/secret/</code>, e nesse caso o <code>KV_MOUNT</code> passa a ser <code>policy-k3s/secret</code></td></tr>
+</tbody></table></div>
+<div class="note info">Regra para nunca errar: <strong>a URL que o pod lê é <code>/v1/</code> + o caminho da política (sem o <code>/*</code>)</strong>. Se o segredo está em <code>policy-k3s/secret/teste</code>, a política é <code>policy-k3s/secret/*</code> e a URL é <code>/v1/policy-k3s/secret/teste</code>. Qualquer diferença de uma letra dá <code>403</code>.</div>
+<div class="tw"><table><thead><tr><th>O que aparece</th><th>Causa provável</th><th>O que fazer</th></tr></thead><tbody><tr><td><code>permission denied</code> no login</td><td>O papel não casa com a identidade: o nome do ServiceAccount ou o namespace</td><td>Conferir <code>bound_service_account_*</code> no papel (<code>poc-k3s-vault</code>, <code>poc-k3s-vault</code>)</td></tr><tr><td><code>service account name not authorized</code> ou <code>namespace not authorized</code></td><td>Idem: o nome ou o namespace não está no papel</td><td>Ajustar o papel</td></tr><tr><td><code>lookup failed: service account unauthorized</code></td><td>O token de revisão é inválido, foi recriado, ou o ServiceAccount não tem <code>system:auth-delegator</code></td><td>Refazer o passo 2 (<code>can-i</code> deve dar <code>yes</code>) e atualizar a configuração do Vault com o token novo</td></tr><tr><td>Timeout do login, ou erro de conexão <strong>do Vault</strong> ao k3s</td><td>O Vault não alcança <code>&lt;IP_NODE_K3S&gt;:6443</code></td><td>Liberação do Vault até o k3s (passo 1)</td></tr><tr><td><code>x509</code> no <code>curl</code> do pod</td><td>A CA do Vault no ConfigMap está errada ou incompleta</td><td>Refazer o passo 4.2</td></tr><tr><td>Login ok e leitura <code>HTTP 403</code> (o caso da PoC)</td><td>A política não casa com o caminho lido</td><td>Ver o bloco "o que a política deste token libera" e a tabela do passo 4.4</td></tr><tr><td>Login ok, mas a leitura devolve <code>403</code></td><td>A política não cobre o caminho exato</td><td>Conferir <code>policy-k3s/secret/*</code> na política do passo 3.1</td></tr><tr><td>Login ok, mas a leitura devolve <code>404</code></td><td>O mount ou o caminho está errado, ou o segredo não existe</td><td>Conferir <code>policy-k3s</code> e <code>secret/teste</code></td></tr><tr><td><code>curl: (60) ... certificate</code></td><td>A CA do ConfigMap não fecha a cadeia do Vault</td><td>Refazer o passo 4.2 com a cadeia que o Vault apresenta</td></tr><tr><td><code>curl: not found</code> ou <code>sh: curl: not found</code></td><td>A imagem do pod não tem <code>curl</code></td><td>Trocar a imagem do pod por uma que tenha <code>curl</code></td></tr><tr><td>Pod em <code>ImagePullBackOff</code></td><td>O nó não baixa a imagem do pod (ou a Quay devolve <code>401</code>)</td><td>Usar uma imagem que o nó consiga baixar e que tenha <code>curl</code>. Em caso de <code>401</code>, conferir o token no <code>registries.yaml</code> e a permissão do robô no repositório</td></tr></tbody></table></div>
+<h2>5. Como a aplicação consome o Vault<span class="tag ask">decisão</span></h2>
+<p>O passo 4 prova o login e a leitura. Falta definir <strong>como a aplicação real</strong> obtém os segredos. A planilha da PoC cita o Vault como dependência de inicialização do <code>email-corporativo-processar</code>. Confirme com o time dele qual dos mecanismos o OpenShift usa hoje, o que costuma aparecer nas anotações do pod.</p>
+<div class="tw"><table><thead><tr><th>Mecanismo</th><th>O que exige no k3s</th><th>Observação</th></tr></thead><tbody><tr><td><strong>Vault Agent Injector</strong> (anotações <code>vault.hashicorp.com/...</code> no pod)</td><td>Instalar o injetor no k3s, apontando para o Vault externo</td><td>É o mais comum em manifests vindos do OpenShift</td></tr><tr><td><strong>CSI Provider</strong></td><td>Instalar o Secrets Store CSI Driver e o provedor do Vault</td><td>Os segredos viram arquivos montados no pod</td></tr><tr><td><strong>Vault Secrets Operator</strong></td><td>Instalar o operador e criar os recursos de conexão e de autenticação</td><td>Sincroniza o segredo do Vault para um Secret do Kubernetes</td></tr><tr><td><strong>Leitura direta</strong> pela aplicação (API ou SDK)</td><td>Nada, além do papel e da política</td><td>A aplicação faz o login, como o pod de teste</td></tr></tbody></table></div>
+<p>Se for o <strong>Agent Injector</strong>, estas anotações no pod mudam em relação ao OpenShift, porque o método de autenticação e o papel são os <strong>novos</strong>:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vault.hashicorp.com/agent-inject: "true"
+vault.hashicorp.com/role: "role-k3s"
+vault.hashicorp.com/auth-path: "auth/poc-vault"
+vault.hashicorp.com/agent-inject-secret-config.txt: "policy-k3s/secret/teste"</code></pre></div>
+<ul><li>O <strong>endereço do Vault</strong> e a <strong>CA</strong> ficam na configuração do injetor, ou em anotações do pod. Os nomes exatos dos valores do Helm chart e das anotações de CA dependem da versão: confirme na documentação da versão instalada.</li><li>Os manifests migrados do OpenShift costumam trazer o <strong>caminho de autenticação</strong>, o <strong>papel</strong> e o <strong>endereço</strong> antigos: troque todos.</li><li>Eu monto o passo a passo de instalação do mecanismo escolhido quando você souber qual a aplicação usa.</li></ul>
+<h2>6. Limpeza e revogação<span class="tag vault">os dois lados</span></h2>
+<p><strong>No k3s:</strong></p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>kubectl delete namespace poc-k3s-vault
+kubectl delete clusterrolebinding vault-auth-delegator
+kubectl delete namespace vault-auth
+rm -f /tmp/vault-auth.yaml /tmp/poc-k3s-vault-base.yaml /tmp/poc-k3s-vault-pod.yaml /tmp/vault-ca.crt</code></pre></div>
+<p><strong>No Vault</strong> (admin do cliente), ao fim da PoC:</p>
+<div class="code"><button class="copy" type="button">Copiar</button><pre><code>vault auth disable poc-k3s-vault
+vault policy delete policy-k3s
+vault kv delete -mount=policy-k3s secret/teste</code></pre></div>
+<p>Se o token de revisão foi exposto, recrie o ServiceAccount (nota do passo 2) e reaplique o comando <code>vault write auth/poc-vault/config ...</code> <strong>completo</strong> do passo 3.2, com o token novo. A escrita nesse caminho substitui a configuração inteira.</p>
+<h2>Evidências para o relatório</h2>
+<ul><li>O <code>curl</code> do passo 1, com <code>HTTP 200</code> (ou outro código válido), nos dois sentidos.</li><li>O <code>kubectl auth can-i</code> do passo 2, com <code>yes</code>.</li><li>A saída de <code>vault read auth/poc-vault/config</code> (sem o token) e do papel.</li><li>Os logs do pod <code>poc-k3s-vault</code>, com o login e o nome das chaves.</li><li>A decisão sobre o mecanismo de consumo (passo 5).</li></ul>
+</main>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click',function(){
+    var pre=b.parentNode.querySelector('pre');var txt=pre?pre.innerText:'';
+    function done(ok){b.textContent=ok?'Copiado':'Selecione e copie';setTimeout(function(){b.textContent='Copiar'},1600)}
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){done(true)},function(){fallback()})}
+      else{fallback()}
+    }catch(e){fallback()}
+    function fallback(){try{var r=document.createRange();r.selectNodeContents(pre);var s=window.getSelection();s.removeAllRanges();s.addRange(r);done(document.execCommand('copy'))}catch(e){done(false)}}
+  })
+});
+</script>
+</body>
+</html>
+
+</body></html>

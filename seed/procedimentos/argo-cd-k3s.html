@@ -1,0 +1,387 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>Argo CD do cliente → k3s: roteiro da sessão</h1>
+<p>Objetivo: cadastrar o k3s (<code>poc-downstream</code>, <code>&lt;IP_NODE_K3S&gt;</code>) no Argo CD do cliente, que atende os clusters OpenShift, para entregar aplicações nele.</p>
+<p>Fluxo: <strong>1 Rede → 2 Certificado → 3 Credencial → 4 Cluster no Argo → 5 Conferir → 6 Application → 7 Teste GitOps</strong>.</p>
+<p>Convenções deste roteiro:</p>
+<ul>
+<li>Tudo que cria ou altera arquivo usa o <strong>editor</strong> (<code>vi</code>): você abre o arquivo e cola o conteúdo. Não há <code>cluster add</code>, <code>repo add</code> nem <code>app set</code> com parâmetros. O cadastro do cluster é declarativo (um Secret), e você controla tudo no arquivo.</li>
+<li>Comandos do k3s são rodados no nó como <code>root</code> (ou com <code>sudo</code>).</li>
+<li>Onde aparece <code>&lt;...&gt;</code>, troque pelo valor real. No <code>vi</code>, para trocar todas as ocorrências de uma vez: <code>:%s/&lt;APPPROJECT&gt;/valor/g</code> (ajuste o valor).</li>
+</ul>
+<h2>Valores desta sessão</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IP da API do k3s</td>
+<td><code>&lt;IP_NODE_K3S&gt;</code></td>
+</tr>
+<tr>
+<td>Porta</td>
+<td><code>6443</code></td>
+</tr>
+<tr>
+<td>URL da API</td>
+<td><code>https://&lt;IP_NODE_K3S&gt;:6443</code></td>
+</tr>
+<tr>
+<td>Nome do cluster no Argo</td>
+<td><code>k3s-poc</code> (sugestão; precisa ser <strong>único</strong> no Argo)</td>
+</tr>
+<tr>
+<td>Namespace do Argo</td>
+<td><code>argo-cd</code></td>
+</tr>
+<tr>
+<td>AppProject</td>
+<td><code>&lt;APPPROJECT&gt;</code> (perguntar)</td>
+</tr>
+<tr>
+<td>Namespace de destino no k3s</td>
+<td><code>argo-poc</code> (sugestão)</td>
+</tr>
+<tr>
+<td>Repositório de teste</td>
+<td><code>https://github.com/rancher/fleet-examples</code>, branch <code>master</code>, pasta <code>simple</code> (o Argo precisa alcançar o GitHub). Ou um repositório do cliente</td>
+</tr>
+</tbody>
+</table>
+<h2>O que ressaltar com o cliente</h2>
+<table>
+<thead>
+<tr>
+<th>Ponto</th>
+<th>Por que importa</th>
+<th>O que fazer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Argo compartilhado entre clusters</strong></td>
+<td>Um AppProject com destino <code>*</code> ou um ApplicationSet com <em>generator</em> de clusters pode passar a atuar no k3s assim que ele for cadastrado</td>
+<td>Antes do passo 4, olhar os AppProjects e ApplicationSets (comandos lá). Se quiser restringir, usar <code>project:</code> no Secret do cluster</td>
+</tr>
+<tr>
+<td><strong>Rede Argo → k3s</strong></td>
+<td>É a causa mais comum de falha. A origem da conexão é o IP do <strong>nó do OpenShift</strong> onde o pod do Argo roda (ou o EgressIP)</td>
+<td>Pedir ao cliente a liberação para <code>&lt;IP_NODE_K3S&gt;:6443</code> e provar com o passo 1</td>
+</tr>
+<tr>
+<td><strong>Token com <code>cluster-admin</code></strong></td>
+<td>Quem controlar esse Secret no Argo controla o k3s</td>
+<td>Entregar o token por canal seguro, restringir quem enxerga o namespace do Argo, e <strong>revogar ao fim</strong> (passo 8)</td>
+</tr>
+<tr>
+<td><strong>A configuração do Argo é gerenciada por GitOps?</strong></td>
+<td>Se outro Argo ou pipeline gerencia os Secrets de cluster, o Secret manual pode ser revertido</td>
+<td>Perguntar ao admin</td>
+</tr>
+<tr>
+<td><strong>Token na tela</strong></td>
+<td>O passo 3 mostra o token no terminal</td>
+<td><strong>Não tire print</strong> desse trecho. E regenere o token do Quay, que apareceu no chat</td>
+</tr>
+<tr>
+<td><strong>Certificado da API</strong></td>
+<td>O IP precisa constar nele</td>
+<td>Provavelmente já consta, por ser o IP do nó. O passo 2 confirma</td>
+</tr>
+</tbody>
+</table>
+<h2>1. Rede — <em>no OpenShift do cliente</em></h2>
+<p>Prova que o tráfego <strong>do Argo</strong> chega na API do k3s. Precisa de <code>oc</code> no OpenShift do cliente; sem acesso, o admin roda e envia a saída.</p>
+<p>Abra o arquivo:</p>
+<pre><code class="language-bash">vi /tmp/net-test.yaml
+</code></pre>
+<p>Cole este conteúdo (troque o namespace) e salve:</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: net-test
+  namespace: argo-cd
+spec:
+  restartPolicy: Never
+  containers:
+  - name: net-test
+    image: nicolaka/netshoot
+    command: [&#34;sh&#34;, &#34;-c&#34;]
+    args:
+    - |
+      nc -zv -w 5 &lt;IP_NODE_K3S&gt; 6443
+      curl -sk --max-time 8 -o /dev/null -w &#34;HTTP %{http_code}\n&#34; https://&lt;IP_NODE_K3S&gt;:6443/version
+</code></pre>
+<p>Execute, espere alguns segundos e leia o resultado:</p>
+<pre><code class="language-bash">oc apply -f /tmp/net-test.yaml
+oc logs net-test -n argo-cd
+oc delete pod net-test -n argo-cd
+</code></pre>
+<p><strong>Esperado:</strong> o <code>nc</code> mostra <code>open</code>, <code>succeeded</code> ou <code>Connected</code>, e o <code>curl</code> mostra <code>HTTP 200</code>, <code>401</code> ou <code>403</code>.</p>
+<p>Se o pod não subir (imagem do Docker Hub bloqueada ou política de segurança), teste a partir de um nó: <code>oc get nodes</code>, depois <code>oc debug node/&lt;nome-do-no&gt;</code> e, dentro do shell, os mesmos dois comandos.</p>
+<h2>2. Certificado — <em>no nó do k3s</em></h2>
+<pre><code class="language-bash">echo | openssl s_client -connect &lt;IP_NODE_K3S&gt;:6443 2&gt;/dev/null | openssl x509 -noout -checkip &lt;IP_NODE_K3S&gt;
+</code></pre>
+<p><strong>Esperado:</strong> <code>IP &lt;IP_NODE_K3S&gt; does match certificate</code>. Se for isso, <strong>pule para o passo 3</strong>.</p>
+<p>Se aparecer <code>does NOT match certificate</code>, o IP não consta no certificado. Crie um arquivo complementar:</p>
+<pre><code class="language-bash">mkdir -p /etc/rancher/k3s/config.yaml.d
+vi /etc/rancher/k3s/config.yaml.d/10-tls-san.yaml
+</code></pre>
+<p>Conteúdo (o <code>+</code> acrescenta à lista que o <code>config.yaml</code> já tiver):</p>
+<pre><code class="language-yaml">tls-san+:
+  - &lt;IP_NODE_K3S&gt;
+</code></pre>
+<p>Antes de reiniciar, confira a porta de que a sua imagem depende (o registro local da <code>6545</code>), reinicie e repita o teste acima:</p>
+<pre><code class="language-bash">(echo &gt; /dev/tcp/127.0.0.1/6545) &amp;&amp; echo &#34;6545 ok&#34;
+systemctl restart k3s
+kubectl get nodes
+</code></pre>
+<h2>3. Credencial — <em>no nó do k3s</em></h2>
+<p>Abra o arquivo:</p>
+<pre><code class="language-bash">vi /tmp/argocd-manager.yaml
+</code></pre>
+<p>Cole este conteúdo e salve:</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-manager
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-manager-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: argocd-manager
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argocd-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: argocd-manager
+  namespace: kube-system
+</code></pre>
+<p>Aplique:</p>
+<pre><code class="language-bash">kubectl apply -f /tmp/argocd-manager.yaml
+</code></pre>
+<p><strong>Teste: o token e a CA funcionam?</strong> Este comando usa o token sem exibi-lo:</p>
+<pre><code class="language-bash">curl -s --cacert /var/lib/rancher/k3s/server/tls/server-ca.crt -H &#34;Authorization: Bearer $(kubectl -n kube-system get secret argocd-manager-token -o jsonpath=&#39;{.data.token}&#39; | base64 -d)&#34; https://&lt;IP_NODE_K3S&gt;:6443/api/v1/namespaces | head -c 200
+</code></pre>
+<p><strong>Esperado:</strong> um JSON que começa com <code>&quot;kind&quot;: &quot;NamespaceList&quot;</code>. Se der <code>401</code>, espere uns segundos e repita (o token leva um instante para ser gerado); se persistir, o token está errado.</p>
+<p>Agora <strong>leia os dois valores</strong> que irão no Secret do passo 4. <strong>Não tire print desta tela.</strong></p>
+<pre><code class="language-bash">kubectl -n kube-system get secret argocd-manager-token -o jsonpath=&#39;{.data.token}&#39; | base64 -d; echo
+base64 -w0 /var/lib/rancher/k3s/server/tls/server-ca.crt; echo
+</code></pre>
+<p>O primeiro é o <strong>token</strong>; o segundo é a <strong>CA em base64</strong>, em uma linha só. Copie cada um (selecionando o texto com o mouse) para o passo 4 e, em seguida, <strong>limpe a tela</strong>:</p>
+<pre><code class="language-bash">clear
+</code></pre>
+<p><strong>Se o token foi exposto</strong> (print, chat, e-mail), revogue e gere outro. Nada depende dele antes do passo 4, então o custo é baixo. Apagar o Secret invalida o token, e o <code>apply</code> o recria:</p>
+<pre><code class="language-bash">kubectl -n kube-system delete secret argocd-manager-token
+kubectl apply -f /tmp/argocd-manager.yaml
+</code></pre>
+<p>Espere uns segundos, repita o teste do token acima e leia o valor novo.</p>
+<h2>4. Cluster no Argo — <em>no OpenShift do cliente</em></h2>
+<p><strong>Antes de cadastrar</strong>, olhe o que já existe no Argo (ponto de atenção do início):</p>
+<pre><code class="language-bash">oc get appproject -n argo-cd
+oc get appproject -n argo-cd -o yaml | grep -n -A4 &#34;destinations&#34;
+oc get applicationset -A
+</code></pre>
+<p>Procure: <code>destinations</code> com <code>server: '*'</code> e ApplicationSets com <code>clusters:</code> sem seletor. Se existirem, combine com o admin como restringir (por exemplo, com <code>project:</code> abaixo) antes de seguir.</p>
+<p>Crie o arquivo com permissão restrita e abra-o:</p>
+<pre><code class="language-bash">umask 077
+vi /tmp/cluster-k3s-poc.yaml
+</code></pre>
+<p>Cole este conteúdo, troque os três <code>&lt;...&gt;</code> (token e CA do passo 3) e salve:</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-k3s-poc
+  namespace: argo-cd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+type: Opaque
+stringData:
+  name: k3s-poc
+  server: https://&lt;IP_NODE_K3S&gt;:6443
+  config: |
+    {
+      &#34;bearerToken&#34;: &#34;&lt;TOKEN&gt;&#34;,
+      &#34;tlsClientConfig&#34;: { &#34;insecure&#34;: false, &#34;caData&#34;: &#34;&lt;CA_EM_BASE64&gt;&#34; }
+    }
+</code></pre>
+<p><strong>Para restringir o cluster a um único projeto</strong> do Argo, acrescente esta linha em <code>stringData:</code>, no mesmo nível de <code>name:</code> (o Argo só deixa as Applications desse projeto usarem o cluster):</p>
+<pre><code class="language-yaml">  project: &lt;APPPROJECT&gt;
+</code></pre>
+<p>Aplique e <strong>apague os arquivos</strong> (contêm o token):</p>
+<pre><code class="language-bash">oc apply -f /tmp/cluster-k3s-poc.yaml
+rm -f /tmp/cluster-k3s-poc.yaml /tmp/argocd-manager.yaml
+</code></pre>
+<p>Se quem aplica é o admin do Argo, entregue o arquivo a ele por canal seguro.</p>
+<h2>5. Conferir — <em>na UI do Argo</em></h2>
+<p><strong>Settings → Clusters → <code>k3s-poc</code></strong>: o esperado é <strong>Connection Successful</strong>.</p>
+<p>Se aparecer <code>Unknown</code>, aguarde 1 a 2 minutos: o Argo só testa a conexão quando algo usa o cluster. Prossiga para o passo 6, que a prova de fato. Se aparecer <code>Failed</code>, leia a mensagem e use a tabela do final.</p>
+<h2>6. Application — <em>no OpenShift do cliente e na UI do Argo</em></h2>
+<p><strong>6.1 Repositório.</strong> Com o repositório público (fleet-examples), não há nada a fazer. Para um repositório <strong>privado</strong> do cliente, crie um Secret de repositório:</p>
+<pre><code class="language-bash">umask 077
+vi /tmp/repo-poc.yaml
+</code></pre>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-poc
+  namespace: argo-cd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: git
+  url: &lt;URL_DO_REPOSITORIO&gt;
+  username: &lt;USUARIO&gt;
+  password: &lt;TOKEN_DO_GIT&gt;
+</code></pre>
+<pre><code class="language-bash">oc apply -f /tmp/repo-poc.yaml
+rm -f /tmp/repo-poc.yaml
+</code></pre>
+<p><strong>6.2 Application, com sincronização manual.</strong> Abra o arquivo:</p>
+<pre><code class="language-bash">vi /tmp/application.yaml
+</code></pre>
+<p>Cole este conteúdo e salve (troque o namespace e o projeto):</p>
+<pre><code class="language-yaml">apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-k3s
+  namespace: argo-cd
+spec:
+  project: &lt;APPPROJECT&gt;
+  source:
+    repoURL: https://github.com/rancher/fleet-examples
+    targetRevision: master
+    path: simple
+  destination:
+    name: k3s-poc
+    namespace: argo-poc
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+</code></pre>
+<pre><code class="language-bash">oc apply -f /tmp/application.yaml
+</code></pre>
+<p>Na UI do Argo, abra a aplicação <code>guestbook-k3s</code>. Clique em <strong>Sync</strong>, marque <strong>Dry Run</strong> e confirme: ele valida que o Argo renderiza os manifests e que o destino é permitido, sem alterar nada. Depois faça o <strong>Sync</strong> de verdade.</p>
+<p><strong>Esperado:</strong> <code>Synced</code> e <code>Healthy</code>. Confira também no k3s:</p>
+<pre><code class="language-bash">oc get application guestbook-k3s -n argo-cd
+kubectl get pods,svc -n argo-poc
+</code></pre>
+<p><strong>6.3 Sincronização automática.</strong> Reabra o arquivo, acrescente <code>automated</code> ao <code>syncPolicy</code> e reaplique:</p>
+<pre><code class="language-bash">vi /tmp/application.yaml
+</code></pre>
+<pre><code class="language-yaml">  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+</code></pre>
+<pre><code class="language-bash">oc apply -f /tmp/application.yaml
+</code></pre>
+<h2>7. Teste GitOps: atualização e rollback</h2>
+<p>Num fork do repositório, troque a imagem do Deployment por uma do <strong>Quay interno</strong>, que prova também a integração com o Quay: <code>&lt;REGISTRY_QUAY&gt;/&lt;repositorio&gt;:&lt;tag&gt;</code>. Faça commit e push.</p>
+<p>Aguarde o Argo sincronizar (até 3 minutos, ou use <strong>Refresh</strong> na UI) e confira no k3s:</p>
+<pre><code class="language-bash">kubectl get deploy -n argo-poc -o jsonpath=&#39;{.items[*].spec.template.spec.containers[*].image}&#39;; echo
+</code></pre>
+<p><strong>Esperado:</strong> a imagem nova. Para o <strong>rollback</strong>, faça <code>git revert</code> do commit, push, e repita a conferência: a imagem anterior deve voltar.</p>
+<h2>8. Limpeza ao fim da PoC</h2>
+<p>No OpenShift do cliente:</p>
+<pre><code class="language-bash">oc delete application guestbook-k3s -n argo-cd
+oc delete secret cluster-k3s-poc -n argo-cd
+</code></pre>
+<p>No k3s (revoga a credencial):</p>
+<pre><code class="language-bash">kubectl delete clusterrolebinding argocd-manager
+kubectl -n kube-system delete secret argocd-manager-token
+kubectl -n kube-system delete serviceaccount argocd-manager
+</code></pre>
+<h2>Se der erro</h2>
+<table>
+<thead>
+<tr>
+<th>Sintoma</th>
+<th>Causa provável</th>
+<th>O que fazer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Passo 1: <code>nc</code> sem resposta, <code>curl</code> com <code>000</code></td>
+<td>Tráfego bloqueado (firewall, NetworkPolicy, EgressFirewall, proxy)</td>
+<td>Pedir a liberação Argo → <code>&lt;IP_NODE_K3S&gt;:6443</code></td>
+</tr>
+<tr>
+<td>Passo 1: <code>Connection refused</code></td>
+<td>Chegou no k3s, mas nada escuta</td>
+<td>No k3s: <code>ss -ltnp | grep 6443</code></td>
+</tr>
+<tr>
+<td>Passo 2: <code>does NOT match certificate</code></td>
+<td>O IP não está no certificado</td>
+<td><code>tls-san</code> do passo 2 e reiniciar</td>
+</tr>
+<tr>
+<td>Passo 3: <code>401</code> ao testar o token</td>
+<td>Token ainda não gerado, ou errado</td>
+<td>Esperar e repetir; conferir o <code>ClusterRoleBinding</code></td>
+</tr>
+<tr>
+<td>Cluster <code>Failed</code>: <code>x509: certificate signed by unknown authority</code></td>
+<td><code>caData</code> errada, ou cortada na colagem</td>
+<td>Refazer o <code>base64 -w0</code> e colar em <strong>uma linha</strong></td>
+</tr>
+<tr>
+<td>Cluster <code>Failed</code>: <code>x509: certificate is valid for ..., not &lt;IP_NODE_K3S&gt;</code></td>
+<td>IP fora do certificado</td>
+<td>Passo 2</td>
+</tr>
+<tr>
+<td>Cluster <code>Failed</code>: <code>Unauthorized</code></td>
+<td>Token errado ou com espaço sobrando</td>
+<td>Refazer a leitura do token</td>
+</tr>
+<tr>
+<td>Cluster <code>Failed</code>: timeout / <code>connection refused</code></td>
+<td>Rede</td>
+<td>Passo 1</td>
+</tr>
+<tr>
+<td><code>destination ... is not permitted in project</code></td>
+<td>O AppProject não lista o k3s</td>
+<td><code>destinations</code> do projeto (ou o <code>project:</code> do Secret não bate)</td>
+</tr>
+<tr>
+<td><code>ComparisonError</code> / repositório inacessível</td>
+<td>Argo sem acesso ao Git, ou <code>path</code> errado</td>
+<td>Passo 6.1 e conferir a pasta</td>
+</tr>
+<tr>
+<td>Pods em <code>ImagePullBackOff</code> no k3s</td>
+<td>O nó não baixa a imagem</td>
+<td>Guia do Quay (<code>registries.yaml</code>)</td>
+</tr>
+<tr>
+<td>O Secret do cluster sumiu</td>
+<td>Alguém ou algum GitOps o reverteu</td>
+<td>Perguntar ao admin (ponto de atenção)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Guia completo</strong> (proxy, caminho pelo Rancher, 18 testes T01 a T18, script de pré-validação, logs do Argo): <a href="https://claude.ai/artifact/GU8vshgfWq9SQz4gcr4kn6">https://claude.ai/artifact/GU8vshgfWq9SQz4gcr4kn6</a></p>
+
+</body></html>

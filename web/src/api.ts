@@ -5,10 +5,12 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const isFormData = init?.body instanceof FormData;
+
   const res = await fetch(path, {
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: isFormData ? undefined : { "Content-Type": "application/json" },
   });
 
   if (!res.ok) {
@@ -24,6 +26,29 @@ export interface User {
   email: string;
 }
 
+export interface ProcedimentoListItem {
+  id: string;
+  titulo: string;
+  tags: string[];
+  cliente_origem: string | null;
+  status: "rascunho" | "validado";
+  versao: number;
+  data_origem: string | null;
+  created_at: string;
+}
+
+export interface Secao {
+  heading_level: number;
+  heading_title: string;
+  parent_heading_title: string | null;
+  order_index: number;
+}
+
+export interface ProcedimentoDetail extends ProcedimentoListItem {
+  html_original: string;
+  secoes: Secao[];
+}
+
 export const api = {
   login: (email: string, password: string) =>
     request<User>("/api/auth/login", {
@@ -32,4 +57,9 @@ export const api = {
     }),
   logout: () => request<{ status: string }>("/api/auth/logout", { method: "POST" }),
   me: () => request<User>("/api/auth/me"),
+
+  listarProcedimentos: () => request<ProcedimentoListItem[]>("/api/procedimentos"),
+  obterProcedimento: (id: string) => request<ProcedimentoDetail>(`/api/procedimentos/${id}`),
+  criarProcedimento: (form: FormData) =>
+    request<ProcedimentoListItem>("/api/procedimentos", { method: "POST", body: form }),
 };

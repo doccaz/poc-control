@@ -11,3 +11,8 @@ web/dist/
 
 *.log
 .DS_Store
+
+seed/*
+!seed/procedimentos
+
+.claude/

@@ -24,6 +24,8 @@ services:
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
       SESSION_SECRET: ${SESSION_SECRET}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+    volumes:
+      - ./seed:/app/seed:ro
     depends_on:
       db:
         condition: service_healthy
