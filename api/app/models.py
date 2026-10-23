@@ -159,6 +159,42 @@ class Item(Base):
     )
 
     poc: Mapped[Poc] = relationship(back_populates="itens")
+    classificacao: Mapped["Classificacao | None"] = relationship(
+        back_populates="item", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class FlagClassificacao(str, enum.Enum):
+    verde = "verde"
+    amarelo = "amarelo"
+    vermelho = "vermelho"
+
+
+class OrigemClassificacao(str, enum.Enum):
+    auto = "auto"
+    manual = "manual"
+
+
+class Classificacao(Base):
+    __tablename__ = "classificacoes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    item_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("itens.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    flag: Mapped[FlagClassificacao] = mapped_column(Enum(FlagClassificacao, name="flag_classificacao"))
+    origem: Mapped[OrigemClassificacao] = mapped_column(Enum(OrigemClassificacao, name="origem_classificacao"))
+    justificativa: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fontes: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    procedimento_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("procedimentos.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    item: Mapped["Item"] = relationship(back_populates="classificacao")
+    procedimento: Mapped[Procedimento | None] = relationship()
 
 
 class Prerequisito(Base):

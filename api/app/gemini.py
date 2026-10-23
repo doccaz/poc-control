@@ -112,7 +112,7 @@ Responda só com os dados pedidos, em português, sem inventar itens que não te
 _RETRY_CODES = {429, 500, 503}
 
 
-def extrair_itens_poc(pdf_bytes: bytes) -> ExtracaoPoc:
+def _gerar_com_retry(**kwargs) -> types.GenerateContentResponse:
     client = _client()
     tentativas = 4
     espera = 5
@@ -120,21 +120,7 @@ def extrair_itens_poc(pdf_bytes: bytes) -> ExtracaoPoc:
 
     for tentativa in range(tentativas):
         try:
-            response = client.models.generate_content(
-                model=_TEXT_MODEL,
-                contents=[
-                    types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-                    _EXTRACAO_PROMPT,
-                ],
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=ExtracaoPoc,
-                ),
-            )
-            parsed = response.parsed
-            if isinstance(parsed, ExtracaoPoc):
-                return parsed
-            return ExtracaoPoc.model_validate_json(response.text)
+            return client.models.generate_content(**kwargs)
         except genai_errors.APIError as exc:
             ultimo_erro = exc
             if getattr(exc, "code", None) not in _RETRY_CODES or tentativa == tentativas - 1:
@@ -144,3 +130,144 @@ def extrair_itens_poc(pdf_bytes: bytes) -> ExtracaoPoc:
 
     assert ultimo_erro is not None
     raise ultimo_erro
+
+
+def extrair_itens_poc(pdf_bytes: bytes) -> ExtracaoPoc:
+    response = _gerar_com_retry(
+        model=_TEXT_MODEL,
+        contents=[
+            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+            _EXTRACAO_PROMPT,
+        ],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ExtracaoPoc,
+        ),
+    )
+    parsed = response.parsed
+    if isinstance(parsed, ExtracaoPoc):
+        return parsed
+    return ExtracaoPoc.model_validate_json(response.text)
+
+
+class CandidatoProcedimento(BaseModel):
+    titulo_procedimento: str
+    heading_title: str
+    content_text: str
+
+
+class ConfirmacaoMatch(BaseModel):
+    atende: bool
+    indice_candidato: int
+    justificativa: str
+
+
+_CONFIRMACAO_PROMPT = """\
+Você é um Solutions Architect avaliando se algum procedimento já validado resolve um item de uma PoC.
+
+Item da PoC a ser testado:
+\"\"\"
+{item}
+\"\"\"
+
+Candidatos encontrados por similaridade na base de procedimentos validados (cada um é um trecho/seção \
+de um procedimento):
+{candidatos}
+
+Responda:
+- atende: true se algum dos candidatos realmente cobre o que o item pede (não basta ser parecido no \
+assunto, o passo a passo tem que resolver o item).
+- indice_candidato: o número do candidato escolhido (começando em 0), ou -1 se nenhum atende.
+- justificativa: 1-2 frases curtas, em português, explicando a decisão.
+"""
+
+
+def confirmar_match(item_texto: str, candidatos: list[CandidatoProcedimento]) -> ConfirmacaoMatch:
+    candidatos_texto = "\n\n".join(
+        f"[{i}] Procedimento \"{c.titulo_procedimento}\" — seção \"{c.heading_title}\":\n{c.content_text}"
+        for i, c in enumerate(candidatos)
+    )
+    response = _gerar_com_retry(
+        model=_TEXT_MODEL,
+        contents=_CONFIRMACAO_PROMPT.format(item=item_texto, candidatos=candidatos_texto),
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ConfirmacaoMatch,
+        ),
+    )
+    parsed = response.parsed
+    if isinstance(parsed, ConfirmacaoMatch):
+        return parsed
+    return ConfirmacaoMatch.model_validate_json(response.text)
+
+
+class FonteEvidencia(BaseModel):
+    titulo: str
+    url: str
+
+
+_VIABILIDADE_PROMPT = """\
+Pesquise na web se o item de PoC abaixo é viável/suportado ou se há evidência explícita de que NÃO é \
+suportado. Responda em português, de forma objetiva, citando o que a pesquisa encontrou.
+
+Item da PoC:
+\"\"\"
+{item}
+\"\"\"
+"""
+
+
+def pesquisar_viabilidade_web(item_texto: str) -> tuple[str, list[FonteEvidencia]]:
+    response = _gerar_com_retry(
+        model=_TEXT_MODEL,
+        contents=_VIABILIDADE_PROMPT.format(item=item_texto),
+        config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())]),
+    )
+    texto = response.text or ""
+
+    fontes: list[FonteEvidencia] = []
+    candidate = response.candidates[0] if response.candidates else None
+    grounding = getattr(candidate, "grounding_metadata", None) if candidate else None
+    for chunk in getattr(grounding, "grounding_chunks", None) or []:
+        web = getattr(chunk, "web", None)
+        if web is not None and web.uri:
+            fontes.append(FonteEvidencia(titulo=web.title or web.uri, url=web.uri))
+
+    return texto, fontes
+
+
+class AvaliacaoViabilidade(BaseModel):
+    nao_suportado: bool
+    evidencia_viavel: bool
+    justificativa: str
+
+
+_AVALIACAO_PROMPT = """\
+Com base no resultado de pesquisa abaixo sobre a viabilidade de um item de PoC, classifique:
+
+Resultado da pesquisa:
+\"\"\"
+{pesquisa}
+\"\"\"
+
+Responda:
+- nao_suportado: true SÓ se o resultado trouxer evidência explícita de que não é suportado/não é viável.
+- evidencia_viavel: true se o resultado trouxer evidência de que é viável (ainda que não seja prova \
+definitiva).
+- justificativa: 1-2 frases curtas, em português, resumindo a evidência (ou a falta dela).
+"""
+
+
+def classificar_viabilidade(texto_pesquisa: str) -> AvaliacaoViabilidade:
+    response = _gerar_com_retry(
+        model=_TEXT_MODEL,
+        contents=_AVALIACAO_PROMPT.format(pesquisa=texto_pesquisa or "(a pesquisa não retornou texto)"),
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=AvaliacaoViabilidade,
+        ),
+    )
+    parsed = response.parsed
+    if isinstance(parsed, AvaliacaoViabilidade):
+        return parsed
+    return AvaliacaoViabilidade.model_validate_json(response.text)

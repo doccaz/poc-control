@@ -3,7 +3,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models import CondicaoItem, StatusExtracao, StatusItem, StatusPoc
+from app.models import CondicaoItem, FlagClassificacao, OrigemClassificacao, StatusExtracao, StatusItem, StatusPoc
 
 
 class FaseOut(BaseModel):
@@ -26,6 +26,28 @@ class PrerequisitoUpdate(BaseModel):
     atendido: bool
 
 
+class FonteOut(BaseModel):
+    titulo: str
+    url: str
+
+
+class ClassificacaoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    flag: FlagClassificacao
+    origem: OrigemClassificacao
+    justificativa: str | None
+    fontes: list[FonteOut]
+    procedimento_id: uuid.UUID | None
+    created_at: datetime
+
+
+class ClassificacaoManualUpdate(BaseModel):
+    flag: FlagClassificacao
+    procedimento_id: uuid.UUID | None = None
+    justificativa: str | None = None
+
+
 class ItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,6 +62,7 @@ class ItemOut(BaseModel):
     conducao: CondicaoItem | None
     status: StatusItem
     ordem: int
+    classificacao: ClassificacaoOut | None
 
 
 class ItemUpdate(BaseModel):

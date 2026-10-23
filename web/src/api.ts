@@ -79,6 +79,23 @@ export interface Fase {
   descricao: string;
 }
 
+export type FlagClassificacao = "verde" | "amarelo" | "vermelho";
+export type OrigemClassificacao = "auto" | "manual";
+
+export interface Fonte {
+  titulo: string;
+  url: string;
+}
+
+export interface Classificacao {
+  flag: FlagClassificacao;
+  origem: OrigemClassificacao;
+  justificativa: string | null;
+  fontes: Fonte[];
+  procedimento_id: string | null;
+  created_at: string;
+}
+
 export interface ItemPoc {
   id: string;
   codigo: string;
@@ -91,6 +108,13 @@ export interface ItemPoc {
   conducao: CondicaoItem | null;
   status: StatusItem;
   ordem: number;
+  classificacao: Classificacao | null;
+}
+
+export interface ClassificacaoManualPayload {
+  flag: FlagClassificacao;
+  procedimento_id?: string | null;
+  justificativa?: string | null;
 }
 
 export interface PrerequisitoPoc {
@@ -158,4 +182,14 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ atendido }),
     }),
+
+  classificarItem: (pocId: string, itemId: string) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/classificar`, { method: "POST" }),
+  sobrescreverClassificacao: (pocId: string, itemId: string, payload: ClassificacaoManualPayload) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/classificacao`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  classificarPendentes: (pocId: string) =>
+    request<{ status: string }>(`/api/pocs/${pocId}/classificar-pendentes`, { method: "POST" }),
 };

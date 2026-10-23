@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { api, CondicaoItem, Fase, ItemPoc, PocDetail as PocDetailData, StatusItem } from "../api";
+import { Link, useParams } from "react-router-dom";
+import {
+  api,
+  CondicaoItem,
+  Fase,
+  FlagClassificacao,
+  ItemPoc,
+  PocDetail as PocDetailData,
+  ProcedimentoListItem,
+  StatusItem,
+} from "../api";
 
 const STATUS_LABEL: Record<StatusItem, string> = {
   pendente: "Pendente",
@@ -14,6 +23,12 @@ const CONDUCAO_LABEL: Record<CondicaoItem, string> = {
   suse: "SUSE",
   cliente: "Cliente",
   lateral: "Lateral",
+};
+
+const FLAG_LABEL: Record<FlagClassificacao, string> = {
+  verde: "Verde — é só seguir",
+  amarelo: "Amarelo",
+  vermelho: "Vermelho",
 };
 
 const TABS = [
@@ -43,7 +58,14 @@ export function PocDetail() {
   const [poc, setPoc] = useState<PocDetailData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("plano");
+  const [procedimentos, setProcedimentos] = useState<ProcedimentoListItem[]>([]);
+  const [classificandoLote, setClassificandoLote] = useState(false);
   const pollRef = useRef<number | null>(null);
+  const pollLoteRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    api.listarProcedimentos().then(setProcedimentos).catch(() => {});
+  }, []);
 
   function carregar() {
     if (!id) return;
@@ -62,12 +84,32 @@ export function PocDetail() {
     carregar();
     return () => {
       if (pollRef.current) window.clearTimeout(pollRef.current);
+      if (pollLoteRef.current) window.clearTimeout(pollLoteRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   function handleItemAtualizado(atualizado: ItemPoc) {
     setPoc((atual) => (atual ? { ...atual, itens: atual.itens.map((i) => (i.id === atualizado.id ? atualizado : i)) } : atual));
+  }
+
+  async function classificarPendentes() {
+    if (!id) return;
+    setClassificandoLote(true);
+    await api.classificarPendentes(id);
+
+    function poll() {
+      api.obterPoc(id!).then((data) => {
+        setPoc(data);
+        const faltam = data.itens.some((i) => !i.classificacao);
+        if (faltam) {
+          pollLoteRef.current = window.setTimeout(poll, 4000);
+        } else {
+          setClassificandoLote(false);
+        }
+      });
+    }
+    pollLoteRef.current = window.setTimeout(poll, 4000);
   }
 
   function handleItemRemovido(itemId: string) {
@@ -164,6 +206,13 @@ export function PocDetail() {
 
       {tab === "plano" && (
         <div className="card">
+          {poc.itens.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+              <button className="btn btn-secondary" onClick={classificarPendentes} disabled={classificandoLote}>
+                {classificandoLote ? "Classificando..." : "Classificar itens sem semáforo"}
+              </button>
+            </div>
+          )}
           {poc.itens.length === 0 && <div className="empty-state">Nenhum item extraído ainda.</div>}
           {numerosFase.map((n) => (
             <div key={n}>
@@ -179,6 +228,7 @@ export function PocDetail() {
                     key={item.id}
                     pocId={poc.id}
                     item={item}
+                    procedimentos={procedimentos}
                     onAtualizado={handleItemAtualizado}
                     onRemovido={handleItemRemovido}
                   />
@@ -310,11 +360,13 @@ function ResumoTab({
 function ItemRow({
   pocId,
   item,
+  procedimentos,
   onAtualizado,
   onRemovido,
 }: {
   pocId: string;
   item: ItemPoc;
+  procedimentos: ProcedimentoListItem[];
   onAtualizado: (item: ItemPoc) => void;
   onRemovido: (itemId: string) => void;
 }) {
@@ -326,6 +378,45 @@ function ItemRow({
   const [fase, setFase] = useState(item.fase);
   const [conducao, setConducao] = useState<CondicaoItem | "">(item.conducao ?? "");
   const [salvando, setSalvando] = useState(false);
+  const [reavaliando, setReavaliando] = useState(false);
+  const [editandoManual, setEditandoManual] = useState(false);
+  const [flagManual, setFlagManual] = useState<FlagClassificacao>(item.classificacao?.flag ?? "amarelo");
+  const [procedimentoManual, setProcedimentoManual] = useState(item.classificacao?.procedimento_id ?? "");
+  const [justificativaManual, setJustificativaManual] = useState(item.classificacao?.justificativa ?? "");
+  const [salvandoManual, setSalvandoManual] = useState(false);
+
+  async function reavaliar() {
+    setReavaliando(true);
+    try {
+      const atualizado = await api.classificarItem(pocId, item.id);
+      onAtualizado(atualizado);
+      setFlagManual(atualizado.classificacao?.flag ?? "amarelo");
+      setProcedimentoManual(atualizado.classificacao?.procedimento_id ?? "");
+      setJustificativaManual(atualizado.classificacao?.justificativa ?? "");
+    } finally {
+      setReavaliando(false);
+    }
+  }
+
+  async function salvarClassificacaoManual() {
+    setSalvandoManual(true);
+    try {
+      const atualizado = await api.sobrescreverClassificacao(pocId, item.id, {
+        flag: flagManual,
+        procedimento_id: flagManual === "verde" ? procedimentoManual || null : null,
+        justificativa: justificativaManual || null,
+      });
+      onAtualizado(atualizado);
+      setEditandoManual(false);
+    } finally {
+      setSalvandoManual(false);
+    }
+  }
+
+  const procedimentoVinculado = item.classificacao?.procedimento_id
+    ? procedimentos.find((p) => p.id === item.classificacao!.procedimento_id)
+    : undefined;
+  const validados = procedimentos.filter((p) => p.status === "validado");
 
   async function salvar() {
     setSalvando(true);
@@ -363,6 +454,9 @@ function ItemRow({
           {item.categoria && <span className="muted" style={{ marginLeft: 8, fontSize: 12 }}>{item.categoria}</span>}
         </span>
         {item.conducao && <span className={`chip chip-${item.conducao}`}>{CONDUCAO_LABEL[item.conducao]}</span>}
+        <span className={`badge badge-${item.classificacao?.flag ?? "muted"}`}>
+          {item.classificacao ? FLAG_LABEL[item.classificacao.flag] : "Sem semáforo"}
+        </span>
         <span className={`badge badge-${item.status}`}>{STATUS_LABEL[item.status]}</span>
         <select
           className="input"
@@ -425,6 +519,104 @@ function ItemRow({
             <button className="btn btn-secondary" onClick={remover} type="button">
               Remover item
             </button>
+          </div>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <strong>Classificação</strong>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn btn-secondary" onClick={reavaliar} disabled={reavaliando} type="button">
+                  {reavaliando ? "Reavaliando..." : "Reavaliar"}
+                </button>
+                <button className="btn btn-secondary" onClick={() => setEditandoManual((v) => !v)} type="button">
+                  {editandoManual ? "Cancelar" : "Sobrescrever"}
+                </button>
+              </div>
+            </div>
+
+            {item.classificacao ? (
+              <div className="muted" style={{ fontSize: 13 }}>
+                <div>
+                  <span className={`badge badge-${item.classificacao.flag}`}>
+                    {FLAG_LABEL[item.classificacao.flag]}
+                  </span>{" "}
+                  <span>({item.classificacao.origem === "manual" ? "ajustado manualmente" : "automático"})</span>
+                </div>
+                {item.classificacao.justificativa && <p style={{ marginTop: 6 }}>{item.classificacao.justificativa}</p>}
+                {procedimentoVinculado && (
+                  <p>
+                    Procedimento:{" "}
+                    <Link to={`/procedimentos/${procedimentoVinculado.id}`}>{procedimentoVinculado.titulo}</Link>
+                  </p>
+                )}
+                {item.classificacao.fontes.length > 0 && (
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                    {item.classificacao.fontes.map((f, i) => (
+                      <li key={i}>
+                        <a href={f.url} target="_blank" rel="noreferrer">
+                          {f.titulo}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <p className="empty-state">Ainda não classificado. Use "Reavaliar" para rodar a classificação.</p>
+            )}
+
+            {editandoManual && (
+              <div className="fields" style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                <div className="field">
+                  <label>Semáforo</label>
+                  <select
+                    className="input"
+                    value={flagManual}
+                    onChange={(e) => setFlagManual(e.target.value as FlagClassificacao)}
+                  >
+                    <option value="verde">Verde</option>
+                    <option value="amarelo">Amarelo</option>
+                    <option value="vermelho">Vermelho</option>
+                  </select>
+                </div>
+                {flagManual === "verde" && (
+                  <div className="field">
+                    <label>Procedimento vinculado</label>
+                    <select
+                      className="input"
+                      value={procedimentoManual}
+                      onChange={(e) => setProcedimentoManual(e.target.value)}
+                    >
+                      <option value="">—</option>
+                      {validados.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.titulo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="field">
+                  <label>Justificativa</label>
+                  <textarea
+                    className="input"
+                    rows={2}
+                    value={justificativaManual}
+                    onChange={(e) => setJustificativaManual(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={salvarClassificacaoManual}
+                    disabled={salvandoManual}
+                    type="button"
+                  >
+                    {salvandoManual ? "Salvando..." : "Salvar classificação manual"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

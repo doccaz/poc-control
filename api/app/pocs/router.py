@@ -5,11 +5,14 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPExcepti
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.classificacao.service import classificar_item
+from app.classificacao.tasks import classificar_pendentes
 from app.config import settings
 from app.db import get_db
 from app.deps import get_current_user
-from app.models import Item, Poc, PocDocumento, Prerequisito, StatusExtracao, StatusItem
+from app.models import Classificacao, Item, OrigemClassificacao, Poc, PocDocumento, Prerequisito, StatusExtracao, StatusItem
 from app.pocs.schemas import (
+    ClassificacaoManualUpdate,
     FaseOut,
     ItemOut,
     ItemUpdate,
@@ -137,6 +140,46 @@ def remover_item(poc_id: uuid.UUID, item_id: uuid.UUID, db: Session = Depends(ge
     item = _get_item_or_404(db, poc_id, item_id)
     db.delete(item)
     db.commit()
+
+
+@router.post("/{poc_id}/itens/{item_id}/classificar", response_model=ItemOut)
+def classificar_item_individual(poc_id: uuid.UUID, item_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = _get_item_or_404(db, poc_id, item_id)
+    classificar_item(db, item)
+    db.refresh(item)
+    return item
+
+
+@router.patch("/{poc_id}/itens/{item_id}/classificacao", response_model=ItemOut)
+def sobrescrever_classificacao(
+    poc_id: uuid.UUID, item_id: uuid.UUID, payload: ClassificacaoManualUpdate, db: Session = Depends(get_db)
+):
+    item = _get_item_or_404(db, poc_id, item_id)
+
+    classificacao = item.classificacao
+    if classificacao is None:
+        classificacao = Classificacao(item_id=item.id)
+        db.add(classificacao)
+
+    classificacao.flag = payload.flag
+    classificacao.origem = OrigemClassificacao.manual
+    classificacao.justificativa = payload.justificativa
+    classificacao.procedimento_id = payload.procedimento_id
+    if classificacao.fontes is None:
+        classificacao.fontes = []
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/{poc_id}/classificar-pendentes", status_code=status.HTTP_202_ACCEPTED)
+def classificar_pendentes_da_poc(
+    poc_id: uuid.UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+):
+    _get_poc_or_404(db, poc_id)
+    background_tasks.add_task(classificar_pendentes, poc_id)
+    return {"status": "classificando"}
 
 
 @router.patch("/{poc_id}/prerequisitos/{prereq_id}", response_model=PrerequisitoOut)
