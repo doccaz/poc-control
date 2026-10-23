@@ -104,6 +104,14 @@ h2 {
   color: var(--head-ink);
   text-decoration: none;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-logo {
+  width: 22px;
+  height: 22px;
 }
 
 .navbar-links {

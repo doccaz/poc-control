@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { api, User } from "../api";
+import suseLogo from "../assets/suse-logo.svg";
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return isActive ? "navbar-link active" : "navbar-link";
@@ -16,6 +17,7 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
       <header className="navbar">
         <div className="navbar-inner">
           <NavLink to="/" className="navbar-brand">
+            <img src={suseLogo} alt="" className="navbar-logo" />
             POC Control
           </NavLink>
           <nav className="navbar-links">
