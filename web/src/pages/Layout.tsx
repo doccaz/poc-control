@@ -1,12 +1,17 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useState } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { api, User } from "../api";
 import suseLogo from "../assets/suse-logo.svg";
-
-function navLinkClass({ isActive }: { isActive: boolean }) {
-  return isActive ? "navbar-link active" : "navbar-link";
-}
+import { useLanguage } from "../i18n";
+import { Sidebar } from "./Sidebar";
 
 export function Layout({ user, onLogout }: { user: User; onLogout: () => void }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+  const { lang, setLang, t } = useLanguage();
+
+  const mode = location.pathname.startsWith("/plan") ? "plan" : "run";
+
   async function handleLogout() {
     await api.logout();
     onLogout();
@@ -14,42 +19,33 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
 
   return (
     <div className="app-shell">
-      <header className="navbar">
-        <div className="navbar-inner">
-          <NavLink to="/" className="navbar-brand">
-            <img src={suseLogo} alt="" className="navbar-logo" />
-            POC Control
-          </NavLink>
-          <nav className="navbar-links">
-            <NavLink to="/pocs" className={navLinkClass}>
-              POCs
-            </NavLink>
-            <NavLink to="/procedimentos" className={navLinkClass}>
-              Procedimentos
-            </NavLink>
-            {user.is_admin && (
-              <NavLink to="/usuarios" className={navLinkClass}>
-                Usuários
-              </NavLink>
-            )}
-            <NavLink to="/minha-conta" className={navLinkClass}>
-              Minha conta
-            </NavLink>
-          </nav>
-          <div className="navbar-user">
-            <span>{user.email}</span>
-            <button className="btn btn-secondary" onClick={handleLogout}>
-              Sair
-            </button>
-          </div>
+      <header className="topbar">
+        <button className="hamburger" aria-label="Abrir menu" onClick={() => setSidebarOpen(true)}>
+          <span />
+          <span />
+          <span />
+        </button>
+        <Link to="/" className="topbar-brand">
+          <img src={suseLogo} alt="" className="navbar-logo" />
+          {t("brand")}
+        </Link>
+        <div className="lang-switch">
+          <button className={lang === "pt" ? "lang-btn active" : "lang-btn"} onClick={() => setLang("pt")}>
+            PT
+          </button>
+          <button className={lang === "en" ? "lang-btn active" : "lang-btn"} onClick={() => setLang("en")}>
+            EN
+          </button>
         </div>
       </header>
-      <main className="page">
-        {!user.tem_gemini_key && (
+
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} mode={mode} user={user} onLogout={handleLogout} />
+
+      <main className={mode === "plan" ? "page page-flush" : "page"}>
+        {mode === "run" && !user.tem_gemini_key && (
           <p className="alert alert-warning" style={{ marginBottom: 20 }}>
             Você está usando a chave de API do Gemini compartilhada do servidor. Cadastre a sua própria
-            chave em <NavLink to="/minha-conta">Minha conta</NavLink> para que o uso seja faturado na sua
-            conta.
+            chave em <Link to="/minha-conta">Minha conta</Link> para que o uso seja faturado na sua conta.
           </p>
         )}
         <Outlet />

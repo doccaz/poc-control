@@ -1,29 +1,28 @@
 import { Link } from "react-router-dom";
 import { User } from "../api";
+import { useLanguage } from "../i18n";
 
 export function Dashboard({ user }: { user: User }) {
+  const { t } = useLanguage();
+
   return (
     <div>
       <div className="page-header">
-        <h1>Olá, {user.email.split("@")[0]}</h1>
+        <h1>
+          {t("dashboard.greeting")}, {user.email.split("@")[0]}
+        </h1>
       </div>
-      <p className="muted">Bem-vindo ao POC Control.</p>
+      <p className="muted">{t("dashboard.welcome")}</p>
 
       <div className="shortcut-grid">
         <Link to="/pocs" className="shortcut-card">
-          <strong>POCs</strong>
-          <span>Acompanhe a execução das POCs em andamento.</span>
+          <strong>{t("dashboard.pocs.title")}</strong>
+          <span>{t("dashboard.pocs.desc")}</span>
         </Link>
         <Link to="/procedimentos" className="shortcut-card">
-          <strong>Procedimentos</strong>
-          <span>Base de conhecimento validada para as POCs.</span>
+          <strong>{t("dashboard.procedimentos.title")}</strong>
+          <span>{t("dashboard.procedimentos.desc")}</span>
         </Link>
-        {user.is_admin && (
-          <Link to="/usuarios" className="shortcut-card">
-            <strong>Usuários</strong>
-            <span>Gerencie quem tem acesso à ferramenta.</span>
-          </Link>
-        )}
       </div>
     </div>
   );

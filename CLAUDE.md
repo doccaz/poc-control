@@ -3,6 +3,9 @@
 Ferramenta pessoal (depois, do time) para conduzir POCs de clientes: lê o PDF da POC, extrai os itens, cruza com uma base de procedimentos já validados e acompanha a execução com notas, status e resumo de sessão.
 
 Dono: Gabriel (Solutions Architect, SUSE). Idioma da interface e dos textos gerados: **português (pt-BR)**.
+A casca do app (menu, navbar, dashboard) tem opcionalmente um seletor PT/EN (ver seção "Integração com
+o planejador de PoC" abaixo) — isso não muda a regra acima para o conteúdo gerado pela IA nem para os
+formulários de domínio, que continuam só em pt-BR.
 
 ## Repositório e ambiente
 
@@ -87,6 +90,24 @@ Botão "Gerar resumo da sessão": a partir das notas e das mudanças de status d
 5. Execução: sessões, status, notas, anexos, promover a procedimento.
 6. Resumo de sessão e exportação HTML.
 7. Exposição via cloudflared (+ Cloudflare Access) e backup do volume do Postgres.
+
+## Integração com o planejador de PoC (experimental, ramo `plan-poc-integration`)
+
+- Objetivo: unir esta ferramenta (execução da PoC) com a do colega que cobre o planejamento/escopo
+  (um app estático, sem backend, chamado "SUSE PoC Planner"). **Ainda não está no `main` nem deployado**
+  — é uma tentativa que pode ser descartada se não fizer sentido.
+- Navegação: menu hamburguer na lateral esquerda escolhe entre "Executar PoC" (este app) e "Planejar PoC".
+  O topo (`.topbar`) só tem a marca "SUSE POC PLANNER" e o seletor PT/EN. Os links que antes estavam na
+  navbar (POCs, Procedimentos, Usuários — só admin, Minha conta) agora ficam no menu lateral.
+- O planejador do colega é servido **sem modificação** como `web/public/plan-poc.html` (estático, copiado
+  de `C:\Users\Gabriel\Downloads\poc-plan.html`) e montado num `<iframe>` em `/plan`
+  (`web/src/pages/PlanPoc.tsx`). Decisão deliberada: não foi reescrito nem teve sua lógica portada — ele
+  tem seu próprio assistente sequencial em 10 etapas (projeto → produtos → infra → rede → credenciais →
+  portas → arquitetura → testes → checklist → resumo), que Gabriel achou rígido demais; reescrever isso é
+  um projeto futuro maior, não esta tarefa. Ele guarda estado só no `localStorage` do navegador (sem
+  backend), então hoje não há troca de dados entre "Planejar" e "Executar" — é só unificação de navegação.
+- Seletor de idioma (`web/src/i18n.tsx`): cobre só a casca do app (menu, navbar, dashboard), não o
+  conteúdo gerado pela IA nem os formulários de domínio (ver nota no topo deste arquivo).
 
 ## Regras para o agente
 
