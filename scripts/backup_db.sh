@@ -14,8 +14,22 @@ mkdir -p "$BACKUP_DIR"
 cd "$PROJECT_DIR"
 
 ARQUIVO="$BACKUP_DIR/poc-control-$(date +%Y%m%d-%H%M%S).sql.gz"
+TMPFILE="$(mktemp)"
+trap 'rm -f "$TMPFILE"' EXIT
 
-docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > "$ARQUIVO"
+# Não dá pra usar `docker compose exec ... | gzip` direto: `sh` não tem
+# `pipefail`, então um erro do pg_dump (ex.: sem permissão no socket do
+# Docker) passaria batido e geraria um backup vazio/corrompido sem falhar
+# o script. Por isso o dump vai primeiro pra um arquivo temporário, cujo
+# exit code e tamanho são checados antes de comprimir.
+docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "$TMPFILE"
+
+if [ ! -s "$TMPFILE" ]; then
+    echo "Backup falhou: pg_dump não retornou dados" >&2
+    exit 1
+fi
+
+gzip -c "$TMPFILE" > "$ARQUIVO"
 
 echo "Backup salvo em $ARQUIVO ($(du -h "$ARQUIVO" | cut -f1))"
 
