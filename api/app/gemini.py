@@ -271,3 +271,47 @@ def classificar_viabilidade(texto_pesquisa: str) -> AvaliacaoViabilidade:
     if isinstance(parsed, AvaliacaoViabilidade):
         return parsed
     return AvaliacaoViabilidade.model_validate_json(response.text)
+
+
+class ResumoSessaoExtraido(BaseModel):
+    data: str
+    participantes: list[str]
+    pontos_resolvidos: list[str]
+    pontos_falha: list[str]
+    proximos_passos: list[str]
+
+
+_RESUMO_SESSAO_PROMPT = """\
+Você é um Solutions Architect organizando o registro de uma sessão de PoC a partir de um resumo em texto \
+livre (gerado por outra ferramenta de IA durante a sessão com o cliente).
+
+Texto da sessão:
+\"\"\"
+{texto}
+\"\"\"
+
+Extraia:
+- data: a data da sessão no formato AAAA-MM-DD, se estiver identificável no texto (senão string vazia).
+- participantes: nomes de pessoas mencionadas como presentes (senão lista vazia).
+- pontos_resolvidos: lista curta dos pontos que foram resolvidos/concluídos na sessão.
+- pontos_falha: lista curta dos pontos que falharam, ficaram bloqueados ou têm alguma pendência.
+- proximos_passos: lista curta das próximas ações combinadas.
+
+Responda em português, com frases curtas e objetivas em cada item das listas. Não invente informação que \
+não esteja no texto; se uma lista não se aplicar, devolva lista vazia.
+"""
+
+
+def extrair_resumo_sessao(texto: str) -> ResumoSessaoExtraido:
+    response = _gerar_com_retry(
+        model=_TEXT_MODEL,
+        contents=_RESUMO_SESSAO_PROMPT.format(texto=texto),
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ResumoSessaoExtraido,
+        ),
+    )
+    parsed = response.parsed
+    if isinstance(parsed, ResumoSessaoExtraido):
+        return parsed
+    return ResumoSessaoExtraido.model_validate_json(response.text)

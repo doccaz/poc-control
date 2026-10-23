@@ -371,6 +371,35 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
   const [criando, setCriando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  const [textoImportar, setTextoImportar] = useState("");
+  const [importando, setImportando] = useState(false);
+  const [erroImportar, setErroImportar] = useState<string | null>(null);
+
+  const promptSugerido = `Resuma a sessão de hoje da PoC ${poc.cliente}: o que foi discutido e testado, o que foi resolvido, o que ficou com falha ou pendência, e quais são os próximos passos. Pode responder em texto corrido.`;
+
+  async function copiarPrompt() {
+    try {
+      await navigator.clipboard.writeText(promptSugerido);
+    } catch {
+      // clipboard pode não estar disponível (ex.: contexto não seguro); segue sem copiar
+    }
+  }
+
+  async function importarResumo() {
+    if (!textoImportar.trim()) return;
+    setErroImportar(null);
+    setImportando(true);
+    try {
+      const sessao = await api.importarSessao(poc.id, textoImportar.trim());
+      onSessaoCriada(sessao);
+      setTextoImportar("");
+    } catch {
+      setErroImportar("Não foi possível importar o resumo");
+    } finally {
+      setImportando(false);
+    }
+  }
+
   async function criarSessao() {
     if (!data) {
       setErro("Informe a data da sessão");
@@ -440,10 +469,58 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
   return (
     <div>
       <h2>Sessões</h2>
+
       <div className="card" style={{ marginBottom: 20 }}>
+        <strong>Importar resumo da sessão</strong>
+        <p className="field-hint">
+          Cole o prompt sugerido na ferramenta de IA que você usa durante a sessão com o cliente, cole o
+          resumo que ela devolver no campo abaixo, e o Gemini organiza automaticamente em pontos resolvidos,
+          pontos com falha e próximos passos.
+        </p>
+        <div className="field">
+          <label>Prompt sugerido</label>
+          <textarea
+            className="input"
+            rows={2}
+            readOnly
+            value={promptSugerido}
+            onClick={(e) => e.currentTarget.select()}
+          />
+          <button className="btn btn-secondary" onClick={copiarPrompt} type="button" style={{ marginTop: 6 }}>
+            Copiar prompt
+          </button>
+        </div>
+        <div className="field">
+          <label>Resumo da sessão</label>
+          <textarea
+            className="input"
+            rows={6}
+            value={textoImportar}
+            onChange={(e) => setTextoImportar(e.target.value)}
+            placeholder="Cole aqui o resumo gerado pela sua ferramenta de IA..."
+          />
+        </div>
+        {erroImportar && <p className="alert alert-error">{erroImportar}</p>}
+        <button
+          className="btn btn-primary"
+          onClick={importarResumo}
+          disabled={importando || !textoImportar.trim()}
+          type="button"
+        >
+          {importando ? "Gemini organizando o resumo..." : "Importar"}
+        </button>
+        {importando && (
+          <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>
+            Isso pode levar alguns segundos...
+          </p>
+        )}
+      </div>
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <strong>Ou crie uma sessão manualmente</strong>
         <div
           className="fields"
-          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}
+          style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}
         >
           <div className="field">
             <label>Data</label>
@@ -486,10 +563,54 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
                 {s.agenda}
               </p>
             )}
+
+            {(s.pontos_resolvidos.length > 0 || s.pontos_falha.length > 0 || s.proximos_passos.length > 0) && (
+              <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                {s.pontos_resolvidos.length > 0 && (
+                  <div>
+                    <span className="badge badge-verde">Resolvido</span>
+                    <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                      {s.pontos_resolvidos.map((p, i) => (
+                        <li key={i} style={{ fontSize: 13 }}>
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {s.pontos_falha.length > 0 && (
+                  <div>
+                    <span className="badge badge-vermelho">Falha / pendência</span>
+                    <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                      {s.pontos_falha.map((p, i) => (
+                        <li key={i} style={{ fontSize: 13 }}>
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {s.proximos_passos.length > 0 && (
+                  <div>
+                    <span className="badge badge-info">Próximos passos</span>
+                    <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                      {s.proximos_passos.map((p, i) => (
+                        <li key={i} style={{ fontSize: 13 }}>
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
             {entradas.length === 0 ? (
-              <p className="empty-state" style={{ marginTop: 8 }}>
-                Nenhum registro nesta sessão ainda.
-              </p>
+              s.pontos_resolvidos.length === 0 && s.pontos_falha.length === 0 && s.proximos_passos.length === 0 && (
+                <p className="empty-state" style={{ marginTop: 8 }}>
+                  Nenhum registro nesta sessão ainda.
+                </p>
+              )
             ) : (
               <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{entradas.map(renderEntrada)}</ul>
             )}

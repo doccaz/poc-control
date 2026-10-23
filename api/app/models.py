@@ -237,6 +237,10 @@ class Sessao(Base):
     data: Mapped[date] = mapped_column(Date, nullable=False)
     participantes: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     agenda: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resumo_bruto: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pontos_resolvidos: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    pontos_falha: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    proximos_passos: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

@@ -1,5 +1,6 @@
 import pathlib
 import uuid
+from datetime import date
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
@@ -11,6 +12,7 @@ from app.classificacao.tasks import classificar_pendentes
 from app.config import settings
 from app.db import get_db
 from app.deps import get_current_user
+from app.gemini import extrair_resumo_sessao
 from app.models import (
     Anexo,
     Classificacao,
@@ -36,6 +38,7 @@ from app.pocs.schemas import (
     PrerequisitoOut,
     PrerequisitoUpdate,
     SessaoCreate,
+    SessaoImportar,
     SessaoOut,
 )
 from app.pocs.tasks import processar_extracao
@@ -231,6 +234,31 @@ def atualizar_prerequisito(
 def criar_sessao(poc_id: uuid.UUID, payload: SessaoCreate, db: Session = Depends(get_db)):
     _get_poc_or_404(db, poc_id)
     sessao = Sessao(poc_id=poc_id, data=payload.data, participantes=payload.participantes, agenda=payload.agenda)
+    db.add(sessao)
+    db.commit()
+    db.refresh(sessao)
+    return sessao
+
+
+@router.post("/{poc_id}/sessoes/importar", response_model=SessaoOut, status_code=status.HTTP_201_CREATED)
+def importar_sessao(poc_id: uuid.UUID, payload: SessaoImportar, db: Session = Depends(get_db)):
+    _get_poc_or_404(db, poc_id)
+    extraido = extrair_resumo_sessao(payload.texto)
+
+    try:
+        data_sessao = date.fromisoformat(extraido.data) if extraido.data else date.today()
+    except ValueError:
+        data_sessao = date.today()
+
+    sessao = Sessao(
+        poc_id=poc_id,
+        data=data_sessao,
+        participantes=extraido.participantes,
+        resumo_bruto=payload.texto,
+        pontos_resolvidos=extraido.pontos_resolvidos,
+        pontos_falha=extraido.pontos_falha,
+        proximos_passos=extraido.proximos_passos,
+    )
     db.add(sessao)
     db.commit()
     db.refresh(sessao)

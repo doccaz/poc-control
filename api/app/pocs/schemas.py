@@ -55,6 +55,10 @@ class SessaoOut(BaseModel):
     data: date
     participantes: list[str]
     agenda: str | None
+    resumo_bruto: str | None
+    pontos_resolvidos: list[str]
+    pontos_falha: list[str]
+    proximos_passos: list[str]
     created_at: datetime
 
 
@@ -62,6 +66,10 @@ class SessaoCreate(BaseModel):
     data: date
     participantes: list[str] = []
     agenda: str | None = None
+
+
+class SessaoImportar(BaseModel):
+    texto: str
 
 
 class NotaOut(BaseModel):

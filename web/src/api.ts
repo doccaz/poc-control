@@ -101,6 +101,10 @@ export interface Sessao {
   data: string;
   participantes: string[];
   agenda: string | null;
+  resumo_bruto: string | null;
+  pontos_resolvidos: string[];
+  pontos_falha: string[];
+  proximos_passos: string[];
   created_at: string;
 }
 
@@ -236,6 +240,8 @@ export const api = {
 
   criarSessao: (pocId: string, payload: SessaoPayload) =>
     request<Sessao>(`/api/pocs/${pocId}/sessoes`, { method: "POST", body: JSON.stringify(payload) }),
+  importarSessao: (pocId: string, texto: string) =>
+    request<Sessao>(`/api/pocs/${pocId}/sessoes/importar`, { method: "POST", body: JSON.stringify({ texto }) }),
 
   criarNota: (pocId: string, itemId: string, sessaoId: string, texto: string) =>
     request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/notas`, {
