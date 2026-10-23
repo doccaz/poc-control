@@ -25,6 +25,7 @@ export interface User {
   id: string;
   email: string;
   is_admin: boolean;
+  tem_gemini_key: boolean;
 }
 
 export interface UsuarioListItem {
@@ -33,6 +34,7 @@ export interface UsuarioListItem {
   is_admin: boolean;
   created_at: string;
   ultimo_login: string | null;
+  tem_gemini_key: boolean;
 }
 
 export interface ProcedimentoListItem {
@@ -199,6 +201,9 @@ export const api = {
     }),
   logout: () => request<{ status: string }>("/api/auth/logout", { method: "POST" }),
   me: () => request<User>("/api/auth/me"),
+  salvarChaveGemini: (apiKey: string) =>
+    request<User>("/api/auth/me/gemini-key", { method: "PUT", body: JSON.stringify({ api_key: apiKey }) }),
+  removerChaveGemini: () => request<User>("/api/auth/me/gemini-key", { method: "DELETE" }),
 
   listarProcedimentos: () => request<ProcedimentoListItem[]>("/api/procedimentos"),
   obterProcedimento: (id: string) => request<ProcedimentoDetail>(`/api/procedimentos/${id}`),

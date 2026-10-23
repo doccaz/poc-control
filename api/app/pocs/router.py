@@ -13,6 +13,7 @@ from app.config import settings
 from app.db import get_db
 from app.deps import get_current_user
 from app.gemini import extrair_resumo_sessao, gerar_resumo_email, gerar_resumo_executivo
+from app.gemini_key import resolve_api_key
 from app.models import (
     Anexo,
     Classificacao,
@@ -26,6 +27,7 @@ from app.models import (
     StatusExtracao,
     StatusHistorico,
     StatusItem,
+    User,
 )
 from app.pocs.apresentacao import montar_apresentacao_html
 from app.pocs.export import montar_export_html
@@ -102,6 +104,7 @@ def criar_poc(
     escopo: str = Form(""),
     arquivo: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     pdf_bytes = arquivo.file.read()
     if not pdf_bytes:
@@ -121,7 +124,7 @@ def criar_poc(
     db.add(PocDocumento(poc_id=poc.id, nome_arquivo=nome_arquivo, caminho_arquivo=str(caminho)))
     db.commit()
 
-    background_tasks.add_task(processar_extracao, poc.id, pdf_bytes)
+    background_tasks.add_task(processar_extracao, poc.id, pdf_bytes, resolve_api_key(current_user))
 
     return _list_item(db, poc)
 
@@ -199,9 +202,13 @@ def _contexto_apresentacao(poc: Poc) -> str:
 
 
 @router.post("/{poc_id}/apresentacao/resumo")
-def gerar_resumo_executivo_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
+def gerar_resumo_executivo_poc(
+    poc_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     poc = _get_poc_or_404(db, poc_id)
-    texto = gerar_resumo_executivo(_contexto_apresentacao(poc))
+    texto = gerar_resumo_executivo(_contexto_apresentacao(poc), api_key=resolve_api_key(current_user))
     poc.resumo_executivo = texto
     db.commit()
     return {"texto": texto}
@@ -254,9 +261,14 @@ def remover_item(poc_id: uuid.UUID, item_id: uuid.UUID, db: Session = Depends(ge
 
 
 @router.post("/{poc_id}/itens/{item_id}/classificar", response_model=ItemOut)
-def classificar_item_individual(poc_id: uuid.UUID, item_id: uuid.UUID, db: Session = Depends(get_db)):
+def classificar_item_individual(
+    poc_id: uuid.UUID,
+    item_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     item = _get_item_or_404(db, poc_id, item_id)
-    classificar_item(db, item)
+    classificar_item(db, item, api_key=resolve_api_key(current_user))
     db.refresh(item)
     return item
 
@@ -286,10 +298,13 @@ def sobrescrever_classificacao(
 
 @router.post("/{poc_id}/classificar-pendentes", status_code=status.HTTP_202_ACCEPTED)
 def classificar_pendentes_da_poc(
-    poc_id: uuid.UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+    poc_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     _get_poc_or_404(db, poc_id)
-    background_tasks.add_task(classificar_pendentes, poc_id)
+    background_tasks.add_task(classificar_pendentes, poc_id, resolve_api_key(current_user))
     return {"status": "classificando"}
 
 
@@ -317,9 +332,14 @@ def criar_sessao(poc_id: uuid.UUID, payload: SessaoCreate, db: Session = Depends
 
 
 @router.post("/{poc_id}/sessoes/importar", response_model=SessaoOut, status_code=status.HTTP_201_CREATED)
-def importar_sessao(poc_id: uuid.UUID, payload: SessaoImportar, db: Session = Depends(get_db)):
+def importar_sessao(
+    poc_id: uuid.UUID,
+    payload: SessaoImportar,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     _get_poc_or_404(db, poc_id)
-    extraido = extrair_resumo_sessao(payload.texto)
+    extraido = extrair_resumo_sessao(payload.texto, api_key=resolve_api_key(current_user))
 
     try:
         data_sessao = date.fromisoformat(extraido.data) if extraido.data else date.today()
@@ -381,10 +401,15 @@ def _contexto_sessao(poc: Poc, sessao: Sessao) -> str:
 
 
 @router.post("/{poc_id}/sessoes/{sessao_id}/resumo")
-def obter_resumo_sessao(poc_id: uuid.UUID, sessao_id: uuid.UUID, db: Session = Depends(get_db)):
+def obter_resumo_sessao(
+    poc_id: uuid.UUID,
+    sessao_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     poc = _get_poc_or_404(db, poc_id)
     sessao = _get_sessao_or_404(db, poc_id, sessao_id)
-    texto = gerar_resumo_email(_contexto_sessao(poc, sessao))
+    texto = gerar_resumo_email(_contexto_sessao(poc, sessao), api_key=resolve_api_key(current_user))
     return {"texto": texto}
 
 

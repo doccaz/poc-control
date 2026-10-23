@@ -67,12 +67,12 @@ def _salvar_auto(
     return classificacao
 
 
-def classificar_item(db: Session, item: Item) -> Classificacao:
+def classificar_item(db: Session, item: Item, api_key: str | None = None) -> Classificacao:
     """Semáforo: busca vetorial nos procedimentos validados → confirmação pelo Gemini →
     se não houver match, pesquisa de viabilidade na web com grounding do Google Search."""
     texto = texto_item(item)
 
-    chunks = _buscar_candidatos(db, embed_query(texto))
+    chunks = _buscar_candidatos(db, embed_query(texto, api_key=api_key))
     if chunks:
         candidatos = [
             CandidatoProcedimento(
@@ -82,7 +82,7 @@ def classificar_item(db: Session, item: Item) -> Classificacao:
             )
             for c in chunks
         ]
-        confirmacao = confirmar_match(texto, candidatos)
+        confirmacao = confirmar_match(texto, candidatos, api_key=api_key)
         if confirmacao.atende and 0 <= confirmacao.indice_candidato < len(chunks):
             procedimento = chunks[confirmacao.indice_candidato].procedimento
             return _salvar_auto(
@@ -94,8 +94,8 @@ def classificar_item(db: Session, item: Item) -> Classificacao:
                 procedimento_id=procedimento.id,
             )
 
-    texto_pesquisa, fontes = pesquisar_viabilidade_web(texto)
-    avaliacao = classificar_viabilidade(texto_pesquisa)
+    texto_pesquisa, fontes = pesquisar_viabilidade_web(texto, api_key=api_key)
+    avaliacao = classificar_viabilidade(texto_pesquisa, api_key=api_key)
     fontes_dump = [f.model_dump() for f in fontes]
 
     if avaliacao.nao_suportado:

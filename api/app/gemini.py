@@ -13,8 +13,8 @@ _MODEL = "gemini-embedding-001"
 _TEXT_MODEL = "gemini-3.8-flash"
 
 
-def _client() -> genai.Client:
-    return genai.Client(api_key=settings.gemini_api_key)
+def _client(api_key: str | None = None) -> genai.Client:
+    return genai.Client(api_key=api_key or settings.gemini_api_key)
 
 
 def _normalize(values: list[float]) -> list[float]:
@@ -24,8 +24,8 @@ def _normalize(values: list[float]) -> list[float]:
     return [v / norm for v in values]
 
 
-def embed_document(texto: str) -> list[float]:
-    client = _client()
+def embed_document(texto: str, api_key: str | None = None) -> list[float]:
+    client = _client(api_key)
     result = client.models.embed_content(
         model=_MODEL,
         contents=texto,
@@ -38,8 +38,8 @@ def embed_document(texto: str) -> list[float]:
     return _normalize(embedding.values)
 
 
-def embed_query(texto: str) -> list[float]:
-    client = _client()
+def embed_query(texto: str, api_key: str | None = None) -> list[float]:
+    client = _client(api_key)
     result = client.models.embed_content(
         model=_MODEL,
         contents=texto,
@@ -112,8 +112,8 @@ Responda só com os dados pedidos, em português, sem inventar itens que não te
 _RETRY_CODES = {429, 500, 503}
 
 
-def _gerar_com_retry(**kwargs) -> types.GenerateContentResponse:
-    client = _client()
+def _gerar_com_retry(*, api_key: str | None = None, **kwargs) -> types.GenerateContentResponse:
+    client = _client(api_key)
     tentativas = 4
     espera = 5
     ultimo_erro: Exception | None = None
@@ -132,8 +132,9 @@ def _gerar_com_retry(**kwargs) -> types.GenerateContentResponse:
     raise ultimo_erro
 
 
-def extrair_itens_poc(pdf_bytes: bytes) -> ExtracaoPoc:
+def extrair_itens_poc(pdf_bytes: bytes, api_key: str | None = None) -> ExtracaoPoc:
     response = _gerar_com_retry(
+        api_key=api_key,
         model=_TEXT_MODEL,
         contents=[
             types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
@@ -182,12 +183,15 @@ assunto, o passo a passo tem que resolver o item).
 """
 
 
-def confirmar_match(item_texto: str, candidatos: list[CandidatoProcedimento]) -> ConfirmacaoMatch:
+def confirmar_match(
+    item_texto: str, candidatos: list[CandidatoProcedimento], api_key: str | None = None
+) -> ConfirmacaoMatch:
     candidatos_texto = "\n\n".join(
         f"[{i}] Procedimento \"{c.titulo_procedimento}\" — seção \"{c.heading_title}\":\n{c.content_text}"
         for i, c in enumerate(candidatos)
     )
     response = _gerar_com_retry(
+        api_key=api_key,
         model=_TEXT_MODEL,
         contents=_CONFIRMACAO_PROMPT.format(item=item_texto, candidatos=candidatos_texto),
         config=types.GenerateContentConfig(
@@ -217,8 +221,9 @@ Item da PoC:
 """
 
 
-def pesquisar_viabilidade_web(item_texto: str) -> tuple[str, list[FonteEvidencia]]:
+def pesquisar_viabilidade_web(item_texto: str, api_key: str | None = None) -> tuple[str, list[FonteEvidencia]]:
     response = _gerar_com_retry(
+        api_key=api_key,
         model=_TEXT_MODEL,
         contents=_VIABILIDADE_PROMPT.format(item=item_texto),
         config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())]),
@@ -258,8 +263,9 @@ definitiva).
 """
 
 
-def classificar_viabilidade(texto_pesquisa: str) -> AvaliacaoViabilidade:
+def classificar_viabilidade(texto_pesquisa: str, api_key: str | None = None) -> AvaliacaoViabilidade:
     response = _gerar_com_retry(
+        api_key=api_key,
         model=_TEXT_MODEL,
         contents=_AVALIACAO_PROMPT.format(pesquisa=texto_pesquisa or "(a pesquisa não retornou texto)"),
         config=types.GenerateContentConfig(
@@ -302,8 +308,9 @@ não esteja no texto; se uma lista não se aplicar, devolva lista vazia.
 """
 
 
-def extrair_resumo_sessao(texto: str) -> ResumoSessaoExtraido:
+def extrair_resumo_sessao(texto: str, api_key: str | None = None) -> ResumoSessaoExtraido:
     response = _gerar_com_retry(
+        api_key=api_key,
         model=_TEXT_MODEL,
         contents=_RESUMO_SESSAO_PROMPT.format(texto=texto),
         config=types.GenerateContentConfig(
@@ -337,8 +344,10 @@ Não invente informação que não esteja no contexto. Não assine o e-mail nem 
 """
 
 
-def gerar_resumo_email(contexto: str) -> str:
-    response = _gerar_com_retry(model=_TEXT_MODEL, contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto))
+def gerar_resumo_email(contexto: str, api_key: str | None = None) -> str:
+    response = _gerar_com_retry(
+        api_key=api_key, model=_TEXT_MODEL, contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto)
+    )
     return response.text or ""
 
 
@@ -364,6 +373,8 @@ como "[Seu nome]".
 """
 
 
-def gerar_resumo_executivo(contexto: str) -> str:
-    response = _gerar_com_retry(model=_TEXT_MODEL, contents=_RESUMO_EXECUTIVO_PROMPT.format(contexto=contexto))
+def gerar_resumo_executivo(contexto: str, api_key: str | None = None) -> str:
+    response = _gerar_com_retry(
+        api_key=api_key, model=_TEXT_MODEL, contents=_RESUMO_EXECUTIVO_PROMPT.format(contexto=contexto)
+    )
     return response.text or ""

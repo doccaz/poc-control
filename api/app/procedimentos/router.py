@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import get_current_user
 from app.gemini import embed_document
+from app.gemini_key import resolve_api_key
 from app.models import Procedimento, ProcedimentoChunk, StatusProcedimento, User
 from app.procedimentos.html_processing import extrair_secoes
 from app.procedimentos.schemas import ProcedimentoDetail, ProcedimentoListItem, SecaoOut
@@ -26,6 +27,7 @@ def _criar_procedimento(
     status_valor: StatusProcedimento,
     versao: int,
     html: str,
+    api_key: str | None = None,
 ) -> Procedimento:
     secoes = extrair_secoes(html)
     if not secoes:
@@ -43,7 +45,7 @@ def _criar_procedimento(
     db.add(procedimento)
 
     for secao in secoes:
-        embedding = embed_document(secao.content_text)
+        embedding = embed_document(secao.content_text, api_key=api_key)
         db.add(
             ProcedimentoChunk(
                 procedimento=procedimento,
@@ -74,6 +76,7 @@ def criar_procedimento(
     versao: int = Form(1),
     arquivo: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         status_valor = StatusProcedimento(status)
@@ -91,6 +94,7 @@ def criar_procedimento(
         status_valor=status_valor,
         versao=versao,
         html=html,
+        api_key=resolve_api_key(current_user),
     )
     return procedimento
 

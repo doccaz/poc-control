@@ -22,6 +22,7 @@ class User(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     ultimo_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    gemini_api_key_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class StatusProcedimento(str, enum.Enum):

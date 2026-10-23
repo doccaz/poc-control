@@ -32,6 +32,9 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
                 Usuários
               </NavLink>
             )}
+            <NavLink to="/minha-conta" className={navLinkClass}>
+              Minha conta
+            </NavLink>
           </nav>
           <div className="navbar-user">
             <span>{user.email}</span>
@@ -42,6 +45,13 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
         </div>
       </header>
       <main className="page">
+        {!user.tem_gemini_key && (
+          <p className="alert alert-warning" style={{ marginBottom: 20 }}>
+            Você está usando a chave de API do Gemini compartilhada do servidor. Cadastre a sua própria
+            chave em <NavLink to="/minha-conta">Minha conta</NavLink> para que o uso seja faturado na sua
+            conta.
+          </p>
+        )}
         <Outlet />
       </main>
     </div>

@@ -8,6 +8,7 @@ import { Procedimentos } from "./pages/Procedimentos";
 import { ProcedimentoUpload } from "./pages/ProcedimentoUpload";
 import { ProcedimentoView } from "./pages/ProcedimentoView";
 import { Usuarios } from "./pages/Usuarios";
+import { MinhaConta } from "./pages/MinhaConta";
 import { Pocs } from "./pages/Pocs";
 import { PocUpload } from "./pages/PocUpload";
 import { PocDetail } from "./pages/PocDetail";
@@ -39,6 +40,7 @@ export function App() {
         <Route path="pocs/novo" element={<PocUpload />} />
         <Route path="pocs/:id" element={<PocDetail />} />
         <Route path="usuarios" element={<Usuarios />} />
+        <Route path="minha-conta" element={<MinhaConta user={user} onUserAtualizado={setUser} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -24,6 +24,7 @@ class UsuarioOut(BaseModel):
     is_admin: bool
     created_at: datetime
     ultimo_login: datetime | None
+    tem_gemini_key: bool
 
 
 @router.get("", response_model=list[UsuarioOut])
@@ -36,6 +37,7 @@ def listar_usuarios(db: Session = Depends(get_db)):
             is_admin=u.is_admin,
             created_at=u.created_at,
             ultimo_login=u.ultimo_login,
+            tem_gemini_key=bool(u.gemini_api_key_encrypted),
         )
         for u in usuarios
     ]
@@ -62,4 +64,5 @@ def criar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
         is_admin=usuario.is_admin,
         created_at=usuario.created_at,
         ultimo_login=usuario.ultimo_login,
+        tem_gemini_key=bool(usuario.gemini_api_key_encrypted),
     )

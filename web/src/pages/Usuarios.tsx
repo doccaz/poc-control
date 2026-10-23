@@ -60,6 +60,7 @@ export function Usuarios() {
                   <th>Perfil</th>
                   <th>Criado em</th>
                   <th>Último login</th>
+                  <th>Chave Gemini própria</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,6 +82,13 @@ export function Usuarios() {
                             timeStyle: "short",
                           })
                         : "Nunca"}
+                    </td>
+                    <td>
+                      {u.tem_gemini_key ? (
+                        <span className="badge badge-verde">Sim</span>
+                      ) : (
+                        <span className="badge badge-muted">Não</span>
+                      )}
                     </td>
                   </tr>
                 ))}

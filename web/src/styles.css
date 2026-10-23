@@ -677,6 +677,11 @@ select.input:focus {
   color: var(--color-success);
 }
 
+.alert-warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
 .empty-state {
   color: var(--color-text-muted);
   padding: 24px 0;
