@@ -59,6 +59,7 @@ export function Usuarios() {
                   <th>E-mail</th>
                   <th>Perfil</th>
                   <th>Criado em</th>
+                  <th>Último login</th>
                 </tr>
               </thead>
               <tbody>
@@ -73,6 +74,14 @@ export function Usuarios() {
                       )}
                     </td>
                     <td className="muted">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="muted">
+                      {u.ultimo_login
+                        ? new Date(u.ultimo_login).toLocaleString("pt-BR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })
+                        : "Nunca"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

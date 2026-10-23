@@ -23,13 +23,20 @@ class UsuarioOut(BaseModel):
     email: str
     is_admin: bool
     created_at: datetime
+    ultimo_login: datetime | None
 
 
 @router.get("", response_model=list[UsuarioOut])
 def listar_usuarios(db: Session = Depends(get_db)):
     usuarios = db.query(User).order_by(User.created_at).all()
     return [
-        UsuarioOut(id=str(u.id), email=u.email, is_admin=u.is_admin, created_at=u.created_at)
+        UsuarioOut(
+            id=str(u.id),
+            email=u.email,
+            is_admin=u.is_admin,
+            created_at=u.created_at,
+            ultimo_login=u.ultimo_login,
+        )
         for u in usuarios
     ]
 
@@ -50,5 +57,9 @@ def criar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
     db.refresh(usuario)
 
     return UsuarioOut(
-        id=str(usuario.id), email=usuario.email, is_admin=usuario.is_admin, created_at=usuario.created_at
+        id=str(usuario.id),
+        email=usuario.email,
+        is_admin=usuario.is_admin,
+        created_at=usuario.created_at,
+        ultimo_login=usuario.ultimo_login,
     )

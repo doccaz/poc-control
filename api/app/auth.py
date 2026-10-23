@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
@@ -27,6 +29,9 @@ def login(payload: LoginRequest, response: Response, db: Session = Depends(get_d
     user = db.query(User).filter(User.email == payload.email).first()
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "E-mail ou senha inválidos")
+
+    user.ultimo_login = datetime.now(timezone.utc)
+    db.commit()
 
     token = create_session_cookie(user.id)
     response.set_cookie(

@@ -32,6 +32,7 @@ export interface UsuarioListItem {
   email: string;
   is_admin: boolean;
   created_at: string;
+  ultimo_login: string | null;
 }
 
 export interface ProcedimentoListItem {
