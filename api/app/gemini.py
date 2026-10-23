@@ -340,3 +340,30 @@ Não invente informação que não esteja no contexto. Não assine o e-mail nem 
 def gerar_resumo_email(contexto: str) -> str:
     response = _gerar_com_retry(model=_TEXT_MODEL, contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto))
     return response.text or ""
+
+
+_RESUMO_EXECUTIVO_PROMPT = """\
+Você é um Solutions Architect preparando o sumário executivo de uma apresentação de resultados de PoC \
+para o cliente, a partir do status consolidado abaixo.
+
+Status consolidado:
+\"\"\"
+{contexto}
+\"\"\"
+
+Escreva um texto em português, tom formal e direto, adequado para abrir uma apresentação ao cliente \
+(3 a 5 parágrafos curtos), cobrindo:
+- Visão geral do que foi avaliado nesta PoC e o percentual concluído.
+- Principais conquistas e pontos validados com sucesso.
+- Pendências ou riscos relevantes, com linguagem profissional e sem expor mensagens de erro ou \
+detalhes técnicos de depuração internos.
+- Próximos passos recomendados.
+
+Não invente informação que não esteja no status consolidado. Não assine o texto nem use placeholders \
+como "[Seu nome]".
+"""
+
+
+def gerar_resumo_executivo(contexto: str) -> str:
+    response = _gerar_com_retry(model=_TEXT_MODEL, contents=_RESUMO_EXECUTIVO_PROMPT.format(contexto=contexto))
+    return response.text or ""

@@ -87,6 +87,7 @@ class Poc(Base):
     titulo: Mapped[str] = mapped_column(String(255), nullable=False)
     cliente: Mapped[str] = mapped_column(String(255), nullable=False)
     escopo: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resumo_executivo: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[StatusPoc] = mapped_column(Enum(StatusPoc, name="status_poc"), default=StatusPoc.ativa)
     status_extracao: Mapped[StatusExtracao] = mapped_column(
         Enum(StatusExtracao, name="status_extracao"), default=StatusExtracao.extraindo

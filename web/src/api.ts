@@ -172,6 +172,7 @@ export interface PrerequisitoPoc {
 export interface PocDetail extends PocListItem {
   escopo: string | null;
   erro_extracao: string | null;
+  resumo_executivo: string | null;
   fases: Fase[];
   itens: ItemPoc[];
   prerequisitos: PrerequisitoPoc[];
@@ -246,6 +247,14 @@ export const api = {
   gerarResumoSessao: (pocId: string, sessaoId: string) =>
     request<{ texto: string }>(`/api/pocs/${pocId}/sessoes/${sessaoId}/resumo`, { method: "POST" }),
   urlExportarPoc: (pocId: string) => `/api/pocs/${pocId}/export`,
+  urlApresentacaoPoc: (pocId: string) => `/api/pocs/${pocId}/apresentacao`,
+  gerarResumoExecutivo: (pocId: string) =>
+    request<{ texto: string }>(`/api/pocs/${pocId}/apresentacao/resumo`, { method: "POST" }),
+  salvarResumoExecutivo: (pocId: string, texto: string) =>
+    request<{ texto: string }>(`/api/pocs/${pocId}/apresentacao/resumo`, {
+      method: "PATCH",
+      body: JSON.stringify({ resumo_executivo: texto }),
+    }),
 
   criarNota: (pocId: string, itemId: string, sessaoId: string, texto: string) =>
     request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/notas`, {

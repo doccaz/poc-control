@@ -12,7 +12,7 @@ from app.classificacao.tasks import classificar_pendentes
 from app.config import settings
 from app.db import get_db
 from app.deps import get_current_user
-from app.gemini import extrair_resumo_sessao, gerar_resumo_email
+from app.gemini import extrair_resumo_sessao, gerar_resumo_email, gerar_resumo_executivo
 from app.models import (
     Anexo,
     Classificacao,
@@ -27,6 +27,7 @@ from app.models import (
     StatusHistorico,
     StatusItem,
 )
+from app.pocs.apresentacao import montar_apresentacao_html
 from app.pocs.export import montar_export_html
 from app.pocs.schemas import (
     ClassificacaoManualUpdate,
@@ -38,6 +39,7 @@ from app.pocs.schemas import (
     PocListItem,
     PrerequisitoOut,
     PrerequisitoUpdate,
+    ResumoExecutivoUpdate,
     SessaoCreate,
     SessaoImportar,
     SessaoOut,
@@ -139,6 +141,7 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
         itens_concluidos=concluidos,
         escopo=poc.escopo,
         erro_extracao=poc.erro_extracao,
+        resumo_executivo=poc.resumo_executivo,
         fases=[FaseOut(**f) for f in (poc.fases or [])],
         itens=[ItemOut.model_validate(i) for i in poc.itens],
         prerequisitos=[PrerequisitoOut.model_validate(p) for p in poc.prerequisitos],
@@ -150,6 +153,72 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
 def exportar_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
     poc = _get_poc_or_404(db, poc_id)
     return HTMLResponse(montar_export_html(poc))
+
+
+def _contexto_apresentacao(poc: Poc) -> str:
+    total = len(poc.itens)
+    concluidos = sum(1 for i in poc.itens if i.status == StatusItem.concluido)
+    pct = round(concluidos / total * 100) if total else 0
+
+    linhas = [
+        f"PoC: {poc.titulo} — Cliente: {poc.cliente}",
+        f"Progresso: {concluidos}/{total} itens concluídos ({pct}%)",
+    ]
+
+    fase_titulo = {f["numero"]: f["titulo"] for f in (poc.fases or [])}
+    por_fase: dict[int, list] = {}
+    for item in poc.itens:
+        por_fase.setdefault(item.fase, []).append(item)
+    for numero in sorted(por_fase):
+        titulo_fase = fase_titulo.get(numero, f"Fase {numero}")
+        resumo_itens = ", ".join(
+            f"{i.codigo} {i.titulo} ({i.status.value}"
+            + (f", {i.classificacao.flag.value}" if i.classificacao else "")
+            + ")"
+            for i in por_fase[numero]
+        )
+        linhas.append(f"Fase \"{titulo_fase}\": {resumo_itens}")
+
+    atendidos = [p.titulo for p in poc.prerequisitos if p.atendido]
+    pendentes_prereq = [p.titulo for p in poc.prerequisitos if not p.atendido]
+    if atendidos:
+        linhas.append("Pré-requisitos atendidos: " + "; ".join(atendidos))
+    if pendentes_prereq:
+        linhas.append("Pré-requisitos pendentes: " + "; ".join(pendentes_prereq))
+
+    for s in sorted(poc.sessoes, key=lambda s: s.data):
+        linhas.append(f"Sessão de {s.data.isoformat()}:")
+        if s.pontos_resolvidos:
+            linhas.append("  Resolvido: " + "; ".join(s.pontos_resolvidos))
+        if s.pontos_falha:
+            linhas.append("  Pendência/falha: " + "; ".join(s.pontos_falha))
+        if s.proximos_passos:
+            linhas.append("  Próximos passos: " + "; ".join(s.proximos_passos))
+
+    return "\n".join(linhas)
+
+
+@router.post("/{poc_id}/apresentacao/resumo")
+def gerar_resumo_executivo_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
+    poc = _get_poc_or_404(db, poc_id)
+    texto = gerar_resumo_executivo(_contexto_apresentacao(poc))
+    poc.resumo_executivo = texto
+    db.commit()
+    return {"texto": texto}
+
+
+@router.patch("/{poc_id}/apresentacao/resumo")
+def salvar_resumo_executivo_poc(poc_id: uuid.UUID, payload: ResumoExecutivoUpdate, db: Session = Depends(get_db)):
+    poc = _get_poc_or_404(db, poc_id)
+    poc.resumo_executivo = payload.resumo_executivo
+    db.commit()
+    return {"texto": poc.resumo_executivo}
+
+
+@router.get("/{poc_id}/apresentacao", response_class=HTMLResponse)
+def exportar_apresentacao(poc_id: uuid.UUID, db: Session = Depends(get_db)):
+    poc = _get_poc_or_404(db, poc_id)
+    return HTMLResponse(montar_apresentacao_html(poc))
 
 
 @router.patch("/{poc_id}/itens/{item_id}", response_model=ItemOut)

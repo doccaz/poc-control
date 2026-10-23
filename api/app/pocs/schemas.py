@@ -153,7 +153,12 @@ class PocListItem(BaseModel):
 class PocDetail(PocListItem):
     escopo: str | None
     erro_extracao: str | None
+    resumo_executivo: str | None
     fases: list[FaseOut]
     itens: list[ItemOut]
     prerequisitos: list[PrerequisitoOut]
     sessoes: list[SessaoOut]
+
+
+class ResumoExecutivoUpdate(BaseModel):
+    resumo_executivo: str

@@ -37,6 +37,7 @@ const TABS = [
   { id: "pre", label: "Pré-requisitos" },
   { id: "resumo", label: "Resumo e riscos" },
   { id: "andamento", label: "Andamento" },
+  { id: "apresentacao", label: "Apresentação" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -119,6 +120,10 @@ export function PocDetail() {
 
   function handleSessaoCriada(sessao: Sessao) {
     setPoc((atual) => (atual ? { ...atual, sessoes: [...atual.sessoes, sessao] } : atual));
+  }
+
+  function handleResumoExecutivoAtualizado(texto: string) {
+    setPoc((atual) => (atual ? { ...atual, resumo_executivo: texto } : atual));
   }
 
   function handlePrereqAtualizado(prereq: { id: string; atendido: boolean }) {
@@ -286,6 +291,10 @@ export function PocDetail() {
       {tab === "resumo" && <ResumoTab poc={poc} porFase={porFase} numerosFase={numerosFase} />}
 
       {tab === "andamento" && <AndamentoTab poc={poc} onSessaoCriada={handleSessaoCriada} />}
+
+      {tab === "apresentacao" && (
+        <ApresentacaoTab poc={poc} onResumoAtualizado={handleResumoExecutivoAtualizado} />
+      )}
     </div>
   );
 }
@@ -571,6 +580,111 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
           <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{semSessao.map(renderEntrada)}</ul>
         </div>
       )}
+    </div>
+  );
+}
+
+function ApresentacaoTab({
+  poc,
+  onResumoAtualizado,
+}: {
+  poc: PocDetailData;
+  onResumoAtualizado: (texto: string) => void;
+}) {
+  const [resumo, setResumo] = useState(poc.resumo_executivo ?? "");
+  const [gerando, setGerando] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [salvo, setSalvo] = useState(false);
+
+  useEffect(() => {
+    setResumo(poc.resumo_executivo ?? "");
+  }, [poc.resumo_executivo]);
+
+  async function gerar() {
+    setGerando(true);
+    try {
+      const { texto } = await api.gerarResumoExecutivo(poc.id);
+      setResumo(texto);
+      onResumoAtualizado(texto);
+    } finally {
+      setGerando(false);
+    }
+  }
+
+  async function salvar() {
+    setSalvando(true);
+    try {
+      await api.salvarResumoExecutivo(poc.id, resumo);
+      onResumoAtualizado(resumo);
+      setSalvo(true);
+      window.setTimeout(() => setSalvo(false), 2000);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  const totalConcluido = poc.itens.filter((i) => i.status === "concluido").length;
+
+  return (
+    <div>
+      <h2>Apresentação para o cliente</h2>
+      <p className="field-hint">
+        Monta um HTML pronto para apresentar (ou exportar como PDF pelo navegador) com o sumário executivo,
+        os resultados por fase e a linha do tempo das sessões. Só entram aqui o sumário executivo — revisado
+        por você antes de salvar — e os pontos já organizados em cada sessão; notas internas avulsas não
+        aparecem automaticamente, pra evitar que algo escrito só pra uso interno vá pro cliente sem revisão.
+      </p>
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}
+        >
+          <strong>Sumário executivo</strong>
+          <button className="btn btn-secondary" onClick={gerar} disabled={gerando} type="button">
+            {gerando ? "Gemini escrevendo..." : "Gerar com IA"}
+          </button>
+        </div>
+        <p className="field-hint">
+          Gerado a partir do status consolidado da PoC. Revise e ajuste o texto antes de salvar — ele entra
+          assim na apresentação exportada.
+        </p>
+        <textarea
+          className="input"
+          rows={10}
+          value={resumo}
+          onChange={(e) => setResumo(e.target.value)}
+          placeholder="Clique em &quot;Gerar com IA&quot; ou escreva o sumário executivo aqui..."
+        />
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button className="btn btn-primary" onClick={salvar} disabled={salvando || !resumo.trim()} type="button">
+            {salvando ? "Salvando..." : salvo ? "Salvo!" : "Salvar"}
+          </button>
+        </div>
+      </div>
+
+      <div className="shortcut-grid" style={{ marginBottom: 20 }}>
+        <div className="card" style={{ padding: 16 }}>
+          <div className="muted" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+            Itens concluídos
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>
+            {totalConcluido}/{poc.itens.length}
+          </div>
+        </div>
+        <div className="card" style={{ padding: 16 }}>
+          <div className="muted" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+            Sessões realizadas
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>{poc.sessoes.length}</div>
+        </div>
+      </div>
+
+      <a href={api.urlApresentacaoPoc(poc.id)} target="_blank" rel="noreferrer" className="btn btn-primary">
+        Abrir apresentação (HTML)
+      </a>
+      <p className="field-hint" style={{ marginTop: 8 }}>
+        Abre em uma nova aba. Para gerar um PDF, use "Imprimir" (Ctrl/Cmd+P) do navegador e salve como PDF.
+      </p>
     </div>
   );
 }
