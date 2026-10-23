@@ -242,6 +242,9 @@ export const api = {
     request<Sessao>(`/api/pocs/${pocId}/sessoes`, { method: "POST", body: JSON.stringify(payload) }),
   importarSessao: (pocId: string, texto: string) =>
     request<Sessao>(`/api/pocs/${pocId}/sessoes/importar`, { method: "POST", body: JSON.stringify({ texto }) }),
+  gerarResumoSessao: (pocId: string, sessaoId: string) =>
+    request<{ texto: string }>(`/api/pocs/${pocId}/sessoes/${sessaoId}/resumo`, { method: "POST" }),
+  urlExportarPoc: (pocId: string) => `/api/pocs/${pocId}/export`,
 
   criarNota: (pocId: string, itemId: string, sessaoId: string, texto: string) =>
     request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/notas`, {

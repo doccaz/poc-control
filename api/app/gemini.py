@@ -315,3 +315,28 @@ def extrair_resumo_sessao(texto: str) -> ResumoSessaoExtraido:
     if isinstance(parsed, ResumoSessaoExtraido):
         return parsed
     return ResumoSessaoExtraido.model_validate_json(response.text)
+
+
+_RESUMO_EMAIL_PROMPT = """\
+Você é um Solutions Architect escrevendo um resumo formal para enviar por e-mail ao cliente sobre o \
+andamento de uma PoC, com base no que aconteceu numa sessão específica.
+
+Contexto da sessão:
+\"\"\"
+{contexto}
+\"\"\"
+
+Escreva um texto em português, tom formal e neutro, pronto para colar num e-mail, estruturado em:
+- Um parágrafo breve de abertura mencionando a data da sessão.
+- "Hoje realizamos": o que foi feito, testado ou resolvido.
+- "Pendências": o que ficou com falha, bloqueado ou pendente (omita esta seção se não houver nada).
+- "Próximos passos": as próximas ações combinadas (omita esta seção se não houver nada).
+
+Não invente informação que não esteja no contexto. Não assine o e-mail nem use placeholders como \
+"[Seu nome]".
+"""
+
+
+def gerar_resumo_email(contexto: str) -> str:
+    response = _gerar_com_retry(model=_TEXT_MODEL, contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto))
+    return response.text or ""

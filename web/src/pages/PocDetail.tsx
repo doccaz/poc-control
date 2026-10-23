@@ -160,6 +160,16 @@ export function PocDetail() {
           </div>
         </div>
 
+        <a
+          href={api.urlExportarPoc(poc.id)}
+          target="_blank"
+          rel="noreferrer"
+          className="btn btn-secondary"
+          style={{ display: "inline-block", marginTop: 12 }}
+        >
+          Exportar status (HTML)
+        </a>
+
         {numerosFase.length > 0 && (
           <div className="phase-strip">
             {numerosFase.map((n) => {
@@ -551,70 +561,7 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
       {sessoesOrdenadas.map((s) => {
         const entradas = (porSessao.get(s.id) ?? []).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
         return (
-          <div className="card" key={s.id} style={{ marginBottom: 12 }}>
-            <strong>{new Date(s.data).toLocaleDateString("pt-BR")}</strong>
-            {s.participantes.length > 0 && (
-              <span className="muted" style={{ marginLeft: 8 }}>
-                {s.participantes.join(", ")}
-              </span>
-            )}
-            {s.agenda && (
-              <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-                {s.agenda}
-              </p>
-            )}
-
-            {(s.pontos_resolvidos.length > 0 || s.pontos_falha.length > 0 || s.proximos_passos.length > 0) && (
-              <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-                {s.pontos_resolvidos.length > 0 && (
-                  <div>
-                    <span className="badge badge-verde">Resolvido</span>
-                    <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-                      {s.pontos_resolvidos.map((p, i) => (
-                        <li key={i} style={{ fontSize: 13 }}>
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {s.pontos_falha.length > 0 && (
-                  <div>
-                    <span className="badge badge-vermelho">Falha / pendência</span>
-                    <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-                      {s.pontos_falha.map((p, i) => (
-                        <li key={i} style={{ fontSize: 13 }}>
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {s.proximos_passos.length > 0 && (
-                  <div>
-                    <span className="badge badge-info">Próximos passos</span>
-                    <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-                      {s.proximos_passos.map((p, i) => (
-                        <li key={i} style={{ fontSize: 13 }}>
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {entradas.length === 0 ? (
-              s.pontos_resolvidos.length === 0 && s.pontos_falha.length === 0 && s.proximos_passos.length === 0 && (
-                <p className="empty-state" style={{ marginTop: 8 }}>
-                  Nenhum registro nesta sessão ainda.
-                </p>
-              )
-            ) : (
-              <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{entradas.map(renderEntrada)}</ul>
-            )}
-          </div>
+          <SessaoCard key={s.id} pocId={poc.id} sessao={s} entradas={entradas} renderEntrada={renderEntrada} />
         );
       })}
 
@@ -622,6 +569,141 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
         <div className="card">
           <strong>Sem sessão vinculada</strong>
           <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{semSessao.map(renderEntrada)}</ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SessaoCard({
+  pocId,
+  sessao: s,
+  entradas,
+  renderEntrada,
+}: {
+  pocId: string;
+  sessao: Sessao;
+  entradas: EntradaTimeline[];
+  renderEntrada: (e: EntradaTimeline, i: number) => JSX.Element;
+}) {
+  const [gerando, setGerando] = useState(false);
+  const [resumoEmail, setResumoEmail] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  async function gerarResumo() {
+    setGerando(true);
+    setResumoEmail(null);
+    try {
+      const { texto } = await api.gerarResumoSessao(pocId, s.id);
+      setResumoEmail(texto);
+    } finally {
+      setGerando(false);
+    }
+  }
+
+  async function copiarResumo() {
+    if (!resumoEmail) return;
+    try {
+      await navigator.clipboard.writeText(resumoEmail);
+      setCopiado(true);
+      window.setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // clipboard pode não estar disponível; segue sem copiar
+    }
+  }
+
+  const temResumoImportado = s.pontos_resolvidos.length > 0 || s.pontos_falha.length > 0 || s.proximos_passos.length > 0;
+
+  return (
+    <div className="card" style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <div>
+          <strong>{new Date(s.data).toLocaleDateString("pt-BR")}</strong>
+          {s.participantes.length > 0 && (
+            <span className="muted" style={{ marginLeft: 8 }}>
+              {s.participantes.join(", ")}
+            </span>
+          )}
+        </div>
+        <button className="btn btn-secondary" onClick={gerarResumo} disabled={gerando} type="button">
+          {gerando ? "Gemini escrevendo..." : "Gerar resumo para e-mail"}
+        </button>
+      </div>
+
+      {s.agenda && (
+        <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+          {s.agenda}
+        </p>
+      )}
+
+      {temResumoImportado && (
+        <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+          {s.pontos_resolvidos.length > 0 && (
+            <div>
+              <span className="badge badge-verde">Resolvido</span>
+              <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                {s.pontos_resolvidos.map((p, i) => (
+                  <li key={i} style={{ fontSize: 13 }}>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {s.pontos_falha.length > 0 && (
+            <div>
+              <span className="badge badge-vermelho">Falha / pendência</span>
+              <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                {s.pontos_falha.map((p, i) => (
+                  <li key={i} style={{ fontSize: 13 }}>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {s.proximos_passos.length > 0 && (
+            <div>
+              <span className="badge badge-info">Próximos passos</span>
+              <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                {s.proximos_passos.map((p, i) => (
+                  <li key={i} style={{ fontSize: 13 }}>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {entradas.length === 0 ? (
+        !temResumoImportado && (
+          <p className="empty-state" style={{ marginTop: 8 }}>
+            Nenhum registro nesta sessão ainda.
+          </p>
+        )
+      ) : (
+        <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{entradas.map(renderEntrada)}</ul>
+      )}
+
+      {(gerando || resumoEmail !== null) && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--color-border)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <strong>Resumo para e-mail</strong>
+            {resumoEmail && (
+              <button className="btn btn-secondary" onClick={copiarResumo} type="button">
+                {copiado ? "Copiado!" : "Copiar"}
+              </button>
+            )}
+          </div>
+          {gerando ? (
+            <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>
+              Isso pode levar alguns segundos...
+            </p>
+          ) : (
+            <textarea className="input" rows={8} readOnly value={resumoEmail ?? ""} style={{ marginTop: 8 }} />
+          )}
         </div>
       )}
     </div>

@@ -3,7 +3,7 @@ import uuid
 from datetime import date
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -12,7 +12,7 @@ from app.classificacao.tasks import classificar_pendentes
 from app.config import settings
 from app.db import get_db
 from app.deps import get_current_user
-from app.gemini import extrair_resumo_sessao
+from app.gemini import extrair_resumo_sessao, gerar_resumo_email
 from app.models import (
     Anexo,
     Classificacao,
@@ -27,6 +27,7 @@ from app.models import (
     StatusHistorico,
     StatusItem,
 )
+from app.pocs.export import montar_export_html
 from app.pocs.schemas import (
     ClassificacaoManualUpdate,
     FaseOut,
@@ -143,6 +144,12 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
         prerequisitos=[PrerequisitoOut.model_validate(p) for p in poc.prerequisitos],
         sessoes=[SessaoOut.model_validate(s) for s in poc.sessoes],
     )
+
+
+@router.get("/{poc_id}/export", response_class=HTMLResponse)
+def exportar_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
+    poc = _get_poc_or_404(db, poc_id)
+    return HTMLResponse(montar_export_html(poc))
 
 
 @router.patch("/{poc_id}/itens/{item_id}", response_model=ItemOut)
@@ -270,6 +277,46 @@ def _get_sessao_or_404(db: Session, poc_id: uuid.UUID, sessao_id: uuid.UUID) -> 
     if sessao is None or sessao.poc_id != poc_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Sessão não encontrada")
     return sessao
+
+
+def _contexto_sessao(poc: Poc, sessao: Sessao) -> str:
+    linhas = [f"PoC: {poc.titulo} — Cliente: {poc.cliente}", f"Data da sessão: {sessao.data.isoformat()}"]
+    if sessao.participantes:
+        linhas.append(f"Participantes: {', '.join(sessao.participantes)}")
+    if sessao.agenda:
+        linhas.append(f"Agenda: {sessao.agenda}")
+    if sessao.pontos_resolvidos:
+        linhas.append("Pontos resolvidos (resumo importado): " + "; ".join(sessao.pontos_resolvidos))
+    if sessao.pontos_falha:
+        linhas.append("Pontos com falha/pendência (resumo importado): " + "; ".join(sessao.pontos_falha))
+    if sessao.proximos_passos:
+        linhas.append("Próximos passos combinados (resumo importado): " + "; ".join(sessao.proximos_passos))
+
+    mudancas = []
+    notas = []
+    for item in poc.itens:
+        for h in item.status_historico:
+            if h.sessao_id == sessao.id:
+                anterior = h.status_anterior.value if h.status_anterior else "novo"
+                mudancas.append(f"{item.codigo} {item.titulo}: {anterior} -> {h.status_novo.value}")
+        for n in item.notas:
+            if n.sessao_id == sessao.id:
+                notas.append(f"{item.codigo} {item.titulo}: {n.texto}")
+
+    if mudancas:
+        linhas.append("Mudanças de status nesta sessão:\n" + "\n".join(mudancas))
+    if notas:
+        linhas.append("Notas registradas nesta sessão:\n" + "\n".join(notas))
+
+    return "\n\n".join(linhas)
+
+
+@router.post("/{poc_id}/sessoes/{sessao_id}/resumo")
+def obter_resumo_sessao(poc_id: uuid.UUID, sessao_id: uuid.UUID, db: Session = Depends(get_db)):
+    poc = _get_poc_or_404(db, poc_id)
+    sessao = _get_sessao_or_404(db, poc_id, sessao_id)
+    texto = gerar_resumo_email(_contexto_sessao(poc, sessao))
+    return {"texto": texto}
 
 
 @router.post("/{poc_id}/itens/{item_id}/notas", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
