@@ -48,6 +48,55 @@ class ClassificacaoManualUpdate(BaseModel):
     justificativa: str | None = None
 
 
+class SessaoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    data: date
+    participantes: list[str]
+    agenda: str | None
+    created_at: datetime
+
+
+class SessaoCreate(BaseModel):
+    data: date
+    participantes: list[str] = []
+    agenda: str | None = None
+
+
+class NotaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    sessao_id: uuid.UUID
+    texto: str
+    created_at: datetime
+
+
+class NotaCreate(BaseModel):
+    sessao_id: uuid.UUID
+    texto: str
+
+
+class AnexoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    sessao_id: uuid.UUID | None
+    nome_arquivo: str
+    created_at: datetime
+
+
+class StatusHistoricoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    sessao_id: uuid.UUID | None
+    status_anterior: StatusItem | None
+    status_novo: StatusItem
+    created_at: datetime
+
+
 class ItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -63,6 +112,9 @@ class ItemOut(BaseModel):
     status: StatusItem
     ordem: int
     classificacao: ClassificacaoOut | None
+    notas: list[NotaOut]
+    anexos: list[AnexoOut]
+    status_historico: list[StatusHistoricoOut]
 
 
 class ItemUpdate(BaseModel):
@@ -74,6 +126,7 @@ class ItemUpdate(BaseModel):
     ref: str | None = None
     conducao: CondicaoItem | None = None
     status: StatusItem | None = None
+    sessao_id: uuid.UUID | None = None
 
 
 class PocListItem(BaseModel):
@@ -95,3 +148,4 @@ class PocDetail(PocListItem):
     fases: list[FaseOut]
     itens: list[ItemOut]
     prerequisitos: list[PrerequisitoOut]
+    sessoes: list[SessaoOut]

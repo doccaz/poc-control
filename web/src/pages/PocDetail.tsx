@@ -8,6 +8,7 @@ import {
   ItemPoc,
   PocDetail as PocDetailData,
   ProcedimentoListItem,
+  Sessao,
   StatusItem,
 } from "../api";
 
@@ -114,6 +115,10 @@ export function PocDetail() {
 
   function handleItemRemovido(itemId: string) {
     setPoc((atual) => (atual ? { ...atual, itens: atual.itens.filter((i) => i.id !== itemId) } : atual));
+  }
+
+  function handleSessaoCriada(sessao: Sessao) {
+    setPoc((atual) => (atual ? { ...atual, sessoes: [...atual.sessoes, sessao] } : atual));
   }
 
   function handlePrereqAtualizado(prereq: { id: string; atendido: boolean }) {
@@ -229,6 +234,8 @@ export function PocDetail() {
                     pocId={poc.id}
                     item={item}
                     procedimentos={procedimentos}
+                    sessoes={poc.sessoes}
+                    clientePoc={poc.cliente}
                     onAtualizado={handleItemAtualizado}
                     onRemovido={handleItemRemovido}
                   />
@@ -268,11 +275,7 @@ export function PocDetail() {
 
       {tab === "resumo" && <ResumoTab poc={poc} porFase={porFase} numerosFase={numerosFase} />}
 
-      {tab === "andamento" && (
-        <div className="card empty-state">
-          Sessões, registro de decisões e próximos passos chegam no próximo marco.
-        </div>
-      )}
+      {tab === "andamento" && <AndamentoTab poc={poc} onSessaoCriada={handleSessaoCriada} />}
     </div>
   );
 }
@@ -357,16 +360,167 @@ function ResumoTab({
   );
 }
 
+type EntradaTimeline =
+  | { tipo: "status"; created_at: string; codigo: string; anterior: StatusItem | null; novo: StatusItem }
+  | { tipo: "nota"; created_at: string; codigo: string; texto: string };
+
+function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCriada: (s: Sessao) => void }) {
+  const [data, setData] = useState("");
+  const [participantes, setParticipantes] = useState("");
+  const [agenda, setAgenda] = useState("");
+  const [criando, setCriando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function criarSessao() {
+    if (!data) {
+      setErro("Informe a data da sessão");
+      return;
+    }
+    setErro(null);
+    setCriando(true);
+    try {
+      const sessao = await api.criarSessao(poc.id, {
+        data,
+        participantes: participantes
+          .split(",")
+          .map((p) => p.trim())
+          .filter(Boolean),
+        agenda: agenda || null,
+      });
+      onSessaoCriada(sessao);
+      setData("");
+      setParticipantes("");
+      setAgenda("");
+    } catch {
+      setErro("Não foi possível criar a sessão");
+    } finally {
+      setCriando(false);
+    }
+  }
+
+  const porSessao = new Map<string | null, EntradaTimeline[]>();
+  function registrar(sessaoId: string | null, entrada: EntradaTimeline) {
+    const lista = porSessao.get(sessaoId) ?? [];
+    lista.push(entrada);
+    porSessao.set(sessaoId, lista);
+  }
+  for (const item of poc.itens) {
+    for (const h of item.status_historico) {
+      registrar(h.sessao_id, {
+        tipo: "status",
+        created_at: h.created_at,
+        codigo: item.codigo,
+        anterior: h.status_anterior,
+        novo: h.status_novo,
+      });
+    }
+    for (const n of item.notas) {
+      registrar(n.sessao_id, { tipo: "nota", created_at: n.created_at, codigo: item.codigo, texto: n.texto });
+    }
+  }
+
+  function renderEntrada(e: EntradaTimeline, i: number) {
+    return (
+      <li key={i} style={{ marginBottom: 4, fontSize: 13 }}>
+        <strong>{e.codigo}</strong>{" "}
+        {e.tipo === "status" ? (
+          <>
+            mudou de {e.anterior ? STATUS_LABEL[e.anterior] : "—"} para {STATUS_LABEL[e.novo]}
+          </>
+        ) : (
+          <>nota: {e.texto}</>
+        )}
+      </li>
+    );
+  }
+
+  const sessoesOrdenadas = [...poc.sessoes].sort((a, b) => (a.data < b.data ? 1 : -1));
+  const semSessao = porSessao.get(null) ?? [];
+
+  return (
+    <div>
+      <h2>Sessões</h2>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div
+          className="fields"
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}
+        >
+          <div className="field">
+            <label>Data</label>
+            <input type="date" className="input" value={data} onChange={(e) => setData(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>Participantes</label>
+            <input
+              className="input"
+              value={participantes}
+              onChange={(e) => setParticipantes(e.target.value)}
+              placeholder="Separados por vírgula"
+            />
+          </div>
+        </div>
+        <div className="field">
+          <label>Agenda</label>
+          <textarea className="input" rows={2} value={agenda} onChange={(e) => setAgenda(e.target.value)} />
+        </div>
+        {erro && <p className="alert alert-error">{erro}</p>}
+        <button className="btn btn-primary" onClick={criarSessao} disabled={criando} type="button">
+          {criando ? "Criando..." : "Nova sessão"}
+        </button>
+      </div>
+
+      {sessoesOrdenadas.length === 0 && <div className="card empty-state">Nenhuma sessão registrada ainda.</div>}
+
+      {sessoesOrdenadas.map((s) => {
+        const entradas = (porSessao.get(s.id) ?? []).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+        return (
+          <div className="card" key={s.id} style={{ marginBottom: 12 }}>
+            <strong>{new Date(s.data).toLocaleDateString("pt-BR")}</strong>
+            {s.participantes.length > 0 && (
+              <span className="muted" style={{ marginLeft: 8 }}>
+                {s.participantes.join(", ")}
+              </span>
+            )}
+            {s.agenda && (
+              <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+                {s.agenda}
+              </p>
+            )}
+            {entradas.length === 0 ? (
+              <p className="empty-state" style={{ marginTop: 8 }}>
+                Nenhum registro nesta sessão ainda.
+              </p>
+            ) : (
+              <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{entradas.map(renderEntrada)}</ul>
+            )}
+          </div>
+        );
+      })}
+
+      {semSessao.length > 0 && (
+        <div className="card">
+          <strong>Sem sessão vinculada</strong>
+          <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{semSessao.map(renderEntrada)}</ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ItemRow({
   pocId,
   item,
   procedimentos,
+  sessoes,
+  clientePoc,
   onAtualizado,
   onRemovido,
 }: {
   pocId: string;
   item: ItemPoc;
   procedimentos: ProcedimentoListItem[];
+  sessoes: Sessao[];
+  clientePoc: string;
   onAtualizado: (item: ItemPoc) => void;
   onRemovido: (itemId: string) => void;
 }) {
@@ -384,6 +538,83 @@ function ItemRow({
   const [procedimentoManual, setProcedimentoManual] = useState(item.classificacao?.procedimento_id ?? "");
   const [justificativaManual, setJustificativaManual] = useState(item.classificacao?.justificativa ?? "");
   const [salvandoManual, setSalvandoManual] = useState(false);
+
+  const [sessaoNotaId, setSessaoNotaId] = useState("");
+  const [textoNota, setTextoNota] = useState("");
+  const [salvandoNota, setSalvandoNota] = useState(false);
+
+  const [sessaoAnexoId, setSessaoAnexoId] = useState("");
+  const [arquivoAnexo, setArquivoAnexo] = useState<File | null>(null);
+  const [enviandoAnexo, setEnviandoAnexo] = useState(false);
+
+  const [promovendo, setPromovendo] = useState(false);
+  const [tituloProc, setTituloProc] = useState(item.titulo);
+  const [tagsProc, setTagsProc] = useState(item.categoria ?? "");
+  const [textoProc, setTextoProc] = useState("");
+  const [salvandoProc, setSalvandoProc] = useState(false);
+  const [procSalvo, setProcSalvo] = useState(false);
+
+  async function adicionarNota() {
+    if (!sessaoNotaId || !textoNota.trim()) return;
+    setSalvandoNota(true);
+    try {
+      const atualizado = await api.criarNota(pocId, item.id, sessaoNotaId, textoNota.trim());
+      onAtualizado(atualizado);
+      setTextoNota("");
+    } finally {
+      setSalvandoNota(false);
+    }
+  }
+
+  async function excluirNota(notaId: string) {
+    const atualizado = await api.removerNota(pocId, item.id, notaId);
+    onAtualizado(atualizado);
+  }
+
+  async function enviarAnexo() {
+    if (!arquivoAnexo) return;
+    setEnviandoAnexo(true);
+    try {
+      const form = new FormData();
+      form.append("arquivo", arquivoAnexo);
+      if (sessaoAnexoId) form.append("sessao_id", sessaoAnexoId);
+      const atualizado = await api.criarAnexo(pocId, item.id, form);
+      onAtualizado(atualizado);
+      setArquivoAnexo(null);
+    } finally {
+      setEnviandoAnexo(false);
+    }
+  }
+
+  async function excluirAnexo(anexoId: string) {
+    const atualizado = await api.removerAnexo(pocId, item.id, anexoId);
+    onAtualizado(atualizado);
+  }
+
+  async function promoverProcedimento() {
+    if (!tituloProc.trim() || !textoProc.trim()) return;
+    setSalvandoProc(true);
+    try {
+      const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const paragrafos = textoProc
+        .split(/\n{2,}/)
+        .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
+        .join("\n");
+      const html = `<h2>${escapeHtml(tituloProc)}</h2>\n${paragrafos}`;
+
+      const form = new FormData();
+      form.append("titulo", tituloProc);
+      form.append("tags", tagsProc);
+      form.append("cliente_origem", clientePoc);
+      form.append("status", "validado");
+      form.append("arquivo", new Blob([html], { type: "text/html" }), `${tituloProc}.html`);
+      await api.criarProcedimento(form);
+      setProcSalvo(true);
+      setPromovendo(false);
+    } finally {
+      setSalvandoProc(false);
+    }
+  }
 
   async function reavaliar() {
     setReavaliando(true);
@@ -613,6 +844,164 @@ function ItemRow({
                     type="button"
                   >
                     {salvandoManual ? "Salvando..." : "Salvar classificação manual"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+            <strong>Notas</strong>
+            {item.notas.length === 0 ? (
+              <p className="empty-state" style={{ marginTop: 8 }}>
+                Nenhuma nota ainda.
+              </p>
+            ) : (
+              <ul style={{ margin: "8px 0", paddingLeft: 18 }}>
+                {item.notas.map((n) => (
+                  <li key={n.id} style={{ marginBottom: 6, fontSize: 13 }}>
+                    {n.texto}{" "}
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 11, padding: "1px 6px" }}
+                      onClick={() => excluirNota(n.id)}
+                      type="button"
+                    >
+                      remover
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {sessoes.length === 0 ? (
+              <p className="field-hint">Crie uma sessão na aba "Andamento" pra poder adicionar notas.</p>
+            ) : (
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+                <select
+                  className="input"
+                  style={{ maxWidth: 160 }}
+                  value={sessaoNotaId}
+                  onChange={(e) => setSessaoNotaId(e.target.value)}
+                >
+                  <option value="">Sessão...</option>
+                  {sessoes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {new Date(s.data).toLocaleDateString("pt-BR")}
+                    </option>
+                  ))}
+                </select>
+                <textarea
+                  className="input"
+                  rows={1}
+                  style={{ flex: 1, minWidth: 160 }}
+                  value={textoNota}
+                  onChange={(e) => setTextoNota(e.target.value)}
+                  placeholder="Nova nota..."
+                />
+                <button
+                  className="btn btn-secondary"
+                  onClick={adicionarNota}
+                  disabled={salvandoNota || !sessaoNotaId || !textoNota.trim()}
+                  type="button"
+                >
+                  Adicionar
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+            <strong>Anexos</strong>
+            {item.anexos.length === 0 ? (
+              <p className="empty-state" style={{ marginTop: 8 }}>
+                Nenhum anexo ainda.
+              </p>
+            ) : (
+              <ul style={{ margin: "8px 0", paddingLeft: 18 }}>
+                {item.anexos.map((a) => (
+                  <li key={a.id} style={{ marginBottom: 6, fontSize: 13 }}>
+                    <a href={api.urlAnexo(pocId, item.id, a.id)} target="_blank" rel="noreferrer">
+                      {a.nome_arquivo}
+                    </a>{" "}
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 11, padding: "1px 6px" }}
+                      onClick={() => excluirAnexo(a.id)}
+                      type="button"
+                    >
+                      remover
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              {sessoes.length > 0 && (
+                <select
+                  className="input"
+                  style={{ maxWidth: 160 }}
+                  value={sessaoAnexoId}
+                  onChange={(e) => setSessaoAnexoId(e.target.value)}
+                >
+                  <option value="">Sem sessão</option>
+                  {sessoes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {new Date(s.data).toLocaleDateString("pt-BR")}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <input type="file" onChange={(e) => setArquivoAnexo(e.target.files?.[0] ?? null)} />
+              <button
+                className="btn btn-secondary"
+                onClick={enviarAnexo}
+                disabled={enviandoAnexo || !arquivoAnexo}
+                type="button"
+              >
+                {enviandoAnexo ? "Enviando..." : "Enviar anexo"}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <strong>Procedimento</strong>
+              <button className="btn btn-secondary" onClick={() => setPromovendo((v) => !v)} type="button">
+                {promovendo ? "Cancelar" : "Promover a procedimento validado"}
+              </button>
+            </div>
+            {procSalvo && (
+              <p className="alert alert-success" style={{ marginTop: 8 }}>
+                Procedimento salvo na base como validado.
+              </p>
+            )}
+            {promovendo && (
+              <div className="fields" style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                <div className="field">
+                  <label>Título do procedimento</label>
+                  <input className="input" value={tituloProc} onChange={(e) => setTituloProc(e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>Tags</label>
+                  <input
+                    className="input"
+                    value={tagsProc}
+                    onChange={(e) => setTagsProc(e.target.value)}
+                    placeholder="k3s, Rancher..."
+                  />
+                </div>
+                <div className="field">
+                  <label>Passo a passo que funcionou</label>
+                  <textarea className="input" rows={6} value={textoProc} onChange={(e) => setTextoProc(e.target.value)} />
+                </div>
+                <div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={promoverProcedimento}
+                    disabled={salvandoProc || !textoProc.trim()}
+                    type="button"
+                  >
+                    {salvandoProc ? "Salvando..." : "Salvar procedimento"}
                   </button>
                 </div>
               </div>

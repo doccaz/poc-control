@@ -2,6 +2,7 @@ import pathlib
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -10,16 +11,32 @@ from app.classificacao.tasks import classificar_pendentes
 from app.config import settings
 from app.db import get_db
 from app.deps import get_current_user
-from app.models import Classificacao, Item, OrigemClassificacao, Poc, PocDocumento, Prerequisito, StatusExtracao, StatusItem
+from app.models import (
+    Anexo,
+    Classificacao,
+    Item,
+    Nota,
+    OrigemClassificacao,
+    Poc,
+    PocDocumento,
+    Prerequisito,
+    Sessao,
+    StatusExtracao,
+    StatusHistorico,
+    StatusItem,
+)
 from app.pocs.schemas import (
     ClassificacaoManualUpdate,
     FaseOut,
     ItemOut,
     ItemUpdate,
+    NotaCreate,
     PocDetail,
     PocListItem,
     PrerequisitoOut,
     PrerequisitoUpdate,
+    SessaoCreate,
+    SessaoOut,
 )
 from app.pocs.tasks import processar_extracao
 
@@ -121,6 +138,7 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
         fases=[FaseOut(**f) for f in (poc.fases or [])],
         itens=[ItemOut.model_validate(i) for i in poc.itens],
         prerequisitos=[PrerequisitoOut.model_validate(p) for p in poc.prerequisitos],
+        sessoes=[SessaoOut.model_validate(s) for s in poc.sessoes],
     )
 
 
@@ -128,8 +146,22 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
 def atualizar_item(poc_id: uuid.UUID, item_id: uuid.UUID, payload: ItemUpdate, db: Session = Depends(get_db)):
     item = _get_item_or_404(db, poc_id, item_id)
     dados = payload.model_dump(exclude_unset=True)
+    sessao_id = dados.pop("sessao_id", None)
+
+    status_anterior = item.status
     for campo, valor in dados.items():
         setattr(item, campo, valor)
+
+    if "status" in dados and dados["status"] != status_anterior:
+        db.add(
+            StatusHistorico(
+                item_id=item.id,
+                sessao_id=sessao_id,
+                status_anterior=status_anterior,
+                status_novo=item.status,
+            )
+        )
+
     db.commit()
     db.refresh(item)
     return item
@@ -193,3 +225,99 @@ def atualizar_prerequisito(
     db.commit()
     db.refresh(prereq)
     return prereq
+
+
+@router.post("/{poc_id}/sessoes", response_model=SessaoOut, status_code=status.HTTP_201_CREATED)
+def criar_sessao(poc_id: uuid.UUID, payload: SessaoCreate, db: Session = Depends(get_db)):
+    _get_poc_or_404(db, poc_id)
+    sessao = Sessao(poc_id=poc_id, data=payload.data, participantes=payload.participantes, agenda=payload.agenda)
+    db.add(sessao)
+    db.commit()
+    db.refresh(sessao)
+    return sessao
+
+
+def _get_sessao_or_404(db: Session, poc_id: uuid.UUID, sessao_id: uuid.UUID) -> Sessao:
+    sessao = db.get(Sessao, sessao_id)
+    if sessao is None or sessao.poc_id != poc_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Sessão não encontrada")
+    return sessao
+
+
+@router.post("/{poc_id}/itens/{item_id}/notas", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
+def criar_nota(poc_id: uuid.UUID, item_id: uuid.UUID, payload: NotaCreate, db: Session = Depends(get_db)):
+    item = _get_item_or_404(db, poc_id, item_id)
+    _get_sessao_or_404(db, poc_id, payload.sessao_id)
+    db.add(Nota(item_id=item.id, sessao_id=payload.sessao_id, texto=payload.texto))
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/{poc_id}/itens/{item_id}/notas/{nota_id}", response_model=ItemOut)
+def remover_nota(poc_id: uuid.UUID, item_id: uuid.UUID, nota_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = _get_item_or_404(db, poc_id, item_id)
+    nota = db.get(Nota, nota_id)
+    if nota is None or nota.item_id != item.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Nota não encontrada")
+    db.delete(nota)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/{poc_id}/itens/{item_id}/anexos", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
+def criar_anexo(
+    poc_id: uuid.UUID,
+    item_id: uuid.UUID,
+    sessao_id: uuid.UUID | None = Form(None),
+    arquivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    item = _get_item_or_404(db, poc_id, item_id)
+    if sessao_id is not None:
+        _get_sessao_or_404(db, poc_id, sessao_id)
+
+    conteudo = arquivo.file.read()
+    if not conteudo:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Arquivo vazio")
+
+    anexo_dir = pathlib.Path(settings.uploads_dir) / "pocs" / str(poc_id) / "anexos" / str(item_id)
+    anexo_dir.mkdir(parents=True, exist_ok=True)
+    nome_arquivo = arquivo.filename or "anexo"
+    caminho = anexo_dir / f"{uuid.uuid4()}_{nome_arquivo}"
+    caminho.write_bytes(conteudo)
+
+    db.add(
+        Anexo(
+            item_id=item.id,
+            sessao_id=sessao_id,
+            nome_arquivo=nome_arquivo,
+            caminho_arquivo=str(caminho),
+        )
+    )
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.get("/{poc_id}/itens/{item_id}/anexos/{anexo_id}")
+def baixar_anexo(poc_id: uuid.UUID, item_id: uuid.UUID, anexo_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = _get_item_or_404(db, poc_id, item_id)
+    anexo = db.get(Anexo, anexo_id)
+    if anexo is None or anexo.item_id != item.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Anexo não encontrado")
+    return FileResponse(anexo.caminho_arquivo, filename=anexo.nome_arquivo)
+
+
+@router.delete("/{poc_id}/itens/{item_id}/anexos/{anexo_id}", response_model=ItemOut)
+def remover_anexo(poc_id: uuid.UUID, item_id: uuid.UUID, anexo_id: uuid.UUID, db: Session = Depends(get_db)):
+    item = _get_item_or_404(db, poc_id, item_id)
+    anexo = db.get(Anexo, anexo_id)
+    if anexo is None or anexo.item_id != item.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Anexo não encontrado")
+    pathlib.Path(anexo.caminho_arquivo).unlink(missing_ok=True)
+    db.delete(anexo)
+    db.commit()
+    db.refresh(item)
+    return item

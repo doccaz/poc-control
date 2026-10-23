@@ -105,6 +105,9 @@ class Poc(Base):
     prerequisitos: Mapped[list["Prerequisito"]] = relationship(
         back_populates="poc", cascade="all, delete-orphan", order_by="Prerequisito.ordem"
     )
+    sessoes: Mapped[list["Sessao"]] = relationship(
+        back_populates="poc", cascade="all, delete-orphan", order_by="Sessao.data"
+    )
 
 
 class PocDocumento(Base):
@@ -162,6 +165,15 @@ class Item(Base):
     classificacao: Mapped["Classificacao | None"] = relationship(
         back_populates="item", uselist=False, cascade="all, delete-orphan"
     )
+    notas: Mapped[list["Nota"]] = relationship(
+        back_populates="item", cascade="all, delete-orphan", order_by="Nota.created_at"
+    )
+    anexos: Mapped[list["Anexo"]] = relationship(
+        back_populates="item", cascade="all, delete-orphan", order_by="Anexo.created_at"
+    )
+    status_historico: Mapped[list["StatusHistorico"]] = relationship(
+        back_populates="item", cascade="all, delete-orphan", order_by="StatusHistorico.created_at"
+    )
 
 
 class FlagClassificacao(str, enum.Enum):
@@ -213,3 +225,81 @@ class Prerequisito(Base):
     )
 
     poc: Mapped[Poc] = relationship(back_populates="prerequisitos")
+
+
+class Sessao(Base):
+    __tablename__ = "sessoes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    poc_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("pocs.id", ondelete="CASCADE"), nullable=False
+    )
+    data: Mapped[date] = mapped_column(Date, nullable=False)
+    participantes: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    agenda: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    poc: Mapped[Poc] = relationship(back_populates="sessoes")
+
+
+class Nota(Base):
+    __tablename__ = "notas"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    item_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("itens.id", ondelete="CASCADE"), nullable=False
+    )
+    sessao_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sessoes.id", ondelete="CASCADE"), nullable=False
+    )
+    texto: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    item: Mapped["Item"] = relationship(back_populates="notas")
+    sessao: Mapped[Sessao] = relationship()
+
+
+class Anexo(Base):
+    __tablename__ = "anexos"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    item_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("itens.id", ondelete="CASCADE"), nullable=False
+    )
+    sessao_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sessoes.id", ondelete="SET NULL"), nullable=True
+    )
+    nome_arquivo: Mapped[str] = mapped_column(String(255), nullable=False)
+    caminho_arquivo: Mapped[str] = mapped_column(String(500), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    item: Mapped["Item"] = relationship(back_populates="anexos")
+    sessao: Mapped[Sessao | None] = relationship()
+
+
+class StatusHistorico(Base):
+    __tablename__ = "status_historico"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    item_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("itens.id", ondelete="CASCADE"), nullable=False
+    )
+    sessao_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sessoes.id", ondelete="SET NULL"), nullable=True
+    )
+    status_anterior: Mapped[StatusItem | None] = mapped_column(
+        Enum(StatusItem, name="status_item"), nullable=True
+    )
+    status_novo: Mapped[StatusItem] = mapped_column(Enum(StatusItem, name="status_item"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    item: Mapped["Item"] = relationship(back_populates="status_historico")
+    sessao: Mapped[Sessao | None] = relationship()

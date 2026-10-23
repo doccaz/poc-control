@@ -96,6 +96,42 @@ export interface Classificacao {
   created_at: string;
 }
 
+export interface Sessao {
+  id: string;
+  data: string;
+  participantes: string[];
+  agenda: string | null;
+  created_at: string;
+}
+
+export interface SessaoPayload {
+  data: string;
+  participantes: string[];
+  agenda?: string | null;
+}
+
+export interface Nota {
+  id: string;
+  sessao_id: string;
+  texto: string;
+  created_at: string;
+}
+
+export interface Anexo {
+  id: string;
+  sessao_id: string | null;
+  nome_arquivo: string;
+  created_at: string;
+}
+
+export interface StatusHistoricoEntry {
+  id: string;
+  sessao_id: string | null;
+  status_anterior: StatusItem | null;
+  status_novo: StatusItem;
+  created_at: string;
+}
+
 export interface ItemPoc {
   id: string;
   codigo: string;
@@ -109,6 +145,9 @@ export interface ItemPoc {
   status: StatusItem;
   ordem: number;
   classificacao: Classificacao | null;
+  notas: Nota[];
+  anexos: Anexo[];
+  status_historico: StatusHistoricoEntry[];
 }
 
 export interface ClassificacaoManualPayload {
@@ -131,6 +170,7 @@ export interface PocDetail extends PocListItem {
   fases: Fase[];
   itens: ItemPoc[];
   prerequisitos: PrerequisitoPoc[];
+  sessoes: Sessao[];
 }
 
 export interface ItemUpdatePayload {
@@ -142,6 +182,7 @@ export interface ItemUpdatePayload {
   ref?: string;
   conducao?: CondicaoItem | null;
   status?: StatusItem;
+  sessao_id?: string | null;
 }
 
 export const api = {
@@ -192,4 +233,22 @@ export const api = {
     }),
   classificarPendentes: (pocId: string) =>
     request<{ status: string }>(`/api/pocs/${pocId}/classificar-pendentes`, { method: "POST" }),
+
+  criarSessao: (pocId: string, payload: SessaoPayload) =>
+    request<Sessao>(`/api/pocs/${pocId}/sessoes`, { method: "POST", body: JSON.stringify(payload) }),
+
+  criarNota: (pocId: string, itemId: string, sessaoId: string, texto: string) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/notas`, {
+      method: "POST",
+      body: JSON.stringify({ sessao_id: sessaoId, texto }),
+    }),
+  removerNota: (pocId: string, itemId: string, notaId: string) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/notas/${notaId}`, { method: "DELETE" }),
+
+  criarAnexo: (pocId: string, itemId: string, form: FormData) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/anexos`, { method: "POST", body: form }),
+  removerAnexo: (pocId: string, itemId: string, anexoId: string) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/anexos/${anexoId}`, { method: "DELETE" }),
+  urlAnexo: (pocId: string, itemId: string, anexoId: string) =>
+    `/api/pocs/${pocId}/itens/${itemId}/anexos/${anexoId}`,
 };
