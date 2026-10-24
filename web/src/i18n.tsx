@@ -1,11 +1,13 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
-export type Lang = "pt" | "en";
+export type Lang = "pt" | "en" | "es";
 
 const LANG_STORAGE_KEY = "poc-control-lang";
 
 // Escopo intencional: só a "casca" do app (navbar, menu, dashboard). O conteúdo gerado pelo
 // Gemini e os formulários de domínio continuam em pt-BR — traduzi-los é um projeto separado.
+// Essa é a ÚNICA seleção de idioma do site: o planejador (rota /plan) recebe esse mesmo valor
+// por postMessage em vez de ter seu próprio seletor (ver features/planejar-poc/pages/PlanPoc.tsx).
 const DICT: Record<Lang, Record<string, string>> = {
   pt: {
     brand: "SUSE POC PLANNER",
@@ -43,6 +45,24 @@ const DICT: Record<Lang, Record<string, string>> = {
     "dashboard.procedimentos.desc": "Validated knowledge base for PoCs.",
     "plan.loading": "Loading the PoC planner...",
   },
+  es: {
+    brand: "SUSE POC PLANNER",
+    "mode.run": "Ejecutar PoC",
+    "mode.plan": "Planificar PoC",
+    "nav.dashboard": "Panel",
+    "nav.pocs": "POCs",
+    "nav.procedimentos": "Procedimientos",
+    "nav.usuarios": "Usuarios",
+    "nav.minhaConta": "Mi cuenta",
+    "action.sair": "Salir",
+    "dashboard.greeting": "Hola",
+    "dashboard.welcome": "Bienvenido a POC Control.",
+    "dashboard.pocs.title": "POCs",
+    "dashboard.pocs.desc": "Siga la ejecución de las POCs en curso.",
+    "dashboard.procedimentos.title": "Procedimientos",
+    "dashboard.procedimentos.desc": "Base de conocimiento validada para las POCs.",
+    "plan.loading": "Cargando el planificador de PoC...",
+  },
 };
 
 interface LanguageContextValue {
@@ -56,7 +76,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 function readStoredLang(): Lang {
   try {
     const stored = localStorage.getItem(LANG_STORAGE_KEY);
-    return stored === "en" ? "en" : "pt";
+    return stored === "en" || stored === "es" ? stored : "pt";
   } catch {
     return "pt";
   }

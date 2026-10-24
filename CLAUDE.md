@@ -3,9 +3,9 @@
 Ferramenta pessoal (depois, do time) para conduzir POCs de clientes: lê o PDF da POC, extrai os itens, cruza com uma base de procedimentos já validados e acompanha a execução com notas, status e resumo de sessão.
 
 Dono: Gabriel (Solutions Architect, SUSE). Idioma da interface e dos textos gerados: **português (pt-BR)**.
-A casca do app (menu, navbar, dashboard) tem opcionalmente um seletor PT/EN (ver seção "Integração com
+A casca do app (menu, navbar, dashboard) tem opcionalmente um seletor PT/EN/ES (ver seção "Integração com
 o planejador de PoC" abaixo) — isso não muda a regra acima para o conteúdo gerado pela IA nem para os
-formulários de domínio, que continuam só em pt-BR.
+formulários de domínio do Executar PoC, que continuam só em pt-BR.
 
 ## Repositório e ambiente
 
@@ -13,6 +13,24 @@ formulários de domínio, que continuam só em pt-BR.
 - Servidor: Raspberry Pi na rede local, acessado por SSH com o alias `rasp` (chave em `~/.ssh/rasp`, ver `~/.ssh/config`). **Nunca** usar senha nem gravar credenciais em arquivos do repositório.
 - Exposição externa: `cloudflared` já instalado na Raspberry. Publicar só o serviço `web`. Recomendado proteger com Cloudflare Access além do login do app.
 - Tudo roda com `docker compose` em imagens **ARM64**.
+
+## Organização do repositório (features separadas para múltiplos times)
+
+O front end é dividido por feature para "Executar PoC" e "Planejar PoC" avançarem em paralelo sem
+pisar um no outro:
+
+- `web/src/features/executar-poc/` — páginas desta ferramenta (POCs, Procedimentos). Dono: Gabriel.
+- `web/src/features/planejar-poc/` — wrapper da rota `/plan`; o HTML estático do "SUSE PoC Planner"
+  do colega mora em `web/public/planejar-poc/`. Dono: time do planejador.
+- `web/src/pages/` (Layout, Sidebar, Dashboard, Login, MinhaConta, Usuarios) e `web/src/i18n.tsx` são
+  a casca compartilhada pelas duas features — mudança aqui pede revisão dos dois lados.
+- `api/` é 100% da feature Executar PoC (o planejador não tem backend, guarda tudo em `localStorage`).
+- `.github/CODEOWNERS` mapeia esses caminhos para revisão automática; troque o placeholder pelo
+  handle real de quem mantém o planejador.
+- Convenção de branch: `feature/executar-poc/<nome>`, `feature/planejar-poc/<nome>` e
+  `feature/shell/<nome>` para mudanças na casca compartilhada.
+- Alias de import `@/` → `web/src/` (configurado em `vite.config.ts` e `tsconfig.json`), para os
+  imports entre features não dependerem da profundidade relativa de cada pasta.
 
 ## Escopo atual
 
@@ -56,7 +74,7 @@ Na carga, **remover ou mascarar** dados específicos do cliente que não devem s
 
 ## POCs
 
-- Upload do PDF → o Gemini lê o PDF nativamente e devolve JSON estruturado (schema fixo): `itens[] { codigo, titulo, descricao, criterio_aceite, categoria }`.
+- Upload do PDF (ou texto/JSON colado — ver "Integração com o planejador de PoC") → o Gemini lê nativamente e devolve JSON estruturado (schema fixo): `itens[] { codigo, titulo, descricao, criterio_aceite, categoria }`.
 - O usuário revisa a lista extraída (editar, juntar, remover) antes de rodar a classificação.
 - Cada POC tem **sessões** (data, participantes, agenda).
 - Em cada item: status (`pendente` | `em_andamento` | `concluido` | `bloqueado` | `nao_aplicavel`), notas com data e sessão, anexos e procedimento vinculado.
@@ -97,17 +115,31 @@ Botão "Gerar resumo da sessão": a partir das notas e das mudanças de status d
   (um app estático, sem backend, chamado "SUSE PoC Planner"). **Ainda não está no `main` nem deployado**
   — é uma tentativa que pode ser descartada se não fizer sentido.
 - Navegação: menu hamburguer na lateral esquerda escolhe entre "Executar PoC" (este app) e "Planejar PoC".
-  O topo (`.topbar`) só tem a marca "SUSE POC PLANNER" e o seletor PT/EN. Os links que antes estavam na
+  O topo (`.topbar`) só tem a marca "SUSE POC PLANNER" e o seletor de idioma. Os links que antes estavam na
   navbar (POCs, Procedimentos, Usuários — só admin, Minha conta) agora ficam no menu lateral.
-- O planejador do colega é servido **sem modificação** como `web/public/plan-poc.html` (estático, copiado
-  de `C:\Users\Gabriel\Downloads\poc-plan.html`) e montado num `<iframe>` em `/plan`
-  (`web/src/pages/PlanPoc.tsx`). Decisão deliberada: não foi reescrito nem teve sua lógica portada — ele
-  tem seu próprio assistente sequencial em 10 etapas (projeto → produtos → infra → rede → credenciais →
-  portas → arquitetura → testes → checklist → resumo), que Gabriel achou rígido demais; reescrever isso é
-  um projeto futuro maior, não esta tarefa. Ele guarda estado só no `localStorage` do navegador (sem
-  backend), então hoje não há troca de dados entre "Planejar" e "Executar" — é só unificação de navegação.
-- Seletor de idioma (`web/src/i18n.tsx`): cobre só a casca do app (menu, navbar, dashboard), não o
-  conteúdo gerado pela IA nem os formulários de domínio (ver nota no topo deste arquivo).
+- O planejador do colega é servido **sem modificação na lógica dele** como
+  `web/public/planejar-poc/plan-poc.html` (estático, copiado de `C:\Users\Gabriel\Downloads\poc-plan.html`)
+  e montado num `<iframe>` em `/plan` (`web/src/features/planejar-poc/pages/PlanPoc.tsx`). Decisão
+  deliberada: não foi reescrito nem teve sua lógica portada — ele tem seu próprio assistente sequencial em
+  10 etapas (projeto → produtos → infra → rede → credenciais → portas → arquitetura → testes → checklist →
+  resumo), que Gabriel achou rígido demais; reescrever isso é um projeto futuro maior, não esta tarefa. Ele
+  guarda estado só no `localStorage` do navegador (sem backend).
+- Seletor de idioma único (`web/src/i18n.tsx`), agora **pt/en/es**: cobre a casca do app e também o
+  planejador. O idioma escolhido no topbar é repassado ao iframe por `postMessage`
+  (`{type:'poc-control:set-lang', lang}`) e por querystring (`?lang=`) na primeira carga; o planejador
+  teve seu próprio seletor PT/EN/ES removido do header (única mudança de UI feita no `plan-poc.html` —
+  a lógica de cada etapa continua intocada) para não duplicar o controle. Isso não muda a regra do topo
+  deste arquivo para o conteúdo gerado pela IA nem para os formulários de domínio do Executar PoC, que
+  continuam só em pt-BR — o planejador já tinha suas próprias traduções prontas nas 3 línguas antes desta
+  integração.
+- Planejar → Executar: a saída do planejador (JSON do botão "Exportar Projeto", na etapa Resumo — inclui
+  a seção "11. Plano de testes e resultados") serve de entrada para criar uma POC em Executar PoC. Em
+  "Nova POC" (`web/src/features/executar-poc/pages/PocUpload.tsx`) dá pra subir esse JSON como arquivo,
+  colar o texto/JSON direto, ou (como antes) subir o PDF do cliente — os três formatos passam pelo mesmo
+  endpoint (`POST /api/pocs`) e pelo mesmo prompt de extração do Gemini (`extrair_itens_poc` em
+  `api/app/gemini.py`), que reconhece o formato do planejador (`project`, `selectedProducts`,
+  `testCases`) e mapeia pros mesmos `itens[]`. Ainda não há ligação automática entre os dois apps (o
+  planejador continua só com `localStorage`) — é import manual, sob demanda.
 
 ## Regras para o agente
 

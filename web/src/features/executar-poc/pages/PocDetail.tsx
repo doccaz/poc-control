@@ -10,7 +10,7 @@ import {
   ProcedimentoListItem,
   Sessao,
   StatusItem,
-} from "../api";
+} from "@/api";
 
 const STATUS_LABEL: Record<StatusItem, string> = {
   pendente: "Pendente",

@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api";
+import { api } from "@/api";
 
 export function ProcedimentoUpload() {
   const navigate = useNavigate();

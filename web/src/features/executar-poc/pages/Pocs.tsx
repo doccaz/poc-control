@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, PocListItem } from "../api";
+import { api, PocListItem } from "@/api";
 
 const STATUS_LABEL: Record<string, string> = {
   ativa: "Ativa",

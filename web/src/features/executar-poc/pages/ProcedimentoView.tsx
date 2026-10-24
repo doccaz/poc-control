@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { api, ProcedimentoDetail } from "../api";
+import { api, ProcedimentoDetail } from "@/api";
 
 export function ProcedimentoView() {
   const { id } = useParams<{ id: string }>();

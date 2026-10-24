@@ -5,15 +5,15 @@ import { LanguageProvider } from "./i18n";
 import { Login } from "./pages/Login";
 import { Layout } from "./pages/Layout";
 import { Dashboard } from "./pages/Dashboard";
-import { Procedimentos } from "./pages/Procedimentos";
-import { ProcedimentoUpload } from "./pages/ProcedimentoUpload";
-import { ProcedimentoView } from "./pages/ProcedimentoView";
 import { Usuarios } from "./pages/Usuarios";
 import { MinhaConta } from "./pages/MinhaConta";
-import { Pocs } from "./pages/Pocs";
-import { PocUpload } from "./pages/PocUpload";
-import { PocDetail } from "./pages/PocDetail";
-import { PlanPoc } from "./pages/PlanPoc";
+import { Procedimentos } from "./features/executar-poc/pages/Procedimentos";
+import { ProcedimentoUpload } from "./features/executar-poc/pages/ProcedimentoUpload";
+import { ProcedimentoView } from "./features/executar-poc/pages/ProcedimentoView";
+import { Pocs } from "./features/executar-poc/pages/Pocs";
+import { PocUpload } from "./features/executar-poc/pages/PocUpload";
+import { PocDetail } from "./features/executar-poc/pages/PocDetail";
+import { PlanPoc } from "./features/planejar-poc/pages/PlanPoc";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);

@@ -36,6 +36,9 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
           <button className={lang === "en" ? "lang-btn active" : "lang-btn"} onClick={() => setLang("en")}>
             EN
           </button>
+          <button className={lang === "es" ? "lang-btn active" : "lang-btn"} onClick={() => setLang("es")}>
+            ES
+          </button>
         </div>
       </header>
 

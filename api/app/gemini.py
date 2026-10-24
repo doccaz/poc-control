@@ -85,6 +85,18 @@ _EXTRACAO_PROMPT = """\
 Você é um Solutions Architect lendo um documento de escopo/plano de testes de uma PoC (prova de conceito) \
 técnica para extrair uma estrutura de acompanhamento.
 
+O documento pode vir em formatos diferentes:
+- Um PDF ou texto livre de escopo/plano de testes.
+- Um JSON exportado pela ferramenta interna de planejamento de PoC ("SUSE PoC Planner"), com campos como \
+`project.projectName`, `project.clientOrganization`, `selectedProducts` (produtos habilitados) e \
+`testCases` (um array de casos de teste por produto, cada um com `text`, `fit`, `led`, `owner`, \
+`evidence`, `notes`). Se for esse JSON: use `project.projectName` como título sugerido e \
+`project.clientOrganization` (ou `project.organization`) como cliente sugerido; agrupe os itens por \
+produto (as chaves marcadas `true` em `selectedProducts`) como fases; cada entrada de \
+`testCases[<produto>]` é um item, com `titulo` a partir de `text`, `categoria` a partir do nome do \
+produto, e `criterio_aceite` inferido do próprio `text` (esse formato não tem um campo de critério \
+separado).
+
 Devolva:
 - titulo_sugerido: título curto da PoC (produto/tecnologia principal).
 - cliente_sugerido: nome do cliente, se identificável no documento (senão string vazia).
@@ -132,14 +144,21 @@ def _gerar_com_retry(*, api_key: str | None = None, **kwargs) -> types.GenerateC
     raise ultimo_erro
 
 
-def extrair_itens_poc(pdf_bytes: bytes, api_key: str | None = None) -> ExtracaoPoc:
+def extrair_itens_poc(
+    pdf_bytes: bytes | None = None, texto: str | None = None, api_key: str | None = None
+) -> ExtracaoPoc:
+    if pdf_bytes:
+        conteudo: list = [types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")]
+    elif texto:
+        conteudo = [texto]
+    else:
+        raise ValueError("Informe pdf_bytes ou texto")
+    conteudo.append(_EXTRACAO_PROMPT)
+
     response = _gerar_com_retry(
         api_key=api_key,
         model=_TEXT_MODEL,
-        contents=[
-            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-            _EXTRACAO_PROMPT,
-        ],
+        contents=conteudo,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=ExtracaoPoc,

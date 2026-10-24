@@ -31,7 +31,7 @@ html[data-theme="dark"] .footer-bar{background:rgba(21,36,31,.88);}
 html[data-theme="dark"] .product-card.selected{background:linear-gradient(180deg,var(--surface),var(--green-50));}
 html[data-theme="dark"] .card{box-shadow:0 1px 3px rgba(0,0,0,.3);}
 *{box-sizing:border-box;}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--gray-50);color:var(--gray-900);}
+body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;background:var(--gray-50);color:var(--gray-900);}
 .app-shell{min-height:100vh;display:flex;flex-direction:column;padding-bottom:110px;}
 .header{background:linear-gradient(135deg,#0b2e2a,#133a34);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.25);}
 .header-inner{max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -1103,6 +1103,19 @@ function initState(){
 
 let state = initState();
 lastSavedAt = Date.now();
+
+/* Idioma unificado: quando embutido via iframe no POC Control, o app host (único seletor
+   PT/EN/ES do site) manda o idioma por querystring (primeira carga) e por postMessage
+   (troca em tempo real), em vez deste app ter seu próprio seletor. Fora do iframe (aberto
+   direto), o app continua funcionando normalmente com o idioma salvo no projeto. */
+try{
+  const urlLang = new URLSearchParams(location.search).get('lang');
+  if(urlLang && T[urlLang] && state.lang !== urlLang){ state.lang = urlLang; saveState(); }
+}catch(e){}
+window.addEventListener('message', function(ev){
+  const data = ev && ev.data;
+  if(data && data.type === 'poc-control:set-lang' && T[data.lang]) window.P.setLang(data.lang);
+});
 function saveState(){
   localStorage.setItem(projectKey(activeProjectId), JSON.stringify(state));
   const idx = loadProjectsIndex();
@@ -1201,7 +1214,8 @@ function fmtTime(ts){
   return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
 }
 function renderHeader(){
-  const langs = [['pt','🇧🇷 PT'],['en','🇺🇸 EN'],['es','🇪🇸 ES']];
+  // O seletor de idioma próprio foi removido: quando embutido no POC Control, o idioma vem
+  // do app host (ver listener de 'message' perto de initState()), que tem o único seletor do site.
   return '<header class="header"><div class="header-inner">'
     + '<div class="brand" onclick="P.go(\'dashboard\')">'
       + '<div class="brand-icon">' + Icon('layout') + '</div>'
@@ -1209,8 +1223,6 @@ function renderHeader(){
     + '</div>'
     + '<div class="flex items-center gap-3">'
       + (lastSavedAt && state.view!=='dashboard' ? '<span class="text-xs" style="opacity:.65;white-space:nowrap;">' + Icon('check') + ' ' + tr('common.savedAt') + ' ' + fmtTime(lastSavedAt) + '</span>' : '')
-      + '<div class="lang-switch">' + langs.map(([code,label])=>
-          '<button class="'+(state.lang===code?'active':'')+'" onclick="P.setLang(\''+code+'\')">'+label+'</button>').join('') + '</div>'
       + '<button class="btn btn-ghost" onclick="P.toggleTheme()" title="'+(theme==='dark'?'Light mode':'Dark mode')+'">' + Icon(theme==='dark'?'sun':'moon') + '</button>'
       + '<button class="btn btn-ghost" onclick="P.go(\'dashboard\')">' + Icon('home') + ' ' + tr('common.home') + '</button>'
     + '</div>'

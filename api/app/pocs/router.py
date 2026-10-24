@@ -102,13 +102,38 @@ def criar_poc(
     titulo: str = Form(...),
     cliente: str = Form(...),
     escopo: str = Form(""),
-    arquivo: UploadFile = File(...),
+    arquivo: UploadFile | None = File(None),
+    texto: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    pdf_bytes = arquivo.file.read()
-    if not pdf_bytes:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Arquivo vazio")
+    # Entrada aceita PDF (upload original) OU texto/JSON — este último cobre tanto colar o
+    # plano de testes em texto quanto subir o JSON exportado pelo "Planejar PoC" (botão
+    # "Exportar Projeto" na etapa Resumo), já que o Gemini sabe interpretar os dois formatos
+    # (ver prompt em app/gemini.py).
+    pdf_bytes: bytes | None = None
+    nome_arquivo: str | None = None
+    texto_arquivo: str | None = None
+
+    if arquivo is not None and arquivo.filename:
+        conteudo = arquivo.file.read()
+        if not conteudo:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Arquivo vazio")
+        nome_arquivo = arquivo.filename
+        if nome_arquivo.lower().endswith(".pdf"):
+            pdf_bytes = conteudo
+        else:
+            try:
+                texto_arquivo = conteudo.decode("utf-8")
+            except UnicodeDecodeError:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Não foi possível ler o arquivo como texto; envie um PDF ou um arquivo de texto/JSON em UTF-8",
+                )
+
+    texto_final = (texto or "").strip() or texto_arquivo
+    if not pdf_bytes and not texto_final:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Envie o PDF da POC, ou cole/envie o plano de testes em texto/JSON")
 
     poc = Poc(titulo=titulo, cliente=cliente, escopo=escopo or None, status_extracao=StatusExtracao.extraindo)
     db.add(poc)
@@ -117,14 +142,19 @@ def criar_poc(
 
     poc_dir = pathlib.Path(settings.uploads_dir) / "pocs" / str(poc.id)
     poc_dir.mkdir(parents=True, exist_ok=True)
-    nome_arquivo = arquivo.filename or "poc.pdf"
-    caminho = poc_dir / nome_arquivo
-    caminho.write_bytes(pdf_bytes)
+    if pdf_bytes:
+        nome = nome_arquivo or "poc.pdf"
+        caminho = poc_dir / nome
+        caminho.write_bytes(pdf_bytes)
+    else:
+        nome = nome_arquivo or "plano-importado.txt"
+        caminho = poc_dir / nome
+        caminho.write_text(texto_final, encoding="utf-8")
 
-    db.add(PocDocumento(poc_id=poc.id, nome_arquivo=nome_arquivo, caminho_arquivo=str(caminho)))
+    db.add(PocDocumento(poc_id=poc.id, nome_arquivo=nome, caminho_arquivo=str(caminho)))
     db.commit()
 
-    background_tasks.add_task(processar_extracao, poc.id, pdf_bytes, resolve_api_key(current_user))
+    background_tasks.add_task(processar_extracao, poc.id, pdf_bytes, texto_final, resolve_api_key(current_user))
 
     return _list_item(db, poc)
 

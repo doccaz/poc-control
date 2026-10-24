@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, ProcedimentoListItem } from "../api";
+import { api, ProcedimentoListItem } from "@/api";
 
 export function Procedimentos() {
   const [itens, setItens] = useState<ProcedimentoListItem[] | null>(null);
