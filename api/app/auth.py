@@ -24,10 +24,15 @@ class UserOut(BaseModel):
     email: str
     is_admin: bool
     tem_gemini_key: bool
+    gemini_model: str | None
 
 
 class GeminiKeyUpdate(BaseModel):
     api_key: str = Field(min_length=10)
+
+
+class GeminiModelUpdate(BaseModel):
+    model: str = Field(min_length=1, max_length=100)
 
 
 def _user_out(user: User) -> UserOut:
@@ -36,6 +41,7 @@ def _user_out(user: User) -> UserOut:
         email=user.email,
         is_admin=user.is_admin,
         tem_gemini_key=bool(user.gemini_api_key_encrypted),
+        gemini_model=user.gemini_model,
     )
 
 
@@ -80,5 +86,21 @@ def salvar_chave_gemini(payload: GeminiKeyUpdate, user: User = Depends(get_curre
 @router.delete("/me/gemini-key", response_model=UserOut)
 def remover_chave_gemini(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     user.gemini_api_key_encrypted = None
+    db.commit()
+    return _user_out(user)
+
+
+@router.put("/me/gemini-model", response_model=UserOut)
+def salvar_modelo_gemini(
+    payload: GeminiModelUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    user.gemini_model = payload.model.strip()
+    db.commit()
+    return _user_out(user)
+
+
+@router.delete("/me/gemini-model", response_model=UserOut)
+def remover_modelo_gemini(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    user.gemini_model = None
     db.commit()
     return _user_out(user)

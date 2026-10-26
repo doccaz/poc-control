@@ -1,10 +1,12 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/api";
+import { useLanguage } from "@/i18n";
 
 type Modo = "arquivo" | "texto";
 
 export function PocUpload() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [titulo, setTitulo] = useState("");
   const [cliente, setCliente] = useState("");
@@ -18,11 +20,11 @@ export function PocUpload() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (modo === "arquivo" && !arquivo) {
-      setErro("Selecione o PDF, ou o JSON/texto do plano de testes");
+      setErro(t("pocUpload.erroSelecione"));
       return;
     }
     if (modo === "texto" && !texto.trim()) {
-      setErro("Cole o plano de testes (texto ou JSON)");
+      setErro(t("pocUpload.erroCole"));
       return;
     }
     setErro(null);
@@ -37,7 +39,7 @@ export function PocUpload() {
       const criado = await api.criarPoc(form);
       navigate(`/pocs/${criado.id}`);
     } catch {
-      setErro("Não foi possível criar a POC");
+      setErro(t("pocUpload.erroCriar"));
     } finally {
       setEnviando(false);
     }
@@ -46,13 +48,13 @@ export function PocUpload() {
   return (
     <div>
       <div className="page-header">
-        <h1>Nova POC</h1>
+        <h1>{t("pocUpload.titulo")}</h1>
       </div>
 
       <div className="card">
         <form onSubmit={handleSubmit} className="form">
           <div className="field">
-            <label htmlFor="titulo">Título</label>
+            <label htmlFor="titulo">{t("pocUpload.labelTitulo")}</label>
             <input
               id="titulo"
               className="input"
@@ -63,7 +65,7 @@ export function PocUpload() {
             />
           </div>
           <div className="field">
-            <label htmlFor="cliente">Cliente</label>
+            <label htmlFor="cliente">{t("pocUpload.labelCliente")}</label>
             <input
               id="cliente"
               className="input"
@@ -73,32 +75,32 @@ export function PocUpload() {
             />
           </div>
           <div className="field">
-            <label htmlFor="escopo">Escopo (opcional)</label>
+            <label htmlFor="escopo">{t("pocUpload.labelEscopo")}</label>
             <input
               id="escopo"
               className="input"
               value={escopo}
               onChange={(e) => setEscopo(e.target.value)}
-              placeholder="Ex.: escopo de storage limitado ao CSI do fabricante"
+              placeholder={t("pocUpload.escopoPlaceholder")}
             />
           </div>
 
           <div className="field">
-            <label>Plano de testes</label>
+            <label>{t("pocUpload.planoDeTestes")}</label>
             <div className="field-toggle">
               <button
                 type="button"
                 className={modo === "arquivo" ? "field-toggle-btn active" : "field-toggle-btn"}
                 onClick={() => setModo("arquivo")}
               >
-                Arquivo
+                {t("pocUpload.arquivo")}
               </button>
               <button
                 type="button"
                 className={modo === "texto" ? "field-toggle-btn active" : "field-toggle-btn"}
                 onClick={() => setModo("texto")}
               >
-                Colar texto
+                {t("pocUpload.colarTexto")}
               </button>
             </div>
 
@@ -111,9 +113,9 @@ export function PocUpload() {
                   onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
                 />
                 <p className="field-hint">
-                  PDF da POC, ou o JSON exportado em <strong>Planejar PoC → Resumo → Exportar Projeto</strong>{" "}
-                  (ou um .txt/.md com o plano de testes). O Gemini extrai o plano de testes (fases, itens e
-                  pré-requisitos) em segundo plano.
+                  {t("pocUpload.hintArquivo1")}
+                  <strong>{t("pocUpload.hintArquivoPath")}</strong>
+                  {t("pocUpload.hintArquivo2")}
                 </p>
               </>
             ) : (
@@ -124,11 +126,12 @@ export function PocUpload() {
                   rows={10}
                   value={texto}
                   onChange={(e) => setTexto(e.target.value)}
-                  placeholder="Cole aqui o plano de testes em texto, ou o JSON exportado em Planejar PoC → Resumo → Exportar Projeto"
+                  placeholder={t("pocUpload.textoPlaceholder")}
                 />
                 <p className="field-hint">
-                  Cole o texto do plano de testes do cliente, ou o conteúdo do JSON exportado em{" "}
-                  <strong>Planejar PoC → Resumo → Exportar Projeto</strong>. O Gemini reconhece os dois formatos.
+                  {t("pocUpload.hintTexto1")}
+                  <strong>{t("pocUpload.hintTextoPath")}</strong>
+                  {t("pocUpload.hintTexto2")}
                 </p>
               </>
             )}
@@ -136,7 +139,7 @@ export function PocUpload() {
 
           {erro && <p className="alert alert-error">{erro}</p>}
           <button type="submit" className="btn btn-primary" disabled={enviando}>
-            {enviando ? "Enviando..." : "Criar POC"}
+            {enviando ? t("pocUpload.enviando") : t("pocUpload.criarPoc")}
           </button>
         </form>
       </div>

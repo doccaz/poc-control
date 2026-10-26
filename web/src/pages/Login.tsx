@@ -1,7 +1,9 @@
 import { FormEvent, useState } from "react";
 import { api, User } from "../api";
+import { useLanguage } from "../i18n";
 
 export function Login({ onLogin }: { onLogin: (user: User) => void }) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +17,7 @@ export function Login({ onLogin }: { onLogin: (user: User) => void }) {
       const user = await api.login(email, password);
       onLogin(user);
     } catch {
-      setError("E-mail ou senha inválidos");
+      setError(t("login.erro"));
     } finally {
       setLoading(false);
     }
@@ -24,10 +26,10 @@ export function Login({ onLogin }: { onLogin: (user: User) => void }) {
   return (
     <div className="login-shell">
       <div className="login-card">
-        <h1>POC Control</h1>
+        <h1>{t("login.titulo")}</h1>
         <form onSubmit={handleSubmit} className="form">
           <div className="field">
-            <label htmlFor="login-email">E-mail</label>
+            <label htmlFor="login-email">{t("login.email")}</label>
             <input
               id="login-email"
               type="email"
@@ -39,7 +41,7 @@ export function Login({ onLogin }: { onLogin: (user: User) => void }) {
             />
           </div>
           <div className="field">
-            <label htmlFor="login-password">Senha</label>
+            <label htmlFor="login-password">{t("login.senha")}</label>
             <input
               id="login-password"
               type="password"
@@ -51,7 +53,7 @@ export function Login({ onLogin }: { onLogin: (user: User) => void }) {
           </div>
           {error && <p className="alert alert-error">{error}</p>}
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? t("login.entrando") : t("login.entrar")}
           </button>
         </form>
       </div>

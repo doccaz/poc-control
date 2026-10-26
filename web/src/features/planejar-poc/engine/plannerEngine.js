@@ -1,190 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUSE PoC Planner</title>
-<style>
-:root{
-  --suse-dark:#0b2e2a; --suse-base:#30ba78; --suse-base2:#28a267;
-  --suse-light:#9fe8c6; --suse-accent:#ff7a59; --gray-50:#f8fafc; --gray-100:#f1f5f9;
-  --gray-200:#e2e8f0; --gray-300:#cbd5e1; --gray-400:#94a3b8; --gray-500:#64748b;
-  --gray-700:#334155; --gray-800:#1e293b; --gray-900:#0f172a;
-  --red-500:#ef4444; --red-50:#fef2f2; --orange-500:#f97316; --orange-50:#fff7ed;
-  --green-600:#16a34a; --green-50:#f0fdf4; --blue-500:#3b82f6; --blue-50:#eff6ff;
-  --purple-500:#a855f7; --purple-50:#faf5ff;
-  --ink:var(--suse-dark); --surface:#ffffff;
-}
-html[data-theme="dark"]{
-  --gray-50:#101c19; --gray-100:#17251f; --gray-200:#223730; --gray-300:#35524a;
-  --gray-400:#7d968d; --gray-500:#a2b8b0; --gray-700:#d2e3dc; --gray-800:#e3f0ea; --gray-900:#f3faf7;
-  --red-500:#f87171; --red-50:#2c1618; --orange-500:#fb923c; --orange-50:#2c2013;
-  --green-600:#4ade80; --green-50:#122c1f; --blue-500:#7fb0ff; --blue-50:#122236;
-  --surface:#15241f; --ink:#7eecb0;
-}
-html[data-theme="dark"] body{background:#0b1512;}
-html[data-theme="dark"] .alert-ok{border-color:#1f6b45;color:#9ff0c2;}
-html[data-theme="dark"] .alert-warn{border-color:#9a5a1f;color:#ffcb94;}
-html[data-theme="dark"] .alert-info{border-color:#3b5a85;color:#a9ccff;}
-html[data-theme="dark"] .alert-danger{border-color:#8a3a3f;color:#ffb3b3;}
-html[data-theme="dark"] .footer-bar{background:rgba(21,36,31,.88);}
-html[data-theme="dark"] .product-card.selected{background:linear-gradient(180deg,var(--surface),var(--green-50));}
-html[data-theme="dark"] .card{box-shadow:0 1px 3px rgba(0,0,0,.3);}
-*{box-sizing:border-box;}
-body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;background:var(--gray-50);color:var(--gray-900);}
-.app-shell{min-height:100vh;display:flex;flex-direction:column;padding-bottom:110px;}
-.header{background:linear-gradient(135deg,#0b2e2a,#133a34);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.25);}
-.header-inner{max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
-.brand{display:flex;align-items:center;gap:14px;cursor:pointer;}
-.brand-icon{background:var(--suse-base);padding:10px;border-radius:14px;display:flex;box-shadow:0 8px 20px rgba(48,186,120,.3);}
-.brand h1{font-size:19px;font-weight:900;margin:0;letter-spacing:.02em;text-transform:uppercase;}
-.brand p{font-size:10px;margin:2px 0 0;color:var(--suse-light);font-weight:700;text-transform:uppercase;letter-spacing:.15em;}
-.lang-switch{display:flex;background:rgba(255,255,255,.07);padding:4px;border-radius:999px;border:1px solid rgba(255,255,255,.1);}
-.lang-switch button{background:transparent;border:none;color:rgba(255,255,255,.45);font-size:11px;font-weight:900;padding:7px 12px;border-radius:999px;cursor:pointer;}
-.lang-switch button.active{background:var(--suse-base);color:#fff;}
-.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;border-radius:14px;border:none;cursor:pointer;transition:transform .15s,background .15s;font-family:inherit;}
-.btn:active{transform:scale(.96);}
-.btn-primary{background:var(--suse-dark);color:#fff;padding:14px 26px;}
-.btn-primary:hover{transform:scale(1.03);}
-.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed;transform:none;}
-.btn-outline{background:var(--surface);color:var(--gray-700);border:1px solid var(--gray-200);padding:14px 24px;}
-.btn-outline:hover{background:var(--gray-50);}
-.btn-ghost{background:rgba(255,255,255,.1);color:#fff;padding:10px 18px;border-radius:999px;font-size:12px;}
-.btn-ghost:hover{background:rgba(255,255,255,.2);}
-.btn-sm{padding:8px 14px;font-size:12px;border-radius:10px;}
-.container{flex:1;width:100%;max-width:1280px;margin:0 auto;padding:28px 24px 0;}
-.card{background:var(--surface);border-radius:22px;border:1px solid var(--gray-100);box-shadow:0 1px 3px rgba(0,0,0,.04);padding:28px;}
-.card + .card{margin-top:20px;}
-h2.section-title{font-size:24px;font-weight:900;color:var(--ink);display:flex;align-items:center;gap:10px;margin:0 0 6px;}
-.section-sub{color:var(--gray-500);font-size:13px;margin:0 0 20px;}
-.grid{display:grid;gap:18px;}
-.grid-2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
-label.field-label{display:block;font-size:11px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
-input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],select,textarea{
-  width:100%;padding:11px 13px;border:1px solid var(--gray-200);border-radius:12px;font-size:13.5px;font-family:inherit;outline:none;background:var(--surface);color:var(--gray-900);transition:border .15s,box-shadow .15s;
-}
-input:focus,select:focus,textarea:focus{border-color:var(--suse-base);box-shadow:0 0 0 3px rgba(48,186,120,.15);}
-input.input-error{border-color:var(--red-500);box-shadow:0 0 0 2px rgba(239,68,68,.15);}
-input.input-ok{border-color:var(--green-600);}
-.field-box{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:16px;padding:16px;}
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;border-radius:999px;}
-.pill-ok{background:var(--green-50);color:var(--green-600);}
-.pill-warn{background:var(--orange-50);color:var(--orange-500);}
-.pill-off{background:var(--gray-100);color:var(--gray-400);}
-.pill-bad{background:var(--red-50);color:var(--red-500);}
-.cred-clear,.print-only{display:none;}
-.product-card{position:relative;border-radius:20px;border:2px solid var(--gray-100);padding:20px;cursor:pointer;transition:all .15s;background:var(--surface);}
-.product-card:hover{border-color:var(--suse-light);}
-.product-card.selected{border-color:var(--suse-base);background:linear-gradient(180deg,var(--surface),var(--green-50));box-shadow:0 8px 20px rgba(48,186,120,.12);}
-.product-card.standalone{border-style:dashed;}
-.product-card .check{position:absolute;top:16px;right:16px;width:22px;height:22px;border-radius:999px;border:2px solid var(--gray-200);display:flex;align-items:center;justify-content:center;}
-.product-card.selected .check{background:var(--suse-base);border-color:var(--suse-base);color:#fff;}
-.product-badge{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;background:var(--gray-100);color:var(--gray-500);padding:2px 8px;border-radius:999px;display:inline-block;margin-top:8px;}
-.nav-steps{display:flex;align-items:center;justify-content:space-between;overflow-x:auto;padding:4px 4px 18px;margin-bottom:10px;gap:0;}
-.nav-step{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:84px;background:none;border:none;font-family:inherit;}
-.nav-circle{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;border:3px solid var(--gray-200);background:var(--surface);color:var(--gray-400);font-weight:800;font-size:13px;}
-.nav-step.active .nav-circle{background:var(--suse-dark);border-color:var(--suse-base);color:#fff;}
-.nav-step.done .nav-circle{background:var(--suse-base);border-color:var(--suse-base);color:#fff;}
-.nav-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);text-align:center;}
-.nav-step.active .nav-label{color:var(--ink);}
-.nav-line{flex:1;height:2px;background:var(--gray-200);margin:0 4px;align-self:flex-start;margin-top:19px;}
-.nav-line.done{background:var(--suse-base);}
-.footer-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:calc(100% - 40px);max-width:900px;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border:1px solid var(--gray-100);border-radius:24px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 20px 50px -12px rgba(0,0,0,.18);z-index:90;}
-table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
-table.data-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);padding:8px 10px;border-bottom:2px solid var(--gray-100);}
-table.data-table td{padding:9px 10px;border-bottom:1px solid var(--gray-100);vertical-align:middle;}
-table.data-table tr:hover td{background:var(--gray-50);}
-.tabs{display:flex;background:var(--gray-100);padding:5px;border-radius:16px;gap:4px;flex-wrap:wrap;}
-.tab-btn{padding:9px 16px;font-size:10.5px;font-weight:900;text-transform:uppercase;border-radius:12px;border:none;background:transparent;color:var(--gray-400);cursor:pointer;font-family:inherit;}
-.tab-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 4px 10px rgba(0,0,0,.06);}
-.badge-dot{width:8px;height:8px;border-radius:999px;display:inline-block;}
-.alert{padding:14px 16px;border-radius:14px;font-size:12.5px;line-height:1.5;}
-.alert-ok{background:var(--green-50);border:1px solid #bbf7d0;color:#166534;}
-.alert-warn{background:var(--orange-50);border:1px solid #fed7aa;color:#9a3412;}
-.alert-info{background:var(--blue-50);border:1px solid #bfdbfe;color:#1e40af;}
-.alert-danger{background:var(--red-50);border:1px solid #fecaca;color:#991b1b;}
-.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--gray-100);}
-.checklist-item input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--suse-base);}
-.icon{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
-.no-print{}
-.arch-svg{display:block;max-width:100%;height:auto;font-family:inherit;}
-.arch-svg .a-t{font-size:14px;font-weight:800;fill:var(--gray-900);}
-.arch-svg .a-s{font-size:12px;fill:var(--gray-500);}
-.grp-row{background:var(--gray-50);}
-.test-filters{position:sticky;top:78px;z-index:60;}
-select.t-compact,input.t-compact{padding:7px 9px;font-size:12px;border-radius:10px;}
-.test-filters select.t-compact,.test-filters input.t-compact{width:auto;flex:1 1 130px;min-width:110px;max-width:200px;}
-.text-muted{color:var(--gray-500);}
-.mono{font-family:ui-monospace,Menlo,Consolas,monospace;}
-.flex{display:flex;}
-.flex-wrap{flex-wrap:wrap;}
-.gap-2{gap:8px;}.gap-3{gap:12px;}.gap-4{gap:16px;}
-.items-center{align-items:center;}
-.justify-between{justify-content:space-between;}
-.mt-1{margin-top:6px;}.mt-2{margin-top:10px;}.mt-3{margin-top:16px;}.mt-4{margin-top:22px;}
-.mb-2{margin-bottom:10px;}.mb-3{margin-bottom:16px;}
-.w-full{width:100%;}
-.text-xs{font-size:11px;}.text-sm{font-size:12.5px;}
-.fade-in{animation:fadeIn .25s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-@media screen and (max-width:720px){
-  .header-inner{padding:12px 16px;gap:10px;}
-  .header-inner > div:last-child{flex-wrap:wrap;gap:8px;}
-  table.data-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .footer-bar{width:calc(100% - 20px);padding:8px 10px;gap:6px;bottom:10px;}
-  .footer-bar .btn{padding:10px 12px;}
-  .footer-bar .btn-primary{padding:10px 14px;}
-  .footer-bar div[style*="width:140px"]{width:56px !important;}
-}
-@media print{
-  /* PDF sempre em papel branco, sem fundo e sem a barra do app, qualquer que seja o tema da tela.
-     As cores dos selos de status e a figura da arquitetura continuam — elas carregam significado. */
-  html,html[data-theme="dark"]{
-    --gray-50:#f8fafc; --gray-100:#f1f5f9; --gray-200:#e2e8f0; --gray-300:#cbd5e1; --gray-400:#94a3b8; --gray-500:#64748b;
-    --gray-700:#334155; --gray-800:#1e293b; --gray-900:#0f172a;
-    --red-500:#ef4444; --red-50:#fef2f2; --orange-500:#f97316; --orange-50:#fff7ed;
-    --green-600:#16a34a; --green-50:#f0fdf4; --blue-500:#3b82f6; --blue-50:#eff6ff;
-    --surface:#ffffff; --ink:#0b2e2a;
-  }
-  html,html[data-theme="dark"] body,body{background:#fff !important;color:#0f172a;}
-  html[data-theme="dark"] .alert-ok{border-color:#bbf7d0;color:#166534;}
-  html[data-theme="dark"] .alert-warn{border-color:#fed7aa;color:#9a3412;}
-  html[data-theme="dark"] .alert-info{border-color:#bfdbfe;color:#1e40af;}
-  html[data-theme="dark"] .alert-danger{border-color:#fecaca;color:#991b1b;}
-  .no-print,.header,.footer-bar,.test-filters{display:none !important;}
-  .app-shell{padding-bottom:0;}
-  .container{padding-top:0;}
-  .card,html[data-theme="dark"] .card{background:transparent;}
-  .grp-row{background:transparent !important;}
-  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .card{page-break-inside:avoid;box-shadow:none;border:1px solid var(--gray-200);}
-  .report-main .card{page-break-inside:auto;}
-  .report-main .card.keep-together{page-break-inside:avoid;break-inside:avoid;}
-  /* Paginação do PDF: título nunca fica sozinho no fim da página, tabelas curtas não se partem, e as
-     longas quebram só entre linhas (com o cabeçalho repetido). */
-  .report-main h3,.report-main h4{break-after:avoid;page-break-after:avoid;}
-  .report-main :is(div,p):has(+ table){break-after:avoid;page-break-after:avoid;}
-  .report-main table.data-table:not(.multi):not(:has(tbody tr:nth-child(15))){break-inside:avoid;page-break-inside:avoid;}   /* .multi = várias <tbody>, onde esta contagem não vale */
-  .report-main table.data-table tr{break-inside:avoid;page-break-inside:avoid;}
-  .report-main tbody.keep-head{break-inside:avoid;page-break-inside:avoid;}
-  table.data-table tr{page-break-inside:avoid;}
-  table.data-table thead{display:table-header-group;}
-  .nav-steps{display:none !important;}
-  /* Credenciais só saem na folha do operador, nunca no relatório do cliente. */
-  .operator-sheet{display:none;}
-  body.print-operator .report-main{display:none;}
-  body.print-operator .operator-sheet{display:block;}
-  body.print-operator .cred-mask{display:none;}
-  body.print-operator .cred-clear{display:inline;}
-  body.print-operator h3.print-only{display:block;}
-}
-</style>
-</head>
-<body>
-<div id="app"></div>
-<script>
 'use strict';
 /* ======================================================================
    SUSE PoC Planner — single-file offline wizard
@@ -1104,18 +917,9 @@ function initState(){
 let state = initState();
 lastSavedAt = Date.now();
 
-/* Idioma unificado: quando embutido via iframe no POC Control, o app host (único seletor
-   PT/EN/ES do site) manda o idioma por querystring (primeira carga) e por postMessage
-   (troca em tempo real), em vez deste app ter seu próprio seletor. Fora do iframe (aberto
-   direto), o app continua funcionando normalmente com o idioma salvo no projeto. */
-try{
-  const urlLang = new URLSearchParams(location.search).get('lang');
-  if(urlLang && T[urlLang] && state.lang !== urlLang){ state.lang = urlLang; saveState(); }
-}catch(e){}
-window.addEventListener('message', function(ev){
-  const data = ev && ev.data;
-  if(data && data.type === 'poc-control:set-lang' && T[data.lang]) window.P.setLang(data.lang);
-});
+/* Idioma unificado: o planejador roda no mesmo documento que o resto do POC Control agora
+   (sem iframe), então o idioma vem direto de mountPlannerEngine()/P.setLang() chamados pelo
+   componente React (ver features/planejar-poc/pages/PlanPoc.tsx) em vez de postMessage/querystring. */
 function saveState(){
   localStorage.setItem(projectKey(activeProjectId), JSON.stringify(state));
   const idx = loadProjectsIndex();
@@ -1150,17 +954,6 @@ function deleteProjectById(id){
     else { createNewProject(); }
   }
 }
-
-/* ---------------- THEME (separado do projeto — não entra no export/import) ---------------- */
-const THEME_KEY = 'suse_poc_planner_theme';
-function loadTheme(){
-  const saved = localStorage.getItem(THEME_KEY);
-  if(saved === 'light' || saved === 'dark') return saved;
-  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-}
-let theme = loadTheme();
-function applyTheme(){ document.documentElement.setAttribute('data-theme', theme); }
-applyTheme();
 
 /* ---------------- deep set/get helper ---------------- */
 function setPath(obj, path, value){
@@ -1214,18 +1007,12 @@ function fmtTime(ts){
   return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
 }
 function renderHeader(){
-  // O seletor de idioma próprio foi removido: quando embutido no POC Control, o idioma vem
-  // do app host (ver listener de 'message' perto de initState()), que tem o único seletor do site.
+  // Cabeçalho reduzido: a marca e o idioma já vêm da topbar compartilhada do POC Control
+  // (ver web/src/pages/Layout.tsx). Aqui fica só o essencial deste wizard: voltar ao
+  // dashboard de projetos e o indicador de "salvo em".
   return '<header class="header"><div class="header-inner">'
-    + '<div class="brand" onclick="P.go(\'dashboard\')">'
-      + '<div class="brand-icon">' + Icon('layout') + '</div>'
-      + '<div><h1>' + tr('brand') + ' <span style="opacity:.55;font-weight:600;font-size:11px;">v'+APP_VERSION+'</span></h1><p>' + tr('tagline') + '</p></div>'
-    + '</div>'
-    + '<div class="flex items-center gap-3">'
-      + (lastSavedAt && state.view!=='dashboard' ? '<span class="text-xs" style="opacity:.65;white-space:nowrap;">' + Icon('check') + ' ' + tr('common.savedAt') + ' ' + fmtTime(lastSavedAt) + '</span>' : '')
-      + '<button class="btn btn-ghost" onclick="P.toggleTheme()" title="'+(theme==='dark'?'Light mode':'Dark mode')+'">' + Icon(theme==='dark'?'sun':'moon') + '</button>'
-      + '<button class="btn btn-ghost" onclick="P.go(\'dashboard\')">' + Icon('home') + ' ' + tr('common.home') + '</button>'
-    + '</div>'
+    + '<button class="btn btn-ghost" onclick="P.go(\'dashboard\')">' + Icon('home') + ' ' + tr('common.home') + '</button>'
+    + (lastSavedAt && state.view!=='dashboard' ? '<span class="text-xs" style="opacity:.65;white-space:nowrap;">' + Icon('check') + ' ' + tr('common.savedAt') + ' ' + fmtTime(lastSavedAt) + '</span>' : '')
   + '</div></header>';
 }
 
@@ -2725,7 +2512,6 @@ function renderSummaryView(){
 window.P = {
   go,
   setLang(l){ state.lang=l; saveState(); render(); },
-  toggleTheme(){ theme = theme==='dark' ? 'light' : 'dark'; localStorage.setItem(THEME_KEY, theme); applyTheme(); render(); },
   setField(path,value){
     setPath(state,path,value); saveState();
   },
@@ -2853,7 +2639,7 @@ window.P = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', render);
-</script>
-</body>
-</html>
+export function mountPlannerEngine(initialLang) {
+  if (initialLang && T[initialLang]) state.lang = initialLang;
+  render();
+}

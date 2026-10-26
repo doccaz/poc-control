@@ -154,6 +154,7 @@ class PocDetail(PocListItem):
     escopo: str | None
     erro_extracao: str | None
     resumo_executivo: str | None
+    parametros_tecnicos: dict | None
     fases: list[FaseOut]
     itens: list[ItemOut]
     prerequisitos: list[PrerequisitoOut]

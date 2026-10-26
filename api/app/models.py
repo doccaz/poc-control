@@ -23,6 +23,11 @@ class User(Base):
     )
     ultimo_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     gemini_api_key_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Nome do modelo de texto do Gemini (ex.: "gemini-3.8-flash"). Livre, não um enum: a
+    # disponibilidade de modelo depende do plano/chave de cada usuário (ver app/gemini_key.py).
+    # Nulo = usa o default do servidor. NÃO afeta o modelo de embedding (EMBEDDING_DIM em
+    # app/gemini.py está fixo no formato da coluna vector do pgvector).
+    gemini_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
 
 class StatusProcedimento(str, enum.Enum):
@@ -95,6 +100,11 @@ class Poc(Base):
     )
     erro_extracao: Mapped[str | None] = mapped_column(Text, nullable=True)
     fases: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
+    # Parâmetros técnicos desta PoC (produtos, rede, infra) quando a origem foi o JSON do
+    # Planejar PoC — ver app/pocs/planner_import.py. Extraído direto da estrutura conhecida do
+    # JSON (sem passar pelo Gemini) para não arriscar perder/alucinar IPs e hostnames.
+    # Nunca contém credenciais. Usado no roteiro do dia (app/pocs/roteiro.py).
+    parametros_tecnicos: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

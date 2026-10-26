@@ -2,6 +2,7 @@ import html as html_lib
 from datetime import date
 
 from app.models import FlagClassificacao, Poc, StatusItem
+from app.pocs.roteiro import montar_ambiente_html
 
 _STATUS_LABEL = {
     StatusItem.pendente: "Pendente",
@@ -127,6 +128,8 @@ def montar_apresentacao_html(poc: Poc) -> str:
 
   <h2>Sumário executivo</h2>
   {resumo_paragrafos}
+
+  {montar_ambiente_html(poc)}
 
   <h2>Resultados em números</h2>
   <div class="stat-grid">

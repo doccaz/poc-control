@@ -145,7 +145,10 @@ def _gerar_com_retry(*, api_key: str | None = None, **kwargs) -> types.GenerateC
 
 
 def extrair_itens_poc(
-    pdf_bytes: bytes | None = None, texto: str | None = None, api_key: str | None = None
+    pdf_bytes: bytes | None = None,
+    texto: str | None = None,
+    api_key: str | None = None,
+    model: str | None = None,
 ) -> ExtracaoPoc:
     if pdf_bytes:
         conteudo: list = [types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")]
@@ -157,7 +160,7 @@ def extrair_itens_poc(
 
     response = _gerar_com_retry(
         api_key=api_key,
-        model=_TEXT_MODEL,
+        model=model or _TEXT_MODEL,
         contents=conteudo,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -203,7 +206,10 @@ assunto, o passo a passo tem que resolver o item).
 
 
 def confirmar_match(
-    item_texto: str, candidatos: list[CandidatoProcedimento], api_key: str | None = None
+    item_texto: str,
+    candidatos: list[CandidatoProcedimento],
+    api_key: str | None = None,
+    model: str | None = None,
 ) -> ConfirmacaoMatch:
     candidatos_texto = "\n\n".join(
         f"[{i}] Procedimento \"{c.titulo_procedimento}\" — seção \"{c.heading_title}\":\n{c.content_text}"
@@ -211,7 +217,7 @@ def confirmar_match(
     )
     response = _gerar_com_retry(
         api_key=api_key,
-        model=_TEXT_MODEL,
+        model=model or _TEXT_MODEL,
         contents=_CONFIRMACAO_PROMPT.format(item=item_texto, candidatos=candidatos_texto),
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -240,10 +246,12 @@ Item da PoC:
 """
 
 
-def pesquisar_viabilidade_web(item_texto: str, api_key: str | None = None) -> tuple[str, list[FonteEvidencia]]:
+def pesquisar_viabilidade_web(
+    item_texto: str, api_key: str | None = None, model: str | None = None
+) -> tuple[str, list[FonteEvidencia]]:
     response = _gerar_com_retry(
         api_key=api_key,
-        model=_TEXT_MODEL,
+        model=model or _TEXT_MODEL,
         contents=_VIABILIDADE_PROMPT.format(item=item_texto),
         config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())]),
     )
@@ -282,10 +290,12 @@ definitiva).
 """
 
 
-def classificar_viabilidade(texto_pesquisa: str, api_key: str | None = None) -> AvaliacaoViabilidade:
+def classificar_viabilidade(
+    texto_pesquisa: str, api_key: str | None = None, model: str | None = None
+) -> AvaliacaoViabilidade:
     response = _gerar_com_retry(
         api_key=api_key,
-        model=_TEXT_MODEL,
+        model=model or _TEXT_MODEL,
         contents=_AVALIACAO_PROMPT.format(pesquisa=texto_pesquisa or "(a pesquisa não retornou texto)"),
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -327,10 +337,12 @@ não esteja no texto; se uma lista não se aplicar, devolva lista vazia.
 """
 
 
-def extrair_resumo_sessao(texto: str, api_key: str | None = None) -> ResumoSessaoExtraido:
+def extrair_resumo_sessao(
+    texto: str, api_key: str | None = None, model: str | None = None
+) -> ResumoSessaoExtraido:
     response = _gerar_com_retry(
         api_key=api_key,
-        model=_TEXT_MODEL,
+        model=model or _TEXT_MODEL,
         contents=_RESUMO_SESSAO_PROMPT.format(texto=texto),
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -363,9 +375,9 @@ Não invente informação que não esteja no contexto. Não assine o e-mail nem 
 """
 
 
-def gerar_resumo_email(contexto: str, api_key: str | None = None) -> str:
+def gerar_resumo_email(contexto: str, api_key: str | None = None, model: str | None = None) -> str:
     response = _gerar_com_retry(
-        api_key=api_key, model=_TEXT_MODEL, contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto)
+        api_key=api_key, model=model or _TEXT_MODEL, contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto)
     )
     return response.text or ""
 
@@ -392,8 +404,8 @@ como "[Seu nome]".
 """
 
 
-def gerar_resumo_executivo(contexto: str, api_key: str | None = None) -> str:
+def gerar_resumo_executivo(contexto: str, api_key: str | None = None, model: str | None = None) -> str:
     response = _gerar_com_retry(
-        api_key=api_key, model=_TEXT_MODEL, contents=_RESUMO_EXECUTIVO_PROMPT.format(contexto=contexto)
+        api_key=api_key, model=model or _TEXT_MODEL, contents=_RESUMO_EXECUTIVO_PROMPT.format(contexto=contexto)
     )
     return response.text or ""

@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, ApiError, UsuarioListItem } from "../api";
+import { useLanguage } from "../i18n";
 
 export function Usuarios() {
+  const { t } = useLanguage();
   const [itens, setItens] = useState<UsuarioListItem[] | null>(null);
   const [erroLista, setErroLista] = useState<string | null>(null);
 
@@ -15,7 +17,7 @@ export function Usuarios() {
     api
       .listarUsuarios()
       .then(setItens)
-      .catch(() => setErroLista("Não foi possível carregar os usuários"));
+      .catch(() => setErroLista(t("usuarios.erroCarregar")));
   }
 
   useEffect(carregar, []);
@@ -32,9 +34,9 @@ export function Usuarios() {
       carregar();
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        setErroForm("Já existe um usuário com esse e-mail");
+        setErroForm(t("usuarios.erroEmailExistente"));
       } else {
-        setErroForm("Não foi possível criar o usuário");
+        setErroForm(t("usuarios.erroCriar"));
       }
     } finally {
       setEnviando(false);
@@ -44,11 +46,11 @@ export function Usuarios() {
   return (
     <div>
       <div className="page-header">
-        <h1>Usuários</h1>
+        <h1>{t("usuarios.titulo")}</h1>
       </div>
 
       {erroLista && <p className="alert alert-error">{erroLista}</p>}
-      {itens === null && !erroLista && <p className="muted">Carregando...</p>}
+      {itens === null && !erroLista && <p className="muted">{t("common.carregando")}</p>}
 
       {itens && itens.length > 0 && (
         <div className="card">
@@ -56,11 +58,11 @@ export function Usuarios() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>E-mail</th>
-                  <th>Perfil</th>
-                  <th>Criado em</th>
-                  <th>Último login</th>
-                  <th>Chave Gemini própria</th>
+                  <th>{t("usuarios.colEmail")}</th>
+                  <th>{t("usuarios.colPerfil")}</th>
+                  <th>{t("usuarios.colCriadoEm")}</th>
+                  <th>{t("usuarios.colUltimoLogin")}</th>
+                  <th>{t("usuarios.colChaveGemini")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -69,9 +71,9 @@ export function Usuarios() {
                     <td>{u.email}</td>
                     <td>
                       {u.is_admin ? (
-                        <span className="badge badge-admin">admin</span>
+                        <span className="badge badge-admin">{t("usuarios.admin")}</span>
                       ) : (
-                        <span className="badge badge-muted">usuário</span>
+                        <span className="badge badge-muted">{t("usuarios.usuario")}</span>
                       )}
                     </td>
                     <td className="muted">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
@@ -81,13 +83,13 @@ export function Usuarios() {
                             dateStyle: "short",
                             timeStyle: "short",
                           })
-                        : "Nunca"}
+                        : t("common.nunca")}
                     </td>
                     <td>
                       {u.tem_gemini_key ? (
-                        <span className="badge badge-verde">Sim</span>
+                        <span className="badge badge-verde">{t("common.sim")}</span>
                       ) : (
-                        <span className="badge badge-muted">Não</span>
+                        <span className="badge badge-muted">{t("common.nao")}</span>
                       )}
                     </td>
                   </tr>
@@ -99,10 +101,10 @@ export function Usuarios() {
       )}
 
       <div className="card">
-        <h2>Novo usuário</h2>
+        <h2>{t("usuarios.novoUsuario")}</h2>
         <form onSubmit={handleSubmit} className="form">
           <div className="field">
-            <label htmlFor="novo-email">E-mail</label>
+            <label htmlFor="novo-email">{t("usuarios.colEmail")}</label>
             <input
               id="novo-email"
               type="email"
@@ -113,7 +115,7 @@ export function Usuarios() {
             />
           </div>
           <div className="field">
-            <label htmlFor="novo-password">Senha inicial</label>
+            <label htmlFor="novo-password">{t("usuarios.senhaInicial")}</label>
             <input
               id="novo-password"
               type="password"
@@ -123,7 +125,7 @@ export function Usuarios() {
               minLength={8}
               required
             />
-            <p className="field-hint">Mínimo de 8 caracteres. Combine com a pessoa depois.</p>
+            <p className="field-hint">{t("usuarios.senhaHint")}</p>
           </div>
           <div className="checkbox-field">
             <input
@@ -132,11 +134,11 @@ export function Usuarios() {
               checked={isAdmin}
               onChange={(e) => setIsAdmin(e.target.checked)}
             />
-            <label htmlFor="novo-admin">Tornar administrador</label>
+            <label htmlFor="novo-admin">{t("usuarios.tornarAdmin")}</label>
           </div>
           {erroForm && <p className="alert alert-error">{erroForm}</p>}
           <button type="submit" className="btn btn-primary" disabled={enviando}>
-            {enviando ? "Criando..." : "Criar usuário"}
+            {enviando ? t("common.criando") : t("usuarios.criarUsuario")}
           </button>
         </form>
       </div>

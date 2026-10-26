@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, PocListItem } from "@/api";
-
-const STATUS_LABEL: Record<string, string> = {
-  ativa: "Ativa",
-  concluida: "Concluída",
-  suspensa: "Suspensa",
-};
+import { useLanguage } from "@/i18n";
 
 function pct(poc: PocListItem) {
   if (poc.total_itens === 0) return 0;
@@ -14,29 +9,37 @@ function pct(poc: PocListItem) {
 }
 
 export function Pocs() {
+  const { t } = useLanguage();
   const [itens, setItens] = useState<PocListItem[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+
+  const STATUS_LABEL: Record<string, string> = {
+    ativa: t("pocs.statusAtiva"),
+    concluida: t("pocs.statusConcluida"),
+    suspensa: t("pocs.statusSuspensa"),
+  };
 
   useEffect(() => {
     api
       .listarPocs()
       .then(setItens)
-      .catch(() => setErro("Não foi possível carregar as POCs"));
+      .catch(() => setErro(t("pocs.erroCarregar")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div>
       <div className="page-header">
-        <h1>POCs</h1>
+        <h1>{t("pocs.titulo")}</h1>
         <Link to="/pocs/novo" className="btn btn-primary">
-          Nova POC
+          {t("pocs.novaPoc")}
         </Link>
       </div>
 
       {erro && <p className="alert alert-error">{erro}</p>}
-      {itens === null && !erro && <p className="muted">Carregando...</p>}
+      {itens === null && !erro && <p className="muted">{t("common.carregando")}</p>}
 
-      {itens && itens.length === 0 && <div className="card empty-state">Nenhuma POC cadastrada ainda.</div>}
+      {itens && itens.length === 0 && <div className="card empty-state">{t("pocs.nenhumaPoc")}</div>}
 
       {itens && itens.length > 0 && (
         <div className="card">
@@ -44,11 +47,11 @@ export function Pocs() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Título</th>
-                  <th>Cliente</th>
-                  <th>Status</th>
-                  <th>Extração</th>
-                  <th>Progresso</th>
+                  <th>{t("pocs.colTitulo")}</th>
+                  <th>{t("pocs.colCliente")}</th>
+                  <th>{t("pocs.colStatus")}</th>
+                  <th>{t("pocs.colExtracao")}</th>
+                  <th>{t("pocs.colProgresso")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -62,8 +65,12 @@ export function Pocs() {
                       <span className="badge badge-muted">{STATUS_LABEL[p.status] ?? p.status}</span>
                     </td>
                     <td>
-                      {p.status_extracao === "extraindo" && <span className="badge badge-info">extraindo...</span>}
-                      {p.status_extracao === "erro" && <span className="badge badge-vermelho">erro</span>}
+                      {p.status_extracao === "extraindo" && (
+                        <span className="badge badge-info">{t("pocs.extraindo")}</span>
+                      )}
+                      {p.status_extracao === "erro" && (
+                        <span className="badge badge-vermelho">{t("pocs.erroExtracao")}</span>
+                      )}
                       {p.status_extracao === "pronto" && <span className="muted">—</span>}
                     </td>
                     <td className="muted">

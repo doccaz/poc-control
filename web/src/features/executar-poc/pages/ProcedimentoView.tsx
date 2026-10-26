@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api, ProcedimentoDetail } from "@/api";
+import { useLanguage } from "@/i18n";
 
 export function ProcedimentoView() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [procedimento, setProcedimento] = useState<ProcedimentoDetail | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -12,11 +14,12 @@ export function ProcedimentoView() {
     api
       .obterProcedimento(id)
       .then(setProcedimento)
-      .catch(() => setErro("Não foi possível carregar o procedimento"));
+      .catch(() => setErro(t("procedimentoView.erroCarregar")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (erro) return <p className="alert alert-error">{erro}</p>;
-  if (!procedimento) return <p className="muted">Carregando...</p>;
+  if (!procedimento) return <p className="muted">{t("common.carregando")}</p>;
 
   return (
     <div>
@@ -27,16 +30,16 @@ export function ProcedimentoView() {
 
       <div className="card">
         <p>
-          <strong>Cliente:</strong> {procedimento.cliente_origem ?? "—"} &nbsp;·&nbsp;{" "}
-          <strong>Versão:</strong> {procedimento.versao}
+          <strong>{t("procedimentoView.cliente")}</strong> {procedimento.cliente_origem ?? "—"} &nbsp;·&nbsp;{" "}
+          <strong>{t("procedimentoView.versao")}</strong> {procedimento.versao}
         </p>
         <p>
-          <strong>Tags:</strong> {procedimento.tags.join(", ") || "—"}
+          <strong>{t("procedimentoView.tags")}</strong> {procedimento.tags.join(", ") || "—"}
         </p>
       </div>
 
       <div className="card">
-        <h2>Seções indexadas</h2>
+        <h2>{t("procedimentoView.secoesIndexadas")}</h2>
         <ul className="secoes-list">
           {procedimento.secoes.map((s, i) => (
             <li key={i} className={s.heading_level === 3 ? "sub" : undefined}>
@@ -47,7 +50,7 @@ export function ProcedimentoView() {
       </div>
 
       <div className="card">
-        <h2>Conteúdo original</h2>
+        <h2>{t("procedimentoView.conteudoOriginal")}</h2>
         <iframe
           title={procedimento.titulo}
           sandbox="allow-same-origin"

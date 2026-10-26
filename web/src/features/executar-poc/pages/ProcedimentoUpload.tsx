@@ -1,8 +1,10 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/api";
+import { useLanguage } from "@/i18n";
 
 export function ProcedimentoUpload() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [titulo, setTitulo] = useState("");
   const [tags, setTags] = useState("");
@@ -15,7 +17,7 @@ export function ProcedimentoUpload() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!arquivo) {
-      setErro("Selecione um arquivo HTML");
+      setErro(t("procedimentoUpload.erroArquivo"));
       return;
     }
     setErro(null);
@@ -30,7 +32,7 @@ export function ProcedimentoUpload() {
       const criado = await api.criarProcedimento(form);
       navigate(`/procedimentos/${criado.id}`);
     } catch {
-      setErro("Não foi possível salvar o procedimento");
+      setErro(t("procedimentoUpload.erroSalvar"));
     } finally {
       setEnviando(false);
     }
@@ -39,13 +41,13 @@ export function ProcedimentoUpload() {
   return (
     <div>
       <div className="page-header">
-        <h1>Novo procedimento</h1>
+        <h1>{t("procedimentoUpload.titulo")}</h1>
       </div>
 
       <div className="card">
         <form onSubmit={handleSubmit} className="form">
           <div className="field">
-            <label htmlFor="titulo">Título</label>
+            <label htmlFor="titulo">{t("procedimentoUpload.labelTitulo")}</label>
             <input
               id="titulo"
               className="input"
@@ -55,18 +57,18 @@ export function ProcedimentoUpload() {
             />
           </div>
           <div className="field">
-            <label htmlFor="tags">Tags</label>
+            <label htmlFor="tags">{t("procedimentoUpload.labelTags")}</label>
             <input
               id="tags"
               className="input"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-              placeholder="k3s, Argo CD, OpenShift"
+              placeholder={t("procedimentoUpload.tagsPlaceholder")}
             />
-            <p className="field-hint">Separadas por vírgula.</p>
+            <p className="field-hint">{t("procedimentoUpload.tagsHint")}</p>
           </div>
           <div className="field">
-            <label htmlFor="cliente">Cliente de origem</label>
+            <label htmlFor="cliente">{t("procedimentoUpload.labelClienteOrigem")}</label>
             <input
               id="cliente"
               className="input"
@@ -75,19 +77,19 @@ export function ProcedimentoUpload() {
             />
           </div>
           <div className="field">
-            <label htmlFor="status">Status</label>
+            <label htmlFor="status">{t("procedimentoUpload.labelStatus")}</label>
             <select
               id="status"
               className="input"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="rascunho">Rascunho</option>
-              <option value="validado">Validado</option>
+              <option value="rascunho">{t("procedimentoUpload.statusRascunho")}</option>
+              <option value="validado">{t("procedimentoUpload.statusValidado")}</option>
             </select>
           </div>
           <div className="field">
-            <label htmlFor="arquivo">Arquivo HTML</label>
+            <label htmlFor="arquivo">{t("procedimentoUpload.labelArquivo")}</label>
             <input
               id="arquivo"
               type="file"
@@ -98,7 +100,7 @@ export function ProcedimentoUpload() {
           </div>
           {erro && <p className="alert alert-error">{erro}</p>}
           <button type="submit" className="btn btn-primary" disabled={enviando}>
-            {enviando ? "Enviando..." : "Salvar"}
+            {enviando ? t("procedimentoUpload.enviando") : t("procedimentoUpload.salvar")}
           </button>
         </form>
       </div>

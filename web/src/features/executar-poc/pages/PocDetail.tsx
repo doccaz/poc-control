@@ -11,36 +11,44 @@ import {
   Sessao,
   StatusItem,
 } from "@/api";
+import { useLanguage } from "@/i18n";
 
-const STATUS_LABEL: Record<StatusItem, string> = {
-  pendente: "Pendente",
-  em_andamento: "Em andamento",
-  concluido: "Concluído",
-  bloqueado: "Bloqueado",
-  nao_aplicavel: "N/A",
+const TAB_IDS = ["plano", "pre", "resumo", "andamento", "apresentacao"] as const;
+type TabId = (typeof TAB_IDS)[number];
+
+const TAB_LABEL_KEY: Record<TabId, string> = {
+  plano: "pocDetail.tabPlano",
+  pre: "pocDetail.tabPre",
+  resumo: "pocDetail.tabResumo",
+  andamento: "pocDetail.tabAndamento",
+  apresentacao: "pocDetail.tabApresentacao",
 };
 
-const CONDUCAO_LABEL: Record<CondicaoItem, string> = {
-  suse: "SUSE",
-  cliente: "Cliente",
-  lateral: "Lateral",
-};
+function statusLabels(t: (k: string) => string): Record<StatusItem, string> {
+  return {
+    pendente: t("pocDetail.statusPendente"),
+    em_andamento: t("pocDetail.statusEmAndamento"),
+    concluido: t("pocDetail.statusConcluido"),
+    bloqueado: t("pocDetail.statusBloqueado"),
+    nao_aplicavel: t("pocDetail.statusNaoAplicavel"),
+  };
+}
 
-const FLAG_LABEL: Record<FlagClassificacao, string> = {
-  verde: "Verde — é só seguir",
-  amarelo: "Amarelo",
-  vermelho: "Vermelho",
-};
+function conducaoLabels(t: (k: string) => string): Record<CondicaoItem, string> {
+  return {
+    suse: t("pocDetail.conducaoSuse"),
+    cliente: t("pocDetail.conducaoCliente"),
+    lateral: t("pocDetail.conducaoLateral"),
+  };
+}
 
-const TABS = [
-  { id: "plano", label: "Plano de testes" },
-  { id: "pre", label: "Pré-requisitos" },
-  { id: "resumo", label: "Resumo e riscos" },
-  { id: "andamento", label: "Andamento" },
-  { id: "apresentacao", label: "Apresentação" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
+function flagLabels(t: (k: string) => string): Record<FlagClassificacao, string> {
+  return {
+    verde: t("pocDetail.flagVerde"),
+    amarelo: t("pocDetail.flagAmarelo"),
+    vermelho: t("pocDetail.flagVermelho"),
+  };
+}
 
 function pct(total: number, concluidos: number) {
   if (total === 0) return 0;
@@ -56,12 +64,14 @@ function faseDescricao(fases: Fase[], numero: number) {
 }
 
 export function PocDetail() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [poc, setPoc] = useState<PocDetailData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("plano");
   const [procedimentos, setProcedimentos] = useState<ProcedimentoListItem[]>([]);
   const [classificandoLote, setClassificandoLote] = useState(false);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const pollRef = useRef<number | null>(null);
   const pollLoteRef = useRef<number | null>(null);
 
@@ -79,7 +89,7 @@ export function PocDetail() {
           pollRef.current = window.setTimeout(carregar, 3000);
         }
       })
-      .catch(() => setErro("Não foi possível carregar a POC"));
+      .catch(() => setErro(t("pocDetail.erroCarregar")));
   }
 
   useEffect(() => {
@@ -116,6 +126,26 @@ export function PocDetail() {
 
   function handleItemRemovido(itemId: string) {
     setPoc((atual) => (atual ? { ...atual, itens: atual.itens.filter((i) => i.id !== itemId) } : atual));
+    setSelecionados((atual) => {
+      if (!atual.has(itemId)) return atual;
+      const novo = new Set(atual);
+      novo.delete(itemId);
+      return novo;
+    });
+  }
+
+  function toggleSelecionado(itemId: string) {
+    setSelecionados((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(itemId)) novo.delete(itemId);
+      else novo.add(itemId);
+      return novo;
+    });
+  }
+
+  function abrirRoteiro() {
+    if (!poc || selecionados.size === 0) return;
+    window.open(api.urlRoteiro(poc.id, [...selecionados]), "_blank", "noreferrer");
   }
 
   function handleSessaoCriada(sessao: Sessao) {
@@ -138,7 +168,7 @@ export function PocDetail() {
   }
 
   if (erro) return <p className="alert alert-error">{erro}</p>;
-  if (!poc) return <p className="muted">Carregando...</p>;
+  if (!poc) return <p className="muted">{t("common.carregando")}</p>;
 
   const totalConcluido = poc.itens.filter((i) => i.status === "concluido").length;
   const porFase = new Map<number, ItemPoc[]>();
@@ -156,12 +186,12 @@ export function PocDetail() {
           <div>
             <h1>{poc.titulo}</h1>
             <div className="poc-sub">
-              {poc.cliente} · {poc.itens.length} itens
+              {poc.cliente} · {poc.itens.length} {t("pocDetail.itens")}
             </div>
           </div>
           <div className="poc-pct">
             <b>{pct(poc.itens.length, totalConcluido)}%</b>
-            <span>itens concluídos</span>
+            <span>{t("pocDetail.itensConcluidos")}</span>
           </div>
         </div>
 
@@ -172,7 +202,7 @@ export function PocDetail() {
           className="btn btn-secondary"
           style={{ display: "inline-block", marginTop: 12 }}
         >
-          Exportar status (HTML)
+          {t("pocDetail.exportarStatus")}
         </a>
 
         {numerosFase.length > 0 && (
@@ -205,21 +235,21 @@ export function PocDetail() {
         )}
       </div>
 
-      {poc.status_extracao === "extraindo" && (
-        <p className="alert alert-success">Extraindo itens do PDF com o Gemini... atualiza automaticamente.</p>
-      )}
+      {poc.status_extracao === "extraindo" && <p className="alert alert-success">{t("pocDetail.extraindo")}</p>}
       {poc.status_extracao === "erro" && (
-        <p className="alert alert-error">Falha na extração: {poc.erro_extracao ?? "erro desconhecido"}</p>
+        <p className="alert alert-error">
+          {t("pocDetail.erroExtracao")} {poc.erro_extracao ?? t("pocDetail.erroDesconhecido")}
+        </p>
       )}
 
       <div className="poc-tabs">
-        {TABS.map((t) => (
+        {TAB_IDS.map((tid) => (
           <button
-            key={t.id}
-            className={tab === t.id ? "poc-tab active" : "poc-tab"}
-            onClick={() => setTab(t.id)}
+            key={tid}
+            className={tab === tid ? "poc-tab active" : "poc-tab"}
+            onClick={() => setTab(tid)}
           >
-            {t.label}
+            {t(TAB_LABEL_KEY[tid])}
           </button>
         ))}
       </div>
@@ -227,13 +257,35 @@ export function PocDetail() {
       {tab === "plano" && (
         <div className="card">
           {poc.itens.length > 0 && (
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-              <button className="btn btn-secondary" onClick={classificarPendentes} disabled={classificandoLote}>
-                {classificandoLote ? "Classificando..." : "Classificar itens sem semáforo"}
-              </button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              <span className="muted" style={{ fontSize: 13 }}>
+                {t("pocDetail.roteiroSelecionados").replace("{n}", String(selecionados.size))}
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={abrirRoteiro}
+                  disabled={selecionados.size === 0}
+                  type="button"
+                >
+                  {t("pocDetail.gerarRoteiro")}
+                </button>
+                <button className="btn btn-secondary" onClick={classificarPendentes} disabled={classificandoLote}>
+                  {classificandoLote ? t("pocDetail.classificando") : t("pocDetail.classificarPendentes")}
+                </button>
+              </div>
             </div>
           )}
-          {poc.itens.length === 0 && <div className="empty-state">Nenhum item extraído ainda.</div>}
+          {poc.itens.length === 0 && <div className="empty-state">{t("pocDetail.nenhumItem")}</div>}
           {numerosFase.map((n) => (
             <div key={n}>
               <div className="fase-header">
@@ -251,6 +303,8 @@ export function PocDetail() {
                     procedimentos={procedimentos}
                     sessoes={poc.sessoes}
                     clientePoc={poc.cliente}
+                    selecionado={selecionados.has(item.id)}
+                    onToggleSelecionado={() => toggleSelecionado(item.id)}
                     onAtualizado={handleItemAtualizado}
                     onRemovido={handleItemRemovido}
                   />
@@ -262,9 +316,7 @@ export function PocDetail() {
 
       {tab === "pre" && (
         <div className="card">
-          {poc.prerequisitos.length === 0 && (
-            <div className="empty-state">Nenhum pré-requisito identificado no documento.</div>
-          )}
+          {poc.prerequisitos.length === 0 && <div className="empty-state">{t("pocDetail.nenhumPrereq")}</div>}
           {poc.prerequisitos.map((p) => (
             <div key={p.id} className="item-row" style={{ padding: "10px 0" }}>
               <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
@@ -308,6 +360,8 @@ function ResumoTab({
   porFase: Map<number, ItemPoc[]>;
   numerosFase: number[];
 }) {
+  const { t } = useLanguage();
+  const STATUS_LABEL = statusLabels(t);
   const contagem: Record<StatusItem, number> = {
     pendente: 0,
     em_andamento: 0,
@@ -331,17 +385,17 @@ function ResumoTab({
         ))}
       </div>
 
-      <h2>Status por fase</h2>
+      <h2>{t("resumoTab.statusPorFase")}</h2>
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
-                <th>Fase</th>
-                <th>Itens</th>
-                <th>Concluído</th>
-                <th>Bloqueado</th>
-                <th>Pendente</th>
+                <th>{t("resumoTab.colFase")}</th>
+                <th>{t("resumoTab.colItens")}</th>
+                <th>{t("resumoTab.colConcluido")}</th>
+                <th>{t("resumoTab.colBloqueado")}</th>
+                <th>{t("resumoTab.colPendente")}</th>
               </tr>
             </thead>
             <tbody>
@@ -362,9 +416,9 @@ function ResumoTab({
         </div>
       </div>
 
-      <h2>Itens bloqueados</h2>
+      <h2>{t("resumoTab.itensBloqueados")}</h2>
       <div className="card">
-        {bloqueados.length === 0 && <div className="empty-state">Nenhum item bloqueado.</div>}
+        {bloqueados.length === 0 && <div className="empty-state">{t("resumoTab.nenhumBloqueado")}</div>}
         {bloqueados.length > 0 && (
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {bloqueados.map((i) => (
@@ -384,6 +438,8 @@ type EntradaTimeline =
   | { tipo: "nota"; created_at: string; codigo: string; texto: string };
 
 function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCriada: (s: Sessao) => void }) {
+  const { t } = useLanguage();
+  const STATUS_LABEL = statusLabels(t);
   const [data, setData] = useState("");
   const [participantes, setParticipantes] = useState("");
   const [agenda, setAgenda] = useState("");
@@ -413,7 +469,7 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
       onSessaoCriada(sessao);
       setTextoImportar("");
     } catch {
-      setErroImportar("Não foi possível importar o resumo");
+      setErroImportar(t("andamentoTab.erroImportar"));
     } finally {
       setImportando(false);
     }
@@ -421,7 +477,7 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
 
   async function criarSessao() {
     if (!data) {
-      setErro("Informe a data da sessão");
+      setErro(t("andamentoTab.informeData"));
       return;
     }
     setErro(null);
@@ -440,7 +496,7 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
       setParticipantes("");
       setAgenda("");
     } catch {
-      setErro("Não foi possível criar a sessão");
+      setErro(t("andamentoTab.erroCriarSessao"));
     } finally {
       setCriando(false);
     }
@@ -473,10 +529,13 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
         <strong>{e.codigo}</strong>{" "}
         {e.tipo === "status" ? (
           <>
-            mudou de {e.anterior ? STATUS_LABEL[e.anterior] : "—"} para {STATUS_LABEL[e.novo]}
+            {t("andamentoTab.mudouDe")} {e.anterior ? STATUS_LABEL[e.anterior] : "—"} {t("andamentoTab.para")}{" "}
+            {STATUS_LABEL[e.novo]}
           </>
         ) : (
-          <>nota: {e.texto}</>
+          <>
+            {t("andamentoTab.nota")} {e.texto}
+          </>
         )}
       </li>
     );
@@ -487,17 +546,13 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
 
   return (
     <div>
-      <h2>Sessões</h2>
+      <h2>{t("andamentoTab.sessoes")}</h2>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <strong>Importar resumo da sessão</strong>
-        <p className="field-hint">
-          Cole o prompt sugerido na ferramenta de IA que você usa durante a sessão com o cliente, cole o
-          resumo que ela devolver no campo abaixo, e o Gemini organiza automaticamente em pontos resolvidos,
-          pontos com falha e próximos passos.
-        </p>
+        <strong>{t("andamentoTab.importarResumo")}</strong>
+        <p className="field-hint">{t("andamentoTab.importarHint")}</p>
         <div className="field">
-          <label>Prompt sugerido</label>
+          <label>{t("andamentoTab.promptSugerido")}</label>
           <textarea
             className="input"
             rows={2}
@@ -506,17 +561,17 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
             onClick={(e) => e.currentTarget.select()}
           />
           <button className="btn btn-secondary" onClick={copiarPrompt} type="button" style={{ marginTop: 6 }}>
-            Copiar prompt
+            {t("andamentoTab.copiarPrompt")}
           </button>
         </div>
         <div className="field">
-          <label>Resumo da sessão</label>
+          <label>{t("andamentoTab.resumoDaSessao")}</label>
           <textarea
             className="input"
             rows={6}
             value={textoImportar}
             onChange={(e) => setTextoImportar(e.target.value)}
-            placeholder="Cole aqui o resumo gerado pela sua ferramenta de IA..."
+            placeholder={t("andamentoTab.resumoPlaceholder")}
           />
         </div>
         {erroImportar && <p className="alert alert-error">{erroImportar}</p>}
@@ -526,46 +581,42 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
           disabled={importando || !textoImportar.trim()}
           type="button"
         >
-          {importando ? "Gemini organizando o resumo..." : "Importar"}
+          {importando ? t("andamentoTab.organizando") : t("andamentoTab.importar")}
         </button>
-        {importando && (
-          <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>
-            Isso pode levar alguns segundos...
-          </p>
-        )}
+        {importando && <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>{t("andamentoTab.podeDemorar")}</p>}
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <strong>Ou crie uma sessão manualmente</strong>
+        <strong>{t("andamentoTab.criarManual")}</strong>
         <div
           className="fields"
           style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}
         >
           <div className="field">
-            <label>Data</label>
+            <label>{t("andamentoTab.data")}</label>
             <input type="date" className="input" value={data} onChange={(e) => setData(e.target.value)} />
           </div>
           <div className="field">
-            <label>Participantes</label>
+            <label>{t("andamentoTab.participantes")}</label>
             <input
               className="input"
               value={participantes}
               onChange={(e) => setParticipantes(e.target.value)}
-              placeholder="Separados por vírgula"
+              placeholder={t("andamentoTab.participantesPlaceholder")}
             />
           </div>
         </div>
         <div className="field">
-          <label>Agenda</label>
+          <label>{t("andamentoTab.agenda")}</label>
           <textarea className="input" rows={2} value={agenda} onChange={(e) => setAgenda(e.target.value)} />
         </div>
         {erro && <p className="alert alert-error">{erro}</p>}
         <button className="btn btn-primary" onClick={criarSessao} disabled={criando} type="button">
-          {criando ? "Criando..." : "Nova sessão"}
+          {criando ? t("common.criando") : t("andamentoTab.novaSessao")}
         </button>
       </div>
 
-      {sessoesOrdenadas.length === 0 && <div className="card empty-state">Nenhuma sessão registrada ainda.</div>}
+      {sessoesOrdenadas.length === 0 && <div className="card empty-state">{t("andamentoTab.nenhumaSessao")}</div>}
 
       {sessoesOrdenadas.map((s) => {
         const entradas = (porSessao.get(s.id) ?? []).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
@@ -576,7 +627,7 @@ function AndamentoTab({ poc, onSessaoCriada }: { poc: PocDetailData; onSessaoCri
 
       {semSessao.length > 0 && (
         <div className="card">
-          <strong>Sem sessão vinculada</strong>
+          <strong>{t("andamentoTab.semSessaoVinculada")}</strong>
           <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{semSessao.map(renderEntrada)}</ul>
         </div>
       )}
@@ -591,6 +642,7 @@ function ApresentacaoTab({
   poc: PocDetailData;
   onResumoAtualizado: (texto: string) => void;
 }) {
+  const { t } = useLanguage();
   const [resumo, setResumo] = useState(poc.resumo_executivo ?? "");
   const [gerando, setGerando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -627,37 +679,29 @@ function ApresentacaoTab({
 
   return (
     <div>
-      <h2>Apresentação para o cliente</h2>
-      <p className="field-hint">
-        Monta um HTML pronto para apresentar (ou exportar como PDF pelo navegador) com o sumário executivo,
-        os resultados por fase e a linha do tempo das sessões. Só entram aqui o sumário executivo — revisado
-        por você antes de salvar — e os pontos já organizados em cada sessão; notas internas avulsas não
-        aparecem automaticamente, pra evitar que algo escrito só pra uso interno vá pro cliente sem revisão.
-      </p>
+      <h2>{t("apresentacaoTab.titulo")}</h2>
+      <p className="field-hint">{t("apresentacaoTab.hint")}</p>
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}
         >
-          <strong>Sumário executivo</strong>
+          <strong>{t("apresentacaoTab.sumarioExecutivo")}</strong>
           <button className="btn btn-secondary" onClick={gerar} disabled={gerando} type="button">
-            {gerando ? "Gemini escrevendo..." : "Gerar com IA"}
+            {gerando ? t("apresentacaoTab.geminiEscrevendo") : t("apresentacaoTab.gerarIA")}
           </button>
         </div>
-        <p className="field-hint">
-          Gerado a partir do status consolidado da PoC. Revise e ajuste o texto antes de salvar — ele entra
-          assim na apresentação exportada.
-        </p>
+        <p className="field-hint">{t("apresentacaoTab.sumarioHint")}</p>
         <textarea
           className="input"
           rows={10}
           value={resumo}
           onChange={(e) => setResumo(e.target.value)}
-          placeholder="Clique em &quot;Gerar com IA&quot; ou escreva o sumário executivo aqui..."
+          placeholder={t("apresentacaoTab.sumarioPlaceholder")}
         />
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button className="btn btn-primary" onClick={salvar} disabled={salvando || !resumo.trim()} type="button">
-            {salvando ? "Salvando..." : salvo ? "Salvo!" : "Salvar"}
+            {salvando ? t("common.salvando") : salvo ? t("apresentacaoTab.salvo") : t("common.salvar")}
           </button>
         </div>
       </div>
@@ -665,7 +709,7 @@ function ApresentacaoTab({
       <div className="shortcut-grid" style={{ marginBottom: 20 }}>
         <div className="card" style={{ padding: 16 }}>
           <div className="muted" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-            Itens concluídos
+            {t("apresentacaoTab.itensConcluidos")}
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>
             {totalConcluido}/{poc.itens.length}
@@ -673,17 +717,17 @@ function ApresentacaoTab({
         </div>
         <div className="card" style={{ padding: 16 }}>
           <div className="muted" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-            Sessões realizadas
+            {t("apresentacaoTab.sessoesRealizadas")}
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>{poc.sessoes.length}</div>
         </div>
       </div>
 
       <a href={api.urlApresentacaoPoc(poc.id)} target="_blank" rel="noreferrer" className="btn btn-primary">
-        Abrir apresentação (HTML)
+        {t("apresentacaoTab.abrirApresentacao")}
       </a>
       <p className="field-hint" style={{ marginTop: 8 }}>
-        Abre em uma nova aba. Para gerar um PDF, use "Imprimir" (Ctrl/Cmd+P) do navegador e salve como PDF.
+        {t("apresentacaoTab.imprimirHint")}
       </p>
     </div>
   );
@@ -700,6 +744,7 @@ function SessaoCard({
   entradas: EntradaTimeline[];
   renderEntrada: (e: EntradaTimeline, i: number) => JSX.Element;
 }) {
+  const { t } = useLanguage();
   const [gerando, setGerando] = useState(false);
   const [resumoEmail, setResumoEmail] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
@@ -740,7 +785,7 @@ function SessaoCard({
           )}
         </div>
         <button className="btn btn-secondary" onClick={gerarResumo} disabled={gerando} type="button">
-          {gerando ? "Gemini escrevendo..." : "Gerar resumo para e-mail"}
+          {gerando ? t("apresentacaoTab.geminiEscrevendo") : t("sessaoCard.gerarResumoEmail")}
         </button>
       </div>
 
@@ -754,7 +799,7 @@ function SessaoCard({
         <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
           {s.pontos_resolvidos.length > 0 && (
             <div>
-              <span className="badge badge-verde">Resolvido</span>
+              <span className="badge badge-verde">{t("sessaoCard.resolvido")}</span>
               <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
                 {s.pontos_resolvidos.map((p, i) => (
                   <li key={i} style={{ fontSize: 13 }}>
@@ -766,7 +811,7 @@ function SessaoCard({
           )}
           {s.pontos_falha.length > 0 && (
             <div>
-              <span className="badge badge-vermelho">Falha / pendência</span>
+              <span className="badge badge-vermelho">{t("sessaoCard.falhaPendencia")}</span>
               <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
                 {s.pontos_falha.map((p, i) => (
                   <li key={i} style={{ fontSize: 13 }}>
@@ -778,7 +823,7 @@ function SessaoCard({
           )}
           {s.proximos_passos.length > 0 && (
             <div>
-              <span className="badge badge-info">Próximos passos</span>
+              <span className="badge badge-info">{t("sessaoCard.proximosPassos")}</span>
               <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
                 {s.proximos_passos.map((p, i) => (
                   <li key={i} style={{ fontSize: 13 }}>
@@ -794,7 +839,7 @@ function SessaoCard({
       {entradas.length === 0 ? (
         !temResumoImportado && (
           <p className="empty-state" style={{ marginTop: 8 }}>
-            Nenhum registro nesta sessão ainda.
+            {t("sessaoCard.nenhumRegistro")}
           </p>
         )
       ) : (
@@ -804,16 +849,16 @@ function SessaoCard({
       {(gerando || resumoEmail !== null) && (
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--color-border)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <strong>Resumo para e-mail</strong>
+            <strong>{t("sessaoCard.resumoParaEmail")}</strong>
             {resumoEmail && (
               <button className="btn btn-secondary" onClick={copiarResumo} type="button">
-                {copiado ? "Copiado!" : "Copiar"}
+                {copiado ? t("sessaoCard.copiado") : t("sessaoCard.copiar")}
               </button>
             )}
           </div>
           {gerando ? (
             <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>
-              Isso pode levar alguns segundos...
+              {t("andamentoTab.podeDemorar")}
             </p>
           ) : (
             <textarea className="input" rows={8} readOnly value={resumoEmail ?? ""} style={{ marginTop: 8 }} />
@@ -830,6 +875,8 @@ function ItemRow({
   procedimentos,
   sessoes,
   clientePoc,
+  selecionado,
+  onToggleSelecionado,
   onAtualizado,
   onRemovido,
 }: {
@@ -838,9 +885,16 @@ function ItemRow({
   procedimentos: ProcedimentoListItem[];
   sessoes: Sessao[];
   clientePoc: string;
+  selecionado: boolean;
+  onToggleSelecionado: () => void;
   onAtualizado: (item: ItemPoc) => void;
   onRemovido: (itemId: string) => void;
 }) {
+  const { t } = useLanguage();
+  const STATUS_LABEL = statusLabels(t);
+  const CONDUCAO_LABEL = conducaoLabels(t);
+  const FLAG_LABEL = flagLabels(t);
+
   const [open, setOpen] = useState(false);
   const [titulo, setTitulo] = useState(item.titulo);
   const [descricao, setDescricao] = useState(item.descricao ?? "");
@@ -996,6 +1050,14 @@ function ItemRow({
   return (
     <div className={open ? "item-row open" : "item-row"}>
       <div className="item-row-head" onClick={() => setOpen(!open)}>
+        <input
+          type="checkbox"
+          checked={selecionado}
+          title={t("pocDetail.selecionarParaRoteiro")}
+          onClick={(e) => e.stopPropagation()}
+          onChange={onToggleSelecionado}
+          style={{ marginRight: 4 }}
+        />
         <span className="item-codigo">{item.codigo}</span>
         <span className="item-titulo">
           {item.titulo}
@@ -1003,7 +1065,7 @@ function ItemRow({
         </span>
         {item.conducao && <span className={`chip chip-${item.conducao}`}>{CONDUCAO_LABEL[item.conducao]}</span>}
         <span className={`badge badge-${item.classificacao?.flag ?? "muted"}`}>
-          {item.classificacao ? FLAG_LABEL[item.classificacao.flag] : "Sem semáforo"}
+          {item.classificacao ? FLAG_LABEL[item.classificacao.flag] : t("itemRow.semSemaforo")}
         </span>
         <span className={`badge badge-${item.status}`}>{STATUS_LABEL[item.status]}</span>
         <select
@@ -1023,24 +1085,24 @@ function ItemRow({
       {open && (
         <div className="item-row-body">
           <div className="field">
-            <label>Título</label>
+            <label>{t("itemRow.titulo")}</label>
             <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
           </div>
           <div className="field">
-            <label>Descrição</label>
+            <label>{t("itemRow.descricao")}</label>
             <textarea className="input" rows={3} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
           </div>
           <div className="field">
-            <label>Critério de aceite</label>
+            <label>{t("itemRow.criterioAceite")}</label>
             <textarea className="input" rows={2} value={criterio} onChange={(e) => setCriterio(e.target.value)} />
           </div>
           <div className="fields" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
             <div className="field">
-              <label>Categoria</label>
+              <label>{t("itemRow.categoria")}</label>
               <input className="input" value={categoria} onChange={(e) => setCategoria(e.target.value)} />
             </div>
             <div className="field">
-              <label>Fase</label>
+              <label>{t("itemRow.fase")}</label>
               <input
                 type="number"
                 min={1}
@@ -1050,34 +1112,38 @@ function ItemRow({
               />
             </div>
             <div className="field">
-              <label>Condução</label>
+              <label>{t("itemRow.conducao")}</label>
               <select className="input" value={conducao} onChange={(e) => setConducao(e.target.value as CondicaoItem | "")}>
                 <option value="">—</option>
-                <option value="suse">SUSE</option>
-                <option value="cliente">Cliente</option>
-                <option value="lateral">Lateral</option>
+                <option value="suse">{CONDUCAO_LABEL.suse}</option>
+                <option value="cliente">{CONDUCAO_LABEL.cliente}</option>
+                <option value="lateral">{CONDUCAO_LABEL.lateral}</option>
               </select>
             </div>
           </div>
-          {item.ref && <p className="field-hint">Referência no documento original: {item.ref}</p>}
+          {item.ref && (
+            <p className="field-hint">
+              {t("itemRow.referencia")} {item.ref}
+            </p>
+          )}
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn btn-primary" onClick={salvar} disabled={salvando}>
-              {salvando ? "Salvando..." : "Salvar"}
+              {salvando ? t("common.salvando") : t("common.salvar")}
             </button>
             <button className="btn btn-secondary" onClick={remover} type="button">
-              Remover item
+              {t("itemRow.removerItem")}
             </button>
           </div>
 
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <strong>Classificação</strong>
+              <strong>{t("itemRow.classificacao")}</strong>
               <div style={{ display: "flex", gap: 8 }}>
                 <button className="btn btn-secondary" onClick={reavaliar} disabled={reavaliando} type="button">
-                  {reavaliando ? "Reavaliando..." : "Reavaliar"}
+                  {reavaliando ? t("itemRow.reavaliando") : t("itemRow.reavaliar")}
                 </button>
                 <button className="btn btn-secondary" onClick={() => setEditandoManual((v) => !v)} type="button">
-                  {editandoManual ? "Cancelar" : "Sobrescrever"}
+                  {editandoManual ? t("common.cancelar") : t("itemRow.sobrescrever")}
                 </button>
               </div>
             </div>
@@ -1088,12 +1154,14 @@ function ItemRow({
                   <span className={`badge badge-${item.classificacao.flag}`}>
                     {FLAG_LABEL[item.classificacao.flag]}
                   </span>{" "}
-                  <span>({item.classificacao.origem === "manual" ? "ajustado manualmente" : "automático"})</span>
+                  <span>
+                    ({item.classificacao.origem === "manual" ? t("itemRow.ajustadoManualmente") : t("itemRow.automatico")})
+                  </span>
                 </div>
                 {item.classificacao.justificativa && <p style={{ marginTop: 6 }}>{item.classificacao.justificativa}</p>}
                 {procedimentoVinculado && (
                   <p>
-                    Procedimento:{" "}
+                    {t("itemRow.procedimentoLabel")}{" "}
                     <Link to={`/procedimentos/${procedimentoVinculado.id}`}>{procedimentoVinculado.titulo}</Link>
                   </p>
                 )}
@@ -1110,26 +1178,26 @@ function ItemRow({
                 )}
               </div>
             ) : (
-              <p className="empty-state">Ainda não classificado. Use "Reavaliar" para rodar a classificação.</p>
+              <p className="empty-state">{t("itemRow.naoClassificado")}</p>
             )}
 
             {editandoManual && (
               <div className="fields" style={{ marginTop: 12, display: "grid", gap: 10 }}>
                 <div className="field">
-                  <label>Semáforo</label>
+                  <label>{t("itemRow.semaforo")}</label>
                   <select
                     className="input"
                     value={flagManual}
                     onChange={(e) => setFlagManual(e.target.value as FlagClassificacao)}
                   >
-                    <option value="verde">Verde</option>
-                    <option value="amarelo">Amarelo</option>
-                    <option value="vermelho">Vermelho</option>
+                    <option value="verde">{FLAG_LABEL.verde}</option>
+                    <option value="amarelo">{FLAG_LABEL.amarelo}</option>
+                    <option value="vermelho">{FLAG_LABEL.vermelho}</option>
                   </select>
                 </div>
                 {flagManual === "verde" && (
                   <div className="field">
-                    <label>Procedimento vinculado</label>
+                    <label>{t("itemRow.procedimentoVinculado")}</label>
                     <select
                       className="input"
                       value={procedimentoManual}
@@ -1145,7 +1213,7 @@ function ItemRow({
                   </div>
                 )}
                 <div className="field">
-                  <label>Justificativa</label>
+                  <label>{t("itemRow.justificativa")}</label>
                   <textarea
                     className="input"
                     rows={2}
@@ -1160,7 +1228,7 @@ function ItemRow({
                     disabled={salvandoManual}
                     type="button"
                   >
-                    {salvandoManual ? "Salvando..." : "Salvar classificação manual"}
+                    {salvandoManual ? t("common.salvando") : t("itemRow.salvarClassificacaoManual")}
                   </button>
                 </div>
               </div>
@@ -1168,10 +1236,10 @@ function ItemRow({
           </div>
 
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
-            <strong>Notas</strong>
+            <strong>{t("itemRow.notas")}</strong>
             {item.notas.length === 0 ? (
               <p className="empty-state" style={{ marginTop: 8 }}>
-                Nenhuma nota ainda.
+                {t("itemRow.nenhumaNota")}
               </p>
             ) : (
               <ul style={{ margin: "8px 0", paddingLeft: 18 }}>
@@ -1184,14 +1252,14 @@ function ItemRow({
                       onClick={() => excluirNota(n.id)}
                       type="button"
                     >
-                      remover
+                      {t("itemRow.remover")}
                     </button>
                   </li>
                 ))}
               </ul>
             )}
             {sessoes.length === 0 ? (
-              <p className="field-hint">Crie uma sessão na aba "Andamento" pra poder adicionar notas.</p>
+              <p className="field-hint">{t("itemRow.crieSessaoParaNotas")}</p>
             ) : (
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
                 <select
@@ -1200,7 +1268,7 @@ function ItemRow({
                   value={sessaoNotaId}
                   onChange={(e) => setSessaoNotaId(e.target.value)}
                 >
-                  <option value="">Sessão...</option>
+                  <option value="">{t("itemRow.sessaoPlaceholder")}</option>
                   {sessoes.map((s) => (
                     <option key={s.id} value={s.id}>
                       {new Date(s.data).toLocaleDateString("pt-BR")}
@@ -1213,7 +1281,7 @@ function ItemRow({
                   style={{ flex: 1, minWidth: 160 }}
                   value={textoNota}
                   onChange={(e) => setTextoNota(e.target.value)}
-                  placeholder="Nova nota..."
+                  placeholder={t("itemRow.novaNotaPlaceholder")}
                 />
                 <button
                   className="btn btn-secondary"
@@ -1221,17 +1289,17 @@ function ItemRow({
                   disabled={salvandoNota || !sessaoNotaId || !textoNota.trim()}
                   type="button"
                 >
-                  Adicionar
+                  {t("itemRow.adicionar")}
                 </button>
               </div>
             )}
           </div>
 
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
-            <strong>Anexos</strong>
+            <strong>{t("itemRow.anexos")}</strong>
             {item.anexos.length === 0 ? (
               <p className="empty-state" style={{ marginTop: 8 }}>
-                Nenhum anexo ainda.
+                {t("itemRow.nenhumAnexo")}
               </p>
             ) : (
               <ul style={{ margin: "8px 0", paddingLeft: 18 }}>
@@ -1246,7 +1314,7 @@ function ItemRow({
                       onClick={() => excluirAnexo(a.id)}
                       type="button"
                     >
-                      remover
+                      {t("itemRow.remover")}
                     </button>
                   </li>
                 ))}
@@ -1260,7 +1328,7 @@ function ItemRow({
                   value={sessaoAnexoId}
                   onChange={(e) => setSessaoAnexoId(e.target.value)}
                 >
-                  <option value="">Sem sessão</option>
+                  <option value="">{t("itemRow.semSessao")}</option>
                   {sessoes.map((s) => (
                     <option key={s.id} value={s.id}>
                       {new Date(s.data).toLocaleDateString("pt-BR")}
@@ -1275,40 +1343,36 @@ function ItemRow({
                 disabled={enviandoAnexo || !arquivoAnexo}
                 type="button"
               >
-                {enviandoAnexo ? "Enviando..." : "Enviar anexo"}
+                {enviandoAnexo ? t("common.enviando") : t("itemRow.enviarAnexo")}
               </button>
             </div>
           </div>
 
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <strong>Procedimento</strong>
+              <strong>{t("itemRow.procedimento")}</strong>
               <button className="btn btn-secondary" onClick={() => setPromovendo((v) => !v)} type="button">
-                {promovendo ? "Cancelar" : "Promover a procedimento validado"}
+                {promovendo ? t("common.cancelar") : t("itemRow.promoverProcedimento")}
               </button>
             </div>
-            {procSalvo && (
-              <p className="alert alert-success" style={{ marginTop: 8 }}>
-                Procedimento salvo na base como validado.
-              </p>
-            )}
+            {procSalvo && <p className="alert alert-success" style={{ marginTop: 8 }}>{t("itemRow.procedimentoSalvo")}</p>}
             {promovendo && (
               <div className="fields" style={{ marginTop: 12, display: "grid", gap: 10 }}>
                 <div className="field">
-                  <label>Título do procedimento</label>
+                  <label>{t("itemRow.tituloProcedimento")}</label>
                   <input className="input" value={tituloProc} onChange={(e) => setTituloProc(e.target.value)} />
                 </div>
                 <div className="field">
-                  <label>Tags</label>
+                  <label>{t("itemRow.tags")}</label>
                   <input
                     className="input"
                     value={tagsProc}
                     onChange={(e) => setTagsProc(e.target.value)}
-                    placeholder="k3s, Rancher..."
+                    placeholder={t("itemRow.tagsPlaceholder")}
                   />
                 </div>
                 <div className="field">
-                  <label>Passo a passo que funcionou</label>
+                  <label>{t("itemRow.passoAPasso")}</label>
                   <textarea className="input" rows={6} value={textoProc} onChange={(e) => setTextoProc(e.target.value)} />
                 </div>
                 <div>
@@ -1318,7 +1382,7 @@ function ItemRow({
                     disabled={salvandoProc || !textoProc.trim()}
                     type="button"
                   >
-                    {salvandoProc ? "Salvando..." : "Salvar procedimento"}
+                    {salvandoProc ? t("common.salvando") : t("itemRow.salvarProcedimento")}
                   </button>
                 </div>
               </div>

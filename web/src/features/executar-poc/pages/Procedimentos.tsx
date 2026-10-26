@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ProcedimentoListItem } from "@/api";
+import { useLanguage } from "@/i18n";
 
 export function Procedimentos() {
+  const { t } = useLanguage();
   const [itens, setItens] = useState<ProcedimentoListItem[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -10,24 +12,23 @@ export function Procedimentos() {
     api
       .listarProcedimentos()
       .then(setItens)
-      .catch(() => setErro("Não foi possível carregar os procedimentos"));
+      .catch(() => setErro(t("procedimentos.erroCarregar")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div>
       <div className="page-header">
-        <h1>Procedimentos</h1>
+        <h1>{t("procedimentos.titulo")}</h1>
         <Link to="/procedimentos/novo" className="btn btn-primary">
-          Novo procedimento
+          {t("procedimentos.novoProcedimento")}
         </Link>
       </div>
 
       {erro && <p className="alert alert-error">{erro}</p>}
-      {itens === null && !erro && <p className="muted">Carregando...</p>}
+      {itens === null && !erro && <p className="muted">{t("common.carregando")}</p>}
 
-      {itens && itens.length === 0 && (
-        <div className="card empty-state">Nenhum procedimento cadastrado ainda.</div>
-      )}
+      {itens && itens.length === 0 && <div className="card empty-state">{t("procedimentos.nenhum")}</div>}
 
       {itens && itens.length > 0 && (
         <div className="card">
@@ -35,11 +36,11 @@ export function Procedimentos() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Título</th>
-                  <th>Tags</th>
-                  <th>Cliente</th>
-                  <th>Status</th>
-                  <th>Versão</th>
+                  <th>{t("procedimentos.colTitulo")}</th>
+                  <th>{t("procedimentos.colTags")}</th>
+                  <th>{t("procedimentos.colCliente")}</th>
+                  <th>{t("procedimentos.colStatus")}</th>
+                  <th>{t("procedimentos.colVersao")}</th>
                 </tr>
               </thead>
               <tbody>

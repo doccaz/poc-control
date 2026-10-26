@@ -2,7 +2,7 @@ import pathlib
 import uuid
 from datetime import date
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -13,7 +13,7 @@ from app.config import settings
 from app.db import get_db
 from app.deps import get_current_user
 from app.gemini import extrair_resumo_sessao, gerar_resumo_email, gerar_resumo_executivo
-from app.gemini_key import resolve_api_key
+from app.gemini_key import resolve_api_key, resolve_model
 from app.models import (
     Anexo,
     Classificacao,
@@ -31,6 +31,8 @@ from app.models import (
 )
 from app.pocs.apresentacao import montar_apresentacao_html
 from app.pocs.export import montar_export_html
+from app.pocs.planner_import import extrair_parametros_tecnicos
+from app.pocs.roteiro import montar_roteiro_html
 from app.pocs.schemas import (
     ClassificacaoManualUpdate,
     FaseOut,
@@ -135,7 +137,15 @@ def criar_poc(
     if not pdf_bytes and not texto_final:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Envie o PDF da POC, ou cole/envie o plano de testes em texto/JSON")
 
-    poc = Poc(titulo=titulo, cliente=cliente, escopo=escopo or None, status_extracao=StatusExtracao.extraindo)
+    parametros_tecnicos = extrair_parametros_tecnicos(texto_final) if texto_final else None
+
+    poc = Poc(
+        titulo=titulo,
+        cliente=cliente,
+        escopo=escopo or None,
+        status_extracao=StatusExtracao.extraindo,
+        parametros_tecnicos=parametros_tecnicos,
+    )
     db.add(poc)
     db.commit()
     db.refresh(poc)
@@ -154,7 +164,9 @@ def criar_poc(
     db.add(PocDocumento(poc_id=poc.id, nome_arquivo=nome, caminho_arquivo=str(caminho)))
     db.commit()
 
-    background_tasks.add_task(processar_extracao, poc.id, pdf_bytes, texto_final, resolve_api_key(current_user))
+    background_tasks.add_task(
+        processar_extracao, poc.id, pdf_bytes, texto_final, resolve_api_key(current_user), resolve_model(current_user)
+    )
 
     return _list_item(db, poc)
 
@@ -175,6 +187,7 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
         escopo=poc.escopo,
         erro_extracao=poc.erro_extracao,
         resumo_executivo=poc.resumo_executivo,
+        parametros_tecnicos=poc.parametros_tecnicos,
         fases=[FaseOut(**f) for f in (poc.fases or [])],
         itens=[ItemOut.model_validate(i) for i in poc.itens],
         prerequisitos=[PrerequisitoOut.model_validate(p) for p in poc.prerequisitos],
@@ -238,7 +251,9 @@ def gerar_resumo_executivo_poc(
     current_user: User = Depends(get_current_user),
 ):
     poc = _get_poc_or_404(db, poc_id)
-    texto = gerar_resumo_executivo(_contexto_apresentacao(poc), api_key=resolve_api_key(current_user))
+    texto = gerar_resumo_executivo(
+        _contexto_apresentacao(poc), api_key=resolve_api_key(current_user), model=resolve_model(current_user)
+    )
     poc.resumo_executivo = texto
     db.commit()
     return {"texto": texto}
@@ -256,6 +271,21 @@ def salvar_resumo_executivo_poc(poc_id: uuid.UUID, payload: ResumoExecutivoUpdat
 def exportar_apresentacao(poc_id: uuid.UUID, db: Session = Depends(get_db)):
     poc = _get_poc_or_404(db, poc_id)
     return HTMLResponse(montar_apresentacao_html(poc))
+
+
+@router.get("/{poc_id}/roteiro", response_class=HTMLResponse)
+def gerar_roteiro(poc_id: uuid.UUID, item_ids: list[uuid.UUID] = Query(...), db: Session = Depends(get_db)):
+    """Roteiro do dia: para os itens marcados (checklist na aba "Andamento"), monta uma página
+    imprimível com os procedimentos vinculados já na ordem de execução (fase, depois ordem),
+    precedida pelos parâmetros técnicos desta PoC (rede/infra) quando vieram do Planejar PoC.
+    GET (em vez de POST) de propósito: assim o front abre o resultado direto num link/nova aba,
+    igual aos outros exports (ver urlExportarPoc/urlApresentacaoPoc em web/src/api.ts)."""
+    poc = _get_poc_or_404(db, poc_id)
+    ids_selecionados = set(item_ids)
+    itens_selecionados = [i for i in poc.itens if i.id in ids_selecionados]
+    if not itens_selecionados:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Selecione ao menos um item")
+    return HTMLResponse(montar_roteiro_html(poc, itens_selecionados))
 
 
 @router.patch("/{poc_id}/itens/{item_id}", response_model=ItemOut)
@@ -298,7 +328,7 @@ def classificar_item_individual(
     current_user: User = Depends(get_current_user),
 ):
     item = _get_item_or_404(db, poc_id, item_id)
-    classificar_item(db, item, api_key=resolve_api_key(current_user))
+    classificar_item(db, item, api_key=resolve_api_key(current_user), model=resolve_model(current_user))
     db.refresh(item)
     return item
 
@@ -334,7 +364,9 @@ def classificar_pendentes_da_poc(
     current_user: User = Depends(get_current_user),
 ):
     _get_poc_or_404(db, poc_id)
-    background_tasks.add_task(classificar_pendentes, poc_id, resolve_api_key(current_user))
+    background_tasks.add_task(
+        classificar_pendentes, poc_id, resolve_api_key(current_user), resolve_model(current_user)
+    )
     return {"status": "classificando"}
 
 
@@ -369,7 +401,9 @@ def importar_sessao(
     current_user: User = Depends(get_current_user),
 ):
     _get_poc_or_404(db, poc_id)
-    extraido = extrair_resumo_sessao(payload.texto, api_key=resolve_api_key(current_user))
+    extraido = extrair_resumo_sessao(
+        payload.texto, api_key=resolve_api_key(current_user), model=resolve_model(current_user)
+    )
 
     try:
         data_sessao = date.fromisoformat(extraido.data) if extraido.data else date.today()
@@ -439,7 +473,9 @@ def obter_resumo_sessao(
 ):
     poc = _get_poc_or_404(db, poc_id)
     sessao = _get_sessao_or_404(db, poc_id, sessao_id)
-    texto = gerar_resumo_email(_contexto_sessao(poc, sessao), api_key=resolve_api_key(current_user))
+    texto = gerar_resumo_email(
+        _contexto_sessao(poc, sessao), api_key=resolve_api_key(current_user), model=resolve_model(current_user)
+    )
     return {"texto": texto}
 
 

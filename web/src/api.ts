@@ -26,6 +26,7 @@ export interface User {
   email: string;
   is_admin: boolean;
   tem_gemini_key: boolean;
+  gemini_model: string | null;
 }
 
 export interface UsuarioListItem {
@@ -171,10 +172,28 @@ export interface PrerequisitoPoc {
   ordem: number;
 }
 
+export interface ParametrosTecnicos {
+  origem: string;
+  projeto: { nome: string | null; organizacao: string | null; responsavel: string | null };
+  produtos_selecionados: string[];
+  rede: {
+    cidr_gerenciamento: string | null;
+    gateway: string | null;
+    vip_cluster: string | null;
+    pool_ip_inicio: string | null;
+    pool_ip_fim: string | null;
+    vms: Array<Record<string, unknown>>;
+  };
+  infra: Record<string, unknown>;
+  portas_concluidas: number;
+  portas_total: number;
+}
+
 export interface PocDetail extends PocListItem {
   escopo: string | null;
   erro_extracao: string | null;
   resumo_executivo: string | null;
+  parametros_tecnicos: ParametrosTecnicos | null;
   fases: Fase[];
   itens: ItemPoc[];
   prerequisitos: PrerequisitoPoc[];
@@ -204,6 +223,9 @@ export const api = {
   salvarChaveGemini: (apiKey: string) =>
     request<User>("/api/auth/me/gemini-key", { method: "PUT", body: JSON.stringify({ api_key: apiKey }) }),
   removerChaveGemini: () => request<User>("/api/auth/me/gemini-key", { method: "DELETE" }),
+  salvarModeloGemini: (model: string) =>
+    request<User>("/api/auth/me/gemini-model", { method: "PUT", body: JSON.stringify({ model }) }),
+  removerModeloGemini: () => request<User>("/api/auth/me/gemini-model", { method: "DELETE" }),
 
   listarProcedimentos: () => request<ProcedimentoListItem[]>("/api/procedimentos"),
   obterProcedimento: (id: string) => request<ProcedimentoDetail>(`/api/procedimentos/${id}`),
@@ -253,6 +275,8 @@ export const api = {
     request<{ texto: string }>(`/api/pocs/${pocId}/sessoes/${sessaoId}/resumo`, { method: "POST" }),
   urlExportarPoc: (pocId: string) => `/api/pocs/${pocId}/export`,
   urlApresentacaoPoc: (pocId: string) => `/api/pocs/${pocId}/apresentacao`,
+  urlRoteiro: (pocId: string, itemIds: string[]) =>
+    `/api/pocs/${pocId}/roteiro?${itemIds.map((id) => `item_ids=${encodeURIComponent(id)}`).join("&")}`,
   gerarResumoExecutivo: (pocId: string) =>
     request<{ texto: string }>(`/api/pocs/${pocId}/apresentacao/resumo`, { method: "POST" }),
   salvarResumoExecutivo: (pocId: string, texto: string) =>
