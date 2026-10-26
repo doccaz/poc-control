@@ -1,3 +1,4 @@
+import logging
 import math
 import time
 
@@ -8,6 +9,8 @@ from pydantic import BaseModel
 
 from app.config import settings
 
+logger = logging.getLogger(__name__)
+
 EMBEDDING_DIM = 1536
 _MODEL = "gemini-embedding-001"
 _TEXT_MODEL = "gemini-3.8-flash"
@@ -15,6 +18,37 @@ _TEXT_MODEL = "gemini-3.8-flash"
 
 def _client(api_key: str | None = None) -> genai.Client:
     return genai.Client(api_key=api_key or settings.gemini_api_key)
+
+
+def interpretar_erro_gemini(exc: Exception) -> str:
+    """Traduz os erros mais comuns da API do Gemini pra uma mensagem acionável, em vez do
+    dump cru da exceção (ex.: "503 UNAVAILABLE {'error': {...}}"), que é o que aparecia antes
+    em erro_extracao e deixava o usuário sem saber se era pra tentar de novo, trocar a chave
+    ou reportar o bug."""
+    codigo = getattr(exc, "code", None)
+    if codigo == 503:
+        return (
+            "O Gemini está temporariamente sobrecarregado (alta demanda no modelo configurado). "
+            "Não é um problema com a sua chave de API — tente novamente em alguns minutos."
+        )
+    if codigo == 429:
+        return (
+            "O limite de uso (quota) da chave de API do Gemini foi atingido. Aguarde um pouco "
+            "ou confira o plano da chave em aistudio.google.com."
+        )
+    if codigo in (401, 403):
+        return (
+            "A chave de API do Gemini foi recusada (inválida, revogada, ou sem permissão para "
+            "este modelo). Confira a chave cadastrada em Minha conta."
+        )
+    if codigo == 404:
+        return (
+            "O modelo do Gemini configurado não foi encontrado (nome errado, ou a chave não tem "
+            "acesso a ele). Confira o campo \"Modelo do Gemini\" em Minha conta."
+        )
+    if codigo == 500:
+        return "Erro interno do Gemini. Tente novamente em alguns instantes."
+    return f"Erro inesperado ao chamar o Gemini: {exc}"
 
 
 def _normalize(values: list[float]) -> list[float]:
@@ -26,13 +60,18 @@ def _normalize(values: list[float]) -> list[float]:
 
 def embed_document(texto: str, api_key: str | None = None) -> list[float]:
     client = _client(api_key)
-    result = client.models.embed_content(
-        model=_MODEL,
-        contents=texto,
-        config=types.EmbedContentConfig(
-            task_type="RETRIEVAL_DOCUMENT",
-            output_dimensionality=EMBEDDING_DIM,
+    result = _com_retry(
+        lambda: client.models.embed_content(
+            model=_MODEL,
+            contents=texto,
+            config=types.EmbedContentConfig(
+                task_type="RETRIEVAL_DOCUMENT",
+                output_dimensionality=EMBEDDING_DIM,
+            ),
         ),
+        api_key=api_key,
+        contexto="embed_document",
+        modelo=_MODEL,
     )
     [embedding] = result.embeddings
     return _normalize(embedding.values)
@@ -40,13 +79,18 @@ def embed_document(texto: str, api_key: str | None = None) -> list[float]:
 
 def embed_query(texto: str, api_key: str | None = None) -> list[float]:
     client = _client(api_key)
-    result = client.models.embed_content(
-        model=_MODEL,
-        contents=texto,
-        config=types.EmbedContentConfig(
-            task_type="RETRIEVAL_QUERY",
-            output_dimensionality=EMBEDDING_DIM,
+    result = _com_retry(
+        lambda: client.models.embed_content(
+            model=_MODEL,
+            contents=texto,
+            config=types.EmbedContentConfig(
+                task_type="RETRIEVAL_QUERY",
+                output_dimensionality=EMBEDDING_DIM,
+            ),
         ),
+        api_key=api_key,
+        contexto="embed_query",
+        modelo=_MODEL,
     )
     [embedding] = result.embeddings
     return _normalize(embedding.values)
@@ -124,24 +168,54 @@ Responda só com os dados pedidos, em português, sem inventar itens que não te
 _RETRY_CODES = {429, 500, 503}
 
 
-def _gerar_com_retry(*, api_key: str | None = None, **kwargs) -> types.GenerateContentResponse:
-    client = _client(api_key)
+def _com_retry(operacao, *, api_key: str | None, contexto: str, modelo: str | None):
+    """Executa `operacao()` com retry/backoff exponencial para erros transitórios do Gemini
+    (429/500/503), logando cada tentativa — nunca a chave em si, só se é a pessoal ou a
+    compartilhada. É isso que faz `docker logs poc-control-api-1` mostrar o que de fato
+    aconteceu numa falha (qual operação, qual modelo, quantas tentativas, qual código), em vez
+    de só o 500 genérico que chegava no front antes."""
     tentativas = 4
     espera = 5
     ultimo_erro: Exception | None = None
+    origem_chave = "pessoal" if api_key else "compartilhada"
 
-    for tentativa in range(tentativas):
+    for tentativa in range(1, tentativas + 1):
         try:
-            return client.models.generate_content(**kwargs)
+            resultado = operacao()
+            if tentativa > 1:
+                logger.info(
+                    "Gemini [%s] ok na tentativa %d/%d (modelo=%s, chave=%s)",
+                    contexto, tentativa, tentativas, modelo, origem_chave,
+                )
+            return resultado
         except genai_errors.APIError as exc:
             ultimo_erro = exc
-            if getattr(exc, "code", None) not in _RETRY_CODES or tentativa == tentativas - 1:
+            codigo = getattr(exc, "code", None)
+            vai_tentar_de_novo = codigo in _RETRY_CODES and tentativa < tentativas
+            logger.warning(
+                "Gemini [%s] falhou na tentativa %d/%d (modelo=%s, chave=%s): codigo=%s %s%s",
+                contexto, tentativa, tentativas, modelo, origem_chave, codigo, exc,
+                f" — nova tentativa em {espera}s" if vai_tentar_de_novo else " — desistindo",
+            )
+            if not vai_tentar_de_novo:
                 raise
             time.sleep(espera)
             espera *= 2
 
     assert ultimo_erro is not None
     raise ultimo_erro
+
+
+def _gerar_com_retry(
+    *, api_key: str | None = None, contexto: str = "gemini", **kwargs
+) -> types.GenerateContentResponse:
+    client = _client(api_key)
+    return _com_retry(
+        lambda: client.models.generate_content(**kwargs),
+        api_key=api_key,
+        contexto=contexto,
+        modelo=kwargs.get("model"),
+    )
 
 
 def extrair_itens_poc(
@@ -160,6 +234,7 @@ def extrair_itens_poc(
 
     response = _gerar_com_retry(
         api_key=api_key,
+        contexto="extrair_itens_poc",
         model=model or _TEXT_MODEL,
         contents=conteudo,
         config=types.GenerateContentConfig(
@@ -217,6 +292,7 @@ def confirmar_match(
     )
     response = _gerar_com_retry(
         api_key=api_key,
+        contexto="confirmar_match",
         model=model or _TEXT_MODEL,
         contents=_CONFIRMACAO_PROMPT.format(item=item_texto, candidatos=candidatos_texto),
         config=types.GenerateContentConfig(
@@ -251,6 +327,7 @@ def pesquisar_viabilidade_web(
 ) -> tuple[str, list[FonteEvidencia]]:
     response = _gerar_com_retry(
         api_key=api_key,
+        contexto="pesquisar_viabilidade_web",
         model=model or _TEXT_MODEL,
         contents=_VIABILIDADE_PROMPT.format(item=item_texto),
         config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())]),
@@ -295,6 +372,7 @@ def classificar_viabilidade(
 ) -> AvaliacaoViabilidade:
     response = _gerar_com_retry(
         api_key=api_key,
+        contexto="classificar_viabilidade",
         model=model or _TEXT_MODEL,
         contents=_AVALIACAO_PROMPT.format(pesquisa=texto_pesquisa or "(a pesquisa não retornou texto)"),
         config=types.GenerateContentConfig(
@@ -342,6 +420,7 @@ def extrair_resumo_sessao(
 ) -> ResumoSessaoExtraido:
     response = _gerar_com_retry(
         api_key=api_key,
+        contexto="extrair_resumo_sessao",
         model=model or _TEXT_MODEL,
         contents=_RESUMO_SESSAO_PROMPT.format(texto=texto),
         config=types.GenerateContentConfig(
@@ -377,7 +456,10 @@ Não invente informação que não esteja no contexto. Não assine o e-mail nem 
 
 def gerar_resumo_email(contexto: str, api_key: str | None = None, model: str | None = None) -> str:
     response = _gerar_com_retry(
-        api_key=api_key, model=model or _TEXT_MODEL, contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto)
+        api_key=api_key,
+        contexto="gerar_resumo_email",
+        model=model or _TEXT_MODEL,
+        contents=_RESUMO_EMAIL_PROMPT.format(contexto=contexto),
     )
     return response.text or ""
 
@@ -406,6 +488,9 @@ como "[Seu nome]".
 
 def gerar_resumo_executivo(contexto: str, api_key: str | None = None, model: str | None = None) -> str:
     response = _gerar_com_retry(
-        api_key=api_key, model=model or _TEXT_MODEL, contents=_RESUMO_EXECUTIVO_PROMPT.format(contexto=contexto)
+        api_key=api_key,
+        contexto="gerar_resumo_executivo",
+        model=model or _TEXT_MODEL,
+        contents=_RESUMO_EXECUTIVO_PROMPT.format(contexto=contexto),
     )
     return response.text or ""

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from sqlalchemy import text
 
@@ -6,6 +8,13 @@ from app.db import SessionLocal
 from app.pocs.router import router as pocs_router
 from app.procedimentos.router import router as procedimentos_router
 from app.users import router as users_router
+
+# Sem isso, logger.warning/info/exception dos nossos módulos (app.gemini, app.pocs.tasks etc.)
+# não aparecem em `docker logs` — o root logger do Python não tem handler por padrão, e o
+# logging do uvicorn não propaga pros loggers da aplicação sozinho. Foi assim que um 503 real
+# do Gemini na extração de uma PoC ficou invisível nos logs (só o traceback.exception ia pro
+# "void"); isso garante que INFO pra cima sempre vá pro stdout do container.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 app = FastAPI(title="POC Control")
 app.include_router(auth_router)

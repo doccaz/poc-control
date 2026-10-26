@@ -195,6 +195,47 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
     )
 
 
+@router.post("/{poc_id}/reextrair", status_code=status.HTTP_202_ACCEPTED)
+def reextrair_poc(
+    poc_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Tenta de novo a extração de itens de uma PoC cujo status_extracao ficou 'erro' (ex.: o
+    Gemini respondeu 503 por sobrecarga) -- sem precisar recriar a PoC do zero. Relê o
+    documento original salvo em disco (PDF ou texto/JSON) e refaz a extração em segundo plano."""
+    poc = _get_poc_or_404(db, poc_id)
+    if poc.status_extracao != StatusExtracao.erro:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Só é possível reprocessar uma PoC cuja extração falhou"
+        )
+
+    documento = poc.documentos[-1] if poc.documentos else None
+    if documento is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Esta PoC não tem documento original para reprocessar")
+
+    caminho = pathlib.Path(documento.caminho_arquivo)
+    if not caminho.exists():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "O arquivo original não foi encontrado em disco")
+
+    pdf_bytes: bytes | None = None
+    texto: str | None = None
+    if caminho.suffix.lower() == ".pdf":
+        pdf_bytes = caminho.read_bytes()
+    else:
+        texto = caminho.read_text(encoding="utf-8")
+
+    poc.status_extracao = StatusExtracao.extraindo
+    poc.erro_extracao = None
+    db.commit()
+
+    background_tasks.add_task(
+        processar_extracao, poc.id, pdf_bytes, texto, resolve_api_key(current_user), resolve_model(current_user)
+    )
+    return {"status": "extraindo"}
+
+
 @router.get("/{poc_id}/export", response_class=HTMLResponse)
 def exportar_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
     poc = _get_poc_or_404(db, poc_id)

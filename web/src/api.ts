@@ -242,6 +242,8 @@ export const api = {
   listarPocs: () => request<PocListItem[]>("/api/pocs"),
   obterPoc: (id: string) => request<PocDetail>(`/api/pocs/${id}`),
   criarPoc: (form: FormData) => request<PocListItem>("/api/pocs", { method: "POST", body: form }),
+  reextrairPoc: (pocId: string) =>
+    request<{ status: string }>(`/api/pocs/${pocId}/reextrair`, { method: "POST" }),
   atualizarItem: (pocId: string, itemId: string, payload: ItemUpdatePayload) =>
     request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}`, {
       method: "PATCH",

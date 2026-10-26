@@ -71,6 +71,7 @@ export function PocDetail() {
   const [tab, setTab] = useState<TabId>("plano");
   const [procedimentos, setProcedimentos] = useState<ProcedimentoListItem[]>([]);
   const [classificandoLote, setClassificandoLote] = useState(false);
+  const [reextraindo, setReextraindo] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const pollRef = useRef<number | null>(null);
   const pollLoteRef = useRef<number | null>(null);
@@ -146,6 +147,19 @@ export function PocDetail() {
   function abrirRoteiro() {
     if (!poc || selecionados.size === 0) return;
     window.open(api.urlRoteiro(poc.id, [...selecionados]), "_blank", "noreferrer");
+  }
+
+  async function tentarNovamente() {
+    if (!id) return;
+    setReextraindo(true);
+    try {
+      await api.reextrairPoc(id);
+      carregar();
+    } catch {
+      setErro(t("pocDetail.erroReextrair"));
+    } finally {
+      setReextraindo(false);
+    }
   }
 
   function handleSessaoCriada(sessao: Sessao) {
@@ -239,6 +253,15 @@ export function PocDetail() {
       {poc.status_extracao === "erro" && (
         <p className="alert alert-error">
           {t("pocDetail.erroExtracao")} {poc.erro_extracao ?? t("pocDetail.erroDesconhecido")}
+          <button
+            className="btn btn-secondary"
+            onClick={tentarNovamente}
+            disabled={reextraindo}
+            type="button"
+            style={{ marginLeft: 12 }}
+          >
+            {reextraindo ? t("common.enviando") : t("pocDetail.tentarNovamente")}
+          </button>
         </p>
       )}
 

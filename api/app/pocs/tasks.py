@@ -2,7 +2,7 @@ import logging
 import uuid
 
 from app.db import SessionLocal
-from app.gemini import extrair_itens_poc
+from app.gemini import extrair_itens_poc, interpretar_erro_gemini
 from app.models import Item, Poc, Prerequisito, StatusExtracao
 
 logger = logging.getLogger(__name__)
@@ -24,9 +24,9 @@ def processar_extracao(
         try:
             extraido = extrair_itens_poc(pdf_bytes=pdf_bytes, texto=texto, api_key=api_key, model=model)
         except Exception as exc:  # noqa: BLE001 - precisa capturar qualquer erro da chamada ao Gemini
-            logger.exception("Falha ao extrair itens da PoC %s", poc_id)
+            logger.exception("Falha ao extrair itens da PoC %s (modelo=%s)", poc_id, model)
             poc.status_extracao = StatusExtracao.erro
-            poc.erro_extracao = str(exc)
+            poc.erro_extracao = interpretar_erro_gemini(exc)
             db.commit()
             return
 
