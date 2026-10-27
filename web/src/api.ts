@@ -247,6 +247,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password, is_admin: isAdmin }),
     }),
+  alterarAdmin: (usuarioId: string, isAdmin: boolean) =>
+    request<UsuarioListItem>(`/api/users/${usuarioId}/admin`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_admin: isAdmin }),
+    }),
 
   listarPocs: () => request<PocListItem[]>("/api/pocs"),
   obterPoc: (id: string) => request<PocDetail>(`/api/pocs/${id}`),

@@ -13,6 +13,9 @@ export function Usuarios() {
   const [erroForm, setErroForm] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  const [alterandoId, setAlterandoId] = useState<string | null>(null);
+  const [erroAdmin, setErroAdmin] = useState<string | null>(null);
+
   function carregar() {
     api
       .listarUsuarios()
@@ -21,6 +24,19 @@ export function Usuarios() {
   }
 
   useEffect(carregar, []);
+
+  async function alternarAdmin(usuario: UsuarioListItem) {
+    setErroAdmin(null);
+    setAlterandoId(usuario.id);
+    try {
+      const atualizado = await api.alterarAdmin(usuario.id, !usuario.is_admin);
+      setItens((atual) => atual?.map((u) => (u.id === atualizado.id ? atualizado : u)) ?? atual);
+    } catch (err) {
+      setErroAdmin(err instanceof ApiError ? err.message : t("usuarios.erroAlterarAdmin"));
+    } finally {
+      setAlterandoId(null);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -50,6 +66,7 @@ export function Usuarios() {
       </div>
 
       {erroLista && <p className="alert alert-error">{erroLista}</p>}
+      {erroAdmin && <p className="alert alert-error">{erroAdmin}</p>}
       {itens === null && !erroLista && <p className="muted">{t("common.carregando")}</p>}
 
       {itens && itens.length > 0 && (
@@ -70,11 +87,20 @@ export function Usuarios() {
                   <tr key={u.id}>
                     <td>{u.email}</td>
                     <td>
-                      {u.is_admin ? (
-                        <span className="badge badge-admin">{t("usuarios.admin")}</span>
-                      ) : (
-                        <span className="badge badge-muted">{t("usuarios.usuario")}</span>
-                      )}
+                      <button
+                        className={`badge ${u.is_admin ? "badge-admin" : "badge-muted"}`}
+                        style={{ border: 0, cursor: "pointer" }}
+                        onClick={() => alternarAdmin(u)}
+                        disabled={alterandoId === u.id}
+                        type="button"
+                        title={u.is_admin ? t("usuarios.removerAdmin") : t("usuarios.tornarAdmin")}
+                      >
+                        {alterandoId === u.id
+                          ? t("common.salvando")
+                          : u.is_admin
+                          ? t("usuarios.admin")
+                          : t("usuarios.usuario")}
+                      </button>
                     </td>
                     <td className="muted">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="muted">
