@@ -240,6 +240,12 @@ h2 {
   font-weight: 700;
 }
 
+.sidebar-nav-global {
+  flex: 0;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .sidebar-footer {
   padding: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);

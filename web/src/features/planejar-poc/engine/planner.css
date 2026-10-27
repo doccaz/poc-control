@@ -36,7 +36,12 @@
   color: var(--gray-900);
 }
 #planner-root .app-shell { min-height: 100%; display: flex; flex-direction: column; padding-bottom: 110px; }
-#planner-root .header { background: linear-gradient(135deg, #0b2e2a, #133a34); color: #fff; position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+/* Estático (não sticky) e na mesma cor da topbar real do app (var(--color-pine), de
+   web/src/styles.css) -- antes tinha cor/gradiente próprios e position:sticky com z-index
+   maior que a topbar e o sidebar reais, então ao rolar a página essa barra subia e ficava por
+   cima deles, e mesmo sem rolar já parecia um segundo cabeçalho empilhado. Agora é a mesma cor,
+   fica no fluxo normal da página, e lê como continuação da topbar em vez de outro header. */
+#planner-root .header { background: var(--color-pine); color: var(--head-ink, #fff); position: static; }
 #planner-root .header-inner { max-width: 1280px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 #planner-root .brand { display: flex; align-items: center; gap: 14px; cursor: pointer; }
 #planner-root .brand-icon { background: var(--suse-base); padding: 10px; border-radius: 14px; display: flex; box-shadow: 0 8px 20px rgba(31, 154, 94, .3); }

@@ -54,16 +54,19 @@ export function Sidebar({
             <NavLink to="/procedimentos" className={linkClass} onClick={onClose}>
               {t("nav.procedimentos")}
             </NavLink>
-            {user.is_admin && (
-              <NavLink to="/usuarios" className={linkClass} onClick={onClose}>
-                {t("nav.usuarios")}
-              </NavLink>
-            )}
-            <NavLink to="/minha-conta" className={linkClass} onClick={onClose}>
-              {t("nav.minhaConta")}
-            </NavLink>
           </nav>
         )}
+
+        <nav className="sidebar-nav sidebar-nav-global">
+          {user.is_admin && (
+            <NavLink to="/usuarios" className={linkClass} onClick={onClose}>
+              {t("nav.usuarios")}
+            </NavLink>
+          )}
+          <NavLink to="/minha-conta" className={linkClass} onClick={onClose}>
+            {t("nav.minhaConta")}
+          </NavLink>
+        </nav>
 
         <div className="sidebar-footer">
           <span className="sidebar-user">{user.email}</span>
