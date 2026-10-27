@@ -1,8 +1,11 @@
-/* Estilo original do SUSE PoC Planner (ex-plan-poc.html), portado para o bundle do app.
+/* Estilo do SUSE PoC Planner v2 (schema 2, ex-novo-index.html), portado para o bundle do app.
    Escopado inteiro sob #planner-root para não colidir com web/src/styles.css (as duas folhas
    definem .btn, .card, .app-shell, body{...} de formas diferentes). Paleta de cor base
-   (--suse-dark/--suse-base) alinhada ao verde-pinho do Executar PoC; o modo escuro do
-   planejador foi removido (o app não tem alternância de tema). */
+   (--suse-dark/--suse-base e as 3 sombras rgba que a usam) alinhada ao verde-pinho do Executar
+   PoC; o modo escuro do planejador (html[data-theme="dark"] na versão original) foi removido —
+   o app não tem alternância de tema. O script (engine/plannerEngine.js) continua verbatim,
+   inclusive onde ele próprio embute a cor original (#30ba78 / rgba(48,186,120,…)) em estilos
+   inline (ex.: ícone do dashboard, diagrama de arquitetura) — só esta folha foi recolorida. */
 #planner-root {
   --suse-dark: #0c322c;
   --suse-base: #1f9a5e;
@@ -37,10 +40,11 @@
 }
 #planner-root .app-shell { min-height: 100%; display: flex; flex-direction: column; padding-bottom: 110px; }
 /* Estático (não sticky) e na mesma cor da topbar real do app (var(--color-pine), de
-   web/src/styles.css) -- antes tinha cor/gradiente próprios e position:sticky com z-index
-   maior que a topbar e o sidebar reais, então ao rolar a página essa barra subia e ficava por
-   cima deles, e mesmo sem rolar já parecia um segundo cabeçalho empilhado. Agora é a mesma cor,
-   fica no fluxo normal da página, e lê como continuação da topbar em vez de outro header. */
+   web/src/styles.css) -- o header original tinha cor/gradiente próprios e position:sticky com
+   z-index maior que a topbar e o sidebar reais, então ao rolar a página essa barra subia e
+   ficava por cima deles, e mesmo sem rolar já parecia um segundo cabeçalho empilhado. Agora é a
+   mesma cor, fica no fluxo normal da página, e lê como continuação da topbar em vez de outro
+   header. */
 #planner-root .header { background: var(--color-pine); color: var(--head-ink, #fff); position: static; }
 #planner-root .header-inner { max-width: 1280px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 #planner-root .brand { display: flex; align-items: center; gap: 14px; cursor: pointer; }
@@ -86,7 +90,6 @@
 #planner-root .product-card { position: relative; border-radius: 20px; border: 2px solid var(--gray-100); padding: 20px; cursor: pointer; transition: all .15s; background: var(--surface); }
 #planner-root .product-card:hover { border-color: var(--suse-light); }
 #planner-root .product-card.selected { border-color: var(--suse-base); background: linear-gradient(180deg, var(--surface), var(--green-50)); box-shadow: 0 8px 20px rgba(31, 154, 94, .12); }
-#planner-root .product-card.standalone { border-style: dashed; }
 #planner-root .product-card .check { position: absolute; top: 16px; right: 16px; width: 22px; height: 22px; border-radius: 999px; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; }
 #planner-root .product-card.selected .check { background: var(--suse-base); border-color: var(--suse-base); color: #fff; }
 #planner-root .product-badge { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; background: var(--gray-100); color: var(--gray-500); padding: 2px 8px; border-radius: 999px; display: inline-block; margin-top: 8px; }
@@ -116,6 +119,15 @@
 #planner-root .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--gray-100); }
 #planner-root .checklist-item input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--suse-base); }
 #planner-root .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+/* Menu de exportação (novo na v2): dropdown nativo via <details>, disponível em qualquer etapa. */
+#planner-root .export-menu { position: relative; }
+#planner-root .export-menu > summary { list-style: none; cursor: pointer; }
+#planner-root .export-menu > summary::-webkit-details-marker { display: none; }
+#planner-root .export-pop { position: absolute; right: 0; top: 100%; z-index: 200; min-width: 290px; background: var(--surface); color: var(--ink); border: 1px solid var(--gray-200); border-radius: 12px; box-shadow: 0 12px 32px rgba(0, 0, 0, .18); padding: 6px; }
+#planner-root .export-item { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 9px 10px; cursor: pointer; color: inherit; font: inherit; }
+#planner-root .export-item:hover { background: var(--gray-100); }
+#planner-root .export-item small { display: block; font-size: 11px; opacity: .7; }
+#planner-root .install-sheet, #planner-root .operator-sheet { display: none; }
 #planner-root .arch-svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
 #planner-root .arch-svg .a-t { font-size: 14px; font-weight: 800; fill: var(--gray-900); }
 #planner-root .arch-svg .a-s { font-size: 12px; fill: var(--gray-500); }
@@ -173,12 +185,12 @@
   #planner-root table.data-table tr { page-break-inside: avoid; }
   #planner-root table.data-table thead { display: table-header-group; }
   #planner-root .nav-steps { display: none !important; }
-  /* Credenciais só saem na folha do operador, nunca no relatório do cliente. */
-  #planner-root .operator-sheet { display: none; }
-  body.print-operator #planner-root .report-main { display: none; }
-  body.print-operator #planner-root .operator-sheet { display: block; }
+  /* Três folhas imprimíveis agora (v2): relatório do cliente (default), checklist de instalação
+     e folha do operador (única com credenciais em texto claro). */
+  body.print-operator #planner-root .report-main, body.print-install #planner-root .report-main { display: none; }
+  body.print-install #planner-root .install-sheet, body.print-operator #planner-root .operator-sheet { display: block; }
   body.print-operator #planner-root .cred-mask { display: none; }
   body.print-operator #planner-root .cred-clear { display: inline; }
   body.print-operator #planner-root h3.print-only { display: block; }
-  body.print-operator, html:has(body.print-operator) { background: #fff !important; }
+  body.print-operator, body.print-install, html:has(body.print-operator), html:has(body.print-install) { background: #fff !important; }
 }

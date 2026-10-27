@@ -50,21 +50,21 @@ function Icon(name,cls){ return '<svg class="icon '+(cls||'')+'" viewBox="0 0 24
 const T = {
 pt: {
   brand:'SUSE PoC Planner', tagline:'Planejador Enterprise de PoC',
-  nav:{home:'Início',dashboard:'Painel',project:'Projeto',products:'Produtos',infra:'Infraestrutura',network:'Rede & IPs',credentials:'Credenciais',ports:'Portas',architecture:'Arquitetura',install:'Checklist de Instalação',tests:'Testes',summary:'Resumo'},
+  nav:{home:'Início',dashboard:'Painel',project:'Projeto',products:'Produtos',infra:'Infraestrutura',network:'Rede & IPs',credentials:'Credenciais',ports:'Portas',install:'Checklist de Instalação',tests:'Testes',summary:'Resumo'},
   common:{home:'Início',back:'Voltar',next:'Avançar',finish:'Finalizar',save:'Salvar',cancel:'Cancelar',add:'Adicionar',remove:'Remover',required:'Obrigatório',optional:'Opcional',step:'Etapa',of:'de',yes:'Sim',no:'Não',edit:'Editar',export:'Exportar Projeto',import:'Importar Projeto',print:'Imprimir / PDF',newProject:'Novo Projeto',loadProject:'Carregar Projeto',warning:'Atenção',note:'Nota',officialDocs:'Documentação oficial',unverified:'Não confirmado na pesquisa — valide na documentação oficial antes de usar em produção.',savedAt:'Salvo às',resetStep:'Limpar esta etapa',resetStepConfirm:'Limpar todos os dados desta etapa? Esta ação não pode ser desfeita.',copyToAll:'Copiar para todas',invalidFile:'Arquivo JSON inválido.',missingBadge:'pendente(s) nesta etapa'},
   dashboard:{title:'Planejador de PoC — Ecossistema SUSE',subtitle:'Monte o plano de hardware, rede, credenciais, portas e arquitetura integrada para sua Prova de Conceito.',start:'Iniciar Nova PoC',continue:'Continuar Planejamento',resetWarn:'Criar um novo projeto em branco? O projeto atual continua salvo e pode ser reaberto na lista de projetos.'},
   projects:{title:'Meus Projetos',open:'Abrir',delete:'Excluir',deleteConfirm:'Excluir este projeto permanentemente? Esta ação não pode ser desfeita.',updated:'Atualizado em',current:'Atual',empty:'Nenhum outro projeto salvo.'},
 },
 en: {
   brand:'SUSE PoC Planner', tagline:'Enterprise PoC Planner',
-  nav:{home:'Home',dashboard:'Dashboard',project:'Project',products:'Products',infra:'Infrastructure',network:'Network & IPs',credentials:'Credentials',ports:'Ports',architecture:'Architecture',install:'Install Checklist',tests:'Tests',summary:'Summary'},
+  nav:{home:'Home',dashboard:'Dashboard',project:'Project',products:'Products',infra:'Infrastructure',network:'Network & IPs',credentials:'Credentials',ports:'Ports',install:'Install Checklist',tests:'Tests',summary:'Summary'},
   common:{home:'Home',back:'Back',next:'Next',finish:'Finish',save:'Save',cancel:'Cancel',add:'Add',remove:'Remove',required:'Required',optional:'Optional',step:'Step',of:'of',yes:'Yes',no:'No',edit:'Edit',export:'Export Project',import:'Import Project',print:'Print / PDF',newProject:'New Project',loadProject:'Load Project',warning:'Warning',note:'Note',officialDocs:'Official documentation',unverified:'Not confirmed in research — validate against official docs before production use.',savedAt:'Saved at',resetStep:'Clear this step',resetStepConfirm:'Clear all data in this step? This cannot be undone.',copyToAll:'Copy to all',invalidFile:'Invalid JSON file.',missingBadge:'pending in this step'},
   dashboard:{title:'PoC Planner — SUSE Ecosystem',subtitle:'Plan hardware, network, credentials, ports and integrated architecture for your Proof of Concept.',start:'Start New PoC',continue:'Continue Planning',resetWarn:'Create a new blank project? The current project stays saved and can be reopened from the project list.'},
   projects:{title:'My Projects',open:'Open',delete:'Delete',deleteConfirm:'Permanently delete this project? This cannot be undone.',updated:'Updated',current:'Current',empty:'No other saved projects.'},
 },
 es: {
   brand:'SUSE PoC Planner', tagline:'Planificador Enterprise de PoC',
-  nav:{home:'Inicio',dashboard:'Panel',project:'Proyecto',products:'Productos',infra:'Infraestructura',network:'Red & IPs',credentials:'Credenciales',ports:'Puertos',architecture:'Arquitectura',install:'Checklist de Instalación',tests:'Pruebas',summary:'Resumen'},
+  nav:{home:'Inicio',dashboard:'Panel',project:'Proyecto',products:'Productos',infra:'Infraestructura',network:'Red & IPs',credentials:'Credenciales',ports:'Puertos',install:'Checklist de Instalación',tests:'Pruebas',summary:'Resumen'},
   common:{home:'Inicio',back:'Atrás',next:'Siguiente',finish:'Finalizar',save:'Guardar',cancel:'Cancelar',add:'Agregar',remove:'Eliminar',required:'Obligatorio',optional:'Opcional',step:'Paso',of:'de',yes:'Sí',no:'No',edit:'Editar',export:'Exportar Proyecto',import:'Importar Proyecto',print:'Imprimir / PDF',newProject:'Nuevo Proyecto',loadProject:'Cargar Proyecto',warning:'Atención',note:'Nota',officialDocs:'Documentación oficial',unverified:'No confirmado en la investigación — valide en la documentación oficial antes de usar en producción.',savedAt:'Guardado a las',resetStep:'Limpiar este paso',resetStepConfirm:'¿Limpiar todos los datos de este paso? Esta acción no se puede deshacer.',copyToAll:'Copiar a todas',invalidFile:'Archivo JSON inválido.',missingBadge:'pendiente(s) en este paso'},
   dashboard:{title:'Planificador de PoC — Ecosistema SUSE',subtitle:'Arme el plan de hardware, red, credenciales, puertos y arquitectura integrada para su Prueba de Concepto.',start:'Iniciar Nueva PoC',continue:'Continuar Planificación',resetWarn:'¿Crear un nuevo proyecto en blanco? El proyecto actual sigue guardado y puede reabrirse en la lista de proyectos.'},
   projects:{title:'Mis Proyectos',open:'Abrir',delete:'Eliminar',deleteConfirm:'¿Eliminar este proyecto permanentemente? Esta acción no se puede deshacer.',updated:'Actualizado',current:'Actual',empty:'No hay otros proyectos guardados.'},
@@ -78,22 +78,22 @@ function tr(path){
 
 /* ---------------- PRODUCT CATALOG ---------------- */
 const PRODUCTS = [
-  { id:'virtualization', name:'SUSE Virtualization', alias:'ex-Harvester', color:'#30ba78', standalone:false, hostMode:'required',
+  { id:'virtualization', name:'SUSE Virtualization', alias:'ex-Harvester', color:'#30ba78',
     desc:{pt:'Plataforma HCI (KVM + Kubernetes + storage distribuído) para hospedar VMs e clusters downstream.',en:'HCI platform (KVM + Kubernetes + distributed storage) to host VMs and downstream clusters.',es:'Plataforma HCI (KVM + Kubernetes + almacenamiento distribuido) para alojar VMs y clústeres downstream.'} },
-  { id:'rancher', name:'Rancher Prime', alias:'', color:'#2563eb', standalone:false, hostMode:'optional',
+  { id:'rancher', name:'Rancher Prime', alias:'', color:'#2563eb',
     desc:{pt:'Gerenciamento multi-cluster Kubernetes. É o hub central que conecta os demais produtos.',en:'Multi-cluster Kubernetes management. Central hub connecting the other products.',es:'Gestión multi-clúster de Kubernetes. Es el hub central que conecta los demás productos.'} },
-  { id:'security', name:'SUSE Security', alias:'ex-NeuVector', color:'#dc2626', standalone:false, hostMode:'none',
+  { id:'security', name:'SUSE Security', alias:'ex-NeuVector', color:'#dc2626',
     desc:{pt:'Segurança de containers em runtime: admission control, DPI/DLP, compliance.',en:'Container runtime security: admission control, DPI/DLP, compliance.',es:'Seguridad de contenedores en runtime: admission control, DPI/DLP, compliance.'} },
-  { id:'storage', name:'SUSE Storage', alias:'ex-Longhorn', color:'#9333ea', standalone:false, hostMode:'none',
+  { id:'storage', name:'SUSE Storage', alias:'ex-Longhorn', color:'#9333ea',
     desc:{pt:'Storage distribuído cloud-native para Kubernetes (RWO/RWX, backup S3/NFS).',en:'Cloud-native distributed storage for Kubernetes (RWO/RWX, S3/NFS backup).',es:'Almacenamiento distribuido cloud-native para Kubernetes (RWO/RWX, backup S3/NFS).'} },
-  { id:'observability', name:'SUSE Observability', alias:'ex-StackState', color:'#f97316', standalone:false, hostMode:'optional',
+  { id:'observability', name:'SUSE Observability', alias:'ex-StackState', color:'#f97316',
     desc:{pt:'Observabilidade full-stack: topologia, métricas, logs e traces correlacionados.',en:'Full-stack observability: correlated topology, metrics, logs and traces.',es:'Observabilidad full-stack: topología, métricas, logs y trazas correlacionados.'} },
-  { id:'registry', name:'SUSE Private Registry', alias:'', color:'#0891b2', standalone:false, hostMode:'none',
+  { id:'registry', name:'SUSE Private Registry', alias:'', color:'#0891b2',
     desc:{pt:'Registry de containers privado/air-gapped, espelhamento de imagens.',en:'Private/air-gapped container registry, image mirroring.',es:'Registry de contenedores privado/air-gapped, espejado de imágenes.'} },
-  { id:'appcollection', name:'SUSE Application Collection', alias:'', color:'#65a30d', standalone:false, hostMode:'none',
+  { id:'appcollection', name:'SUSE Application Collection', alias:'', color:'#65a30d',
     desc:{pt:'Catálogo de apps certificadas com SBOM e atestação SLSA L3 (dp.apps.rancher.io).',en:'Catalog of certified apps with SBOM and SLSA L3 attestation (dp.apps.rancher.io).',es:'Catálogo de apps certificadas con SBOM y atestación SLSA L3 (dp.apps.rancher.io).'} },
-  { id:'manager', name:'SUSE Multi-Linux Manager', alias:'', color:'#71717a', standalone:false, hostMode:'optional',
-    desc:{pt:'Patch, compliance e ciclo de vida de SO tradicionais — o servidor roda em contêineres (Podman) num host SL Micro 6.1 ou SLES 15 SP7 e precisa espelhar os repositórios das distribuições dos clientes.',en:'Patch, compliance and lifecycle management for traditional OS — the server runs as containers (Podman) on an SL Micro 6.1 or SLES 15 SP7 host and has to mirror the repositories of the clients’ distributions.',es:'Patch, compliance y ciclo de vida de SO tradicionales — el servidor corre en contenedores (Podman) en un host SL Micro 6.1 o SLES 15 SP7 y debe replicar los repositorios de las distribuciones de los clientes.'} },
+  { id:'manager', name:'SUSE Multi-Linux Manager', alias:'', color:'#71717a',
+    desc:{pt:'Patch, compliance e ciclo de vida de sistemas operacionais tradicionais.',en:'Patch, compliance and lifecycle management for traditional operating systems.',es:'Patch, compliance y ciclo de vida de sistemas operativos tradicionales.'} },
 ];
 
 /* ---------------- HARDWARE / SIZING DATA (sourced from official SUSE docs, Oct/2026 research) ---------------- */
@@ -125,12 +125,11 @@ function virtPrimeStatus(){
 }
 function virtVersionChecked(){ return /^v?1\.(7|8)(\.\d+)?$/.test(String(state.virtInstall.targetVersion||'').trim()); }
 /* Dimensionamento das VMs dos perfis EIB — os mesmos valores do menu do run.sh e da tabela do README.
-   `rec:null` = o run.sh não define um recomendado. test/run.js confere esta tabela contra o run.sh. */
+   `rec:null` = o run.sh não define um recomendado (hoje todos os perfis definem). test/run.js confere esta tabela contra o run.sh. */
 const EIB_SIZING = {
-  1:{ min:{cpu:4,ram:4,disk:50},   rec:null },
-  2:{ min:{cpu:6,ram:12,disk:80},  rec:{cpu:8,ram:16,disk:100} },
-  3:{ min:{cpu:6,ram:24,disk:80},  rec:{cpu:8,ram:32,disk:150} },
-  4:{ min:{cpu:8,ram:32,disk:100}, rec:null }
+  1:{ min:{cpu:4,ram:8,disk:80},   rec:{cpu:8,ram:16,disk:80} },
+  2:{ min:{cpu:6,ram:12,disk:80},  rec:{cpu:8,ram:16,disk:150} },
+  3:{ min:{cpu:6,ram:24,disk:80},  rec:{cpu:8,ram:32,disk:300} }
 };
 function fmtNum(n){ return (Math.round(n*100)/100).toString(); }
 /* Compara as dimensões de uma VM com o mínimo/recomendado do perfil. */
@@ -155,9 +154,9 @@ function sizingHintHtml(sourceHtml, z, vm, noteHtml, g){
 }
 function eibSizingHint(profile, vm, g){
   const note = {
-    1:g('O run.sh não define um valor recomendado para o Rancher; o mínimo é o ponto de partida.','run.sh does not define a recommended value for Rancher; the minimum is the starting point.','run.sh no define un valor recomendado para Rancher; el mínimo es el punto de partida.'),
+    1:g('Folga proposital: 8 GB de RAM e 80 GB de disco já cobrem o Rancher com seus componentes de sistema; 16 GB de RAM tira qualquer dúvida de recurso numa PoC.','Deliberate headroom: 8 GB of RAM and 80 GB of disk already cover Rancher with its system components; 16 GB of RAM removes any doubt about resources in a PoC.','Holgura deliberada: 8 GB de RAM y 80 GB de disco ya cubren Rancher con sus componentes de sistema; 16 GB de RAM descarta cualquier duda de recursos en una PoC.'),
     2:g('Com 8 GB de RAM o nó sofre thrashing (kswapd0 saturado) por causa dos scanners de imagem (Trivy do Harbor e NeuVector); o Trivy do Harbor vem desligado por padrão nesta ISO.','With 8 GB of RAM the node thrashes (kswapd0 saturated) because of the image scanners (Harbor’s Trivy and NeuVector); Harbor’s Trivy is off by default on this ISO.','Con 8 GB de RAM el nodo sufre thrashing (kswapd0 saturado) por los escáneres de imágenes (Trivy de Harbor y NeuVector); el Trivy de Harbor viene desactivado por defecto en esta ISO.'),
-    3:g('Medido em campo: um deploy novo ocupa cerca de 46 GB e o disco cresce com os dados coletados; para uma PoC longa, 200 GB ou mais.','Measured in the field: a fresh deploy takes about 46 GB and the disk grows with the data collected; for a long PoC, 200 GB or more.','Medido en campo: un despliegue nuevo ocupa unos 46 GB y el disco crece con los datos recolectados; para una PoC larga, 200 GB o más.')
+    3:g('Medido em campo: um deploy novo ocupa cerca de 46 GB e o disco cresce com os dados coletados; para uma PoC longa, o recomendado de 300 GB dá folga.','Measured in the field: a fresh deploy takes about 46 GB and the disk grows with the data collected; for a long PoC, the recommended 300 GB leaves headroom.','Medido en campo: un despliegue nuevo ocupa unos 46 GB y el disco crece con los datos recolectados; para una PoC larga, los 300 GB recomendados dan holgura.')
   }[profile]||'';
   return sizingHintHtml(g('Perfil EIB ','EIB profile ','Perfil EIB ')+profile+' (run.sh)', EIB_SIZING[profile], vm, note, g);
 }
@@ -367,7 +366,6 @@ function installWhen(key){
     case 'airgap': return !!n.hasAirGap;
     case 'connected': return !n.hasAirGap;
     case 'backup': return !!(vn.backup.type && vn.backup.type!=='none');
-    case 'testvms': return state.virtInstall.testVms.length > 0;
     case 'dirauth': return !!sp.rancher && (vn.auth.provider==='ad' || vn.auth.provider==='ldap');
     case 'eib1': return eibProfiles().indexOf(1)>=0;
     case 'eib2': return eibProfiles().indexOf(2)>=0;
@@ -462,7 +460,10 @@ const INSTALL_STEPS = [];
     const r=[[g('FQDN do nó','Node FQDN','FQDN del nodo'),j.NODE_FQDN],['IP',j.STATIC_IP]]; if(n===1) r.push(['Rancher UI','https://'+j.RANCHER_FQDN]); return r; };
   S('eib1-build','platform',{products:['rancher'],approach:['eib'],when:'eib1'},['Gerar a ISO do Rancher (run.sh, perfil 1)','Build the Rancher ISO (run.sh, profile 1)','Generar la ISO de Rancher (run.sh, perfil 1)'],
     ['./run.sh → perfil 1; o formulário vem preenchido pelo JSON do Planner, pede só o que faltar e grava a ISO em output/.','./run.sh → profile 1; the form comes prefilled from the Planner JSON, asks only for what is missing and writes the ISO to output/.','./run.sh → perfil 1; el formulario viene precargado con el JSON del Planner, pide solo lo que falte y escribe la ISO en output/.'],
-    { vals:(g)=>eibHostVals(1,g).concat([['K3s / Rancher',g('versões resolvidas no build (stable)','versions resolved at build (stable)','versiones resueltas en el build (stable)')]]) });
+    { vals:(g)=>eibHostVals(1,g).concat([
+      ['K3s', state.k3sVersionPin || g('stable (resolvido no build)','stable (resolved at build)','stable (resuelto en el build)')],
+      ['Rancher', state.rancherVersionPin || g('stable (resolvido no build)','stable (resolved at build)','stable (resuelto en el build)')]
+    ]) });
   S('eib1-boot','platform',{products:['rancher'],approach:['eib'],when:'eib1'},['Instalar a ISO do Rancher e aguardar o primeiro boot','Install the Rancher ISO and wait for first boot','Instalar la ISO de Rancher y esperar el primer arranque'],
     ['Gravar/montar a ISO no destino. No primeiro boot o K3s espera o registry embarcado (porta 6545, ~2 min) e instala cert-manager e Rancher sozinho; conferir com kubectl -n cattle-system rollout status deploy/rancher.','Write/mount the ISO on the target. On first boot K3s waits for the embedded registry (port 6545, ~2 min) and installs cert-manager and Rancher by itself; check with kubectl -n cattle-system rollout status deploy/rancher.','Grabar/montar la ISO en el destino. En el primer arranque K3s espera el registry embebido (puerto 6545, ~2 min) e instala cert-manager y Rancher solo; comprobar con kubectl -n cattle-system rollout status deploy/rancher.'],
     { docs:()=>[['Install Rancher',DOC_RANCHER+'install-rancher.html']], vals:(g)=>eibHostVals(1,g) });
@@ -530,9 +531,6 @@ const INSTALL_STEPS = [];
   S('virt-cfg-backup','config',{products:['virtualization'],when:'backup'},['Backup target','Backup target','Backup target'],
     ['Advanced → Settings → backup-target com o tipo (S3, MinIO ou NFS), endpoint e credenciais; depois testar um backup de VM.','Advanced → Settings → backup-target with the type (S3, MinIO or NFS), endpoint and credentials; then test a VM backup.','Advanced → Settings → backup-target con el tipo (S3, MinIO o NFS), endpoint y credenciales; luego probar un backup de VM.'],
     { docs:()=>[['Settings',docVirt()+'installation-setup/config/settings.html'],['Backup and restore',docVirt()+'virtual-machines/backup-restore.html']], vals:(g)=>{ const b=VN().backup; return [[g('Tipo','Type','Tipo'),iv.v((b.type||'').toUpperCase())],['Endpoint',iv.v(b.endpoint)],[b.type==='nfs'?g('Caminho','Path','Ruta'):'Bucket',iv.v(b.bucket)]]; } });
-  S('virt-cfg-vms','config',{products:['virtualization'],when:'testvms'},['VMs de teste do cliente','Customer test VMs','VMs de prueba del cliente'],
-    ['Criar as VMs de teste (imagem, rede e, se preciso, cloud-init) usadas nos testes de VM.','Create the test VMs (image, network and, if needed, cloud-init) used by the VM tests.','Crear las VMs de prueba (imagen, red y, si hace falta, cloud-init) usadas en las pruebas de VM.'],
-    { docs:()=>[['Create a VM',docVirt()+'virtual-machines/create-vm.html']], vals:()=>[['VMs',iv.list(VI().testVms.map(x=>(x.name||'?')+' · '+(x.os||'?')+' · '+(x.cpu||'?')+'C/'+(x.ram||'?')+'G'))]] });
 
   /* ---- Multi-Linux Manager: os repositórios das distribuições (tarefa longa e essencial) ---- */
   const mlmProducts=(g)=>{ const l=state.infra.manager.clientProducts; return iv.list(l.map(x=>(x.name||'?')+(x.arch?' · '+x.arch:'')))||g('a definir','to define','por definir'); };
@@ -576,14 +574,13 @@ const INSTALL_STEPS = [];
 /* ---------------- TEST CATALOG ----------------
    SUSE Virtualization — PoC Guide v1.7.0. Itens do §5 sem as repetições da tabela do guia (as linhas 8–20 repetem 1–7), mais os
    do §4.3 que a tabela não traz. `tier` é o padrão must/nice (§4.2) e pode ser trocado por
-   teste. `when`: multinode (≥ 2 nós), proxy (proxy ligado), rancher (Rancher selecionado), pxe, storagenet,
+   teste. `when`: multinode (≥ 2 nós), rancher (Rancher selecionado), pxe, storagenet,
    airgap (rede air-gap), novirt (sem Virtualization: evita duplicar o que o catálogo dele já cobre). */
 const TEST_GROUPS = {
   install:{pt:'Instalação',en:'Installation',es:'Instalación'}, network:{pt:'Rede',en:'Network',es:'Red'},
   storage:{pt:'Imagens e storage',en:'Images and storage',es:'Imágenes y storage'}, vm:{pt:'Gestão de VMs',en:'VM management',es:'Gestión de VMs'},
   backup:{pt:'Backup e restore',en:'Backup and restore',es:'Backup y restore'}, rancher:{pt:'Integração com Rancher',en:'Rancher integration',es:'Integración con Rancher'},
-  auth:{pt:'Autenticação e multi-tenancy',en:'Authentication and multi-tenancy',es:'Autenticación y multi-tenancy'},
-  resilience:{pt:'Resiliência e DR',en:'Resilience and DR',es:'Resiliencia y DR'}, migration:{pt:'Migração',en:'Migration',es:'Migración'},
+  resilience:{pt:'Resiliência e DR',en:'Resilience and DR',es:'Resiliencia y DR'},
   'r-platform':{pt:'Plataforma',en:'Platform',es:'Plataforma'}, 'r-clusters':{pt:'Clusters gerenciados',en:'Managed clusters',es:'Clústeres gestionados'},
   'r-access':{pt:'Acesso e governança',en:'Access and governance',es:'Acceso y gobernanza'}, 'r-ops':{pt:'Operação e continuidade',en:'Operations and continuity',es:'Operación y continuidad'},
   general:{pt:'Geral',en:'General',es:'General'}
@@ -596,42 +593,22 @@ const mkT = (product) => (id,group,guide,tier,when,t,x,opts) => TEST_CATALOG.pus
   T('virt-install-iso','install','§8.1','must',null,['Instalar o SUSE Virtualization via ISO','Install SUSE Virtualization from ISO','Instalar SUSE Virtualization desde ISO'],['O 1º nó cria o cluster e a UI responde em HTTPS no VIP','The 1st node creates the cluster and the UI answers over HTTPS on the VIP','El 1.er nodo crea el clúster y la UI responde por HTTPS en la VIP']);
   T('virt-add-nodes','install','§8.1','must','multinode',['Adicionar nós ao cluster','Add nodes to the cluster','Agregar nodos al clúster'],['Nós entram no cluster; os 2 primeiros adicionados são promovidos a management (HA)','Nodes join; the first 2 added are promoted to management (HA)','Los nodos se unen; los 2 primeros agregados pasan a management (HA)']);
   T('virt-pxe','install','§8','must','pxe',['Instalação via PXE/iPXE','PXE/iPXE installation','Instalación por PXE/iPXE'],['Nó instalado automaticamente pelo script iPXE','Node installed automatically from the iPXE script','Nodo instalado automáticamente desde el script iPXE']);
-  T('virt-proxy','network','§9.1','must','proxy',['Configurar HTTP proxy','Configure HTTP proxy','Configurar HTTP proxy'],['O download de imagens e o backup S3 passam pelo proxy; no-proxy cobre o CIDR do cluster','Image downloads and S3 backup go through the proxy; no-proxy covers the cluster CIDR','La descarga de imágenes y el backup S3 pasan por el proxy; no-proxy cubre el CIDR del clúster']);
-  T('virt-mgmt-bond','network','§13.1','must',null,['Binding das NICs da rede mgmt','mgmt network NIC binding','Binding de NICs de la red mgmt'],['mgmt-bo ativo com as NICs; perder um link não derruba o acesso','mgmt-bo is up with the NICs; losing one link keeps access','mgmt-bo activo con las NICs; perder un enlace no corta el acceso']);
   T('virt-storage-net','network','§13.2','must','storagenet',['Rede dedicada de storage','Dedicated storage network','Red dedicada de storage'],['O tráfego de replicação do Longhorn usa a cluster network dedicada','Longhorn replication traffic uses the dedicated cluster network','El tráfico de replicación de Longhorn usa la red dedicada']);
   T('virt-vlan-net','network','§13.2.3','must',null,['Criar rede VLAN para VMs','Create a VLAN network for VMs','Crear red VLAN para VMs'],['VM na VLAN recebe IP e alcança a rede externa','A VM on the VLAN gets an IP and reaches the external network','La VM en la VLAN obtiene IP y alcanza la red externa']);
-  T('virt-vlan-check','network','§13.2','must','multinode',['Verificar a VLAN em todos os nós','Verify the VLAN on every node','Verificar la VLAN en todos los nodos'],['VMs em nós diferentes se comunicam pela VLAN','VMs on different nodes communicate over the VLAN','VMs en nodos distintos se comunican por la VLAN']);
   T('virt-image','storage','§12','must',null,['Registrar uma imagem para VMs','Register an image for VMs','Registrar una imagen para VMs'],['Imagem (qcow2/raw/iso) chega ao estado Active','The image (qcow2/raw/iso) reaches Active','La imagen (qcow2/raw/iso) llega al estado Active']);
   T('virt-sc-volume','storage','§11','must',null,['Criar StorageClass e volume','Create a StorageClass and a volume','Crear StorageClass y volumen'],['Volume provisionado com o nº de réplicas definido (padrão 3)','Volume provisioned with the configured replica count (default 3)','Volumen provisionado con las réplicas definidas (por defecto 3)']);
   T('virt-vm-create','vm','§14.1','must',null,['Criar uma VM','Create a VM','Crear una VM'],['VM em Running, com guest agent','VM Running, with the guest agent','VM en Running, con guest agent']);
-  T('virt-userdata','vm','§14.1','nice',null,['cloud-config (user-data) na VM','cloud-config (user-data) on a VM','cloud-config (user-data) en la VM'],['Usuário e pacotes aplicados no primeiro boot','User and packages applied on first boot','Usuario y paquetes aplicados en el primer arranque']);
-  T('virt-console','vm','§14','nice',null,['Console serial/VNC','Serial/VNC console','Consola serie/VNC'],['Console acessível pela UI','Console reachable from the UI','Consola accesible desde la UI']);
-  T('virt-sshkey','vm','§14','nice',null,['Chave SSH na VM (Linux)','SSH key on a VM (Linux)','Clave SSH en la VM (Linux)'],['Acesso à VM com a chave importada','The VM is reachable with the imported key','Acceso a la VM con la clave importada']);
   T('virt-resize','vm','§5 #21','must',null,['Escalar CPU, memória e disco da VM','Scale VM CPU, memory and disk','Escalar CPU, memoria y disco de la VM'],['Recursos alterados e refletidos no guest','Resources changed and reflected in the guest','Recursos cambiados y reflejados en el guest']);
   T('virt-storage-ext','vm','§5 #22','must',null,['Adicionar, remover e ampliar discos da VM','Add, remove and enlarge VM disks','Agregar, quitar y ampliar discos de la VM'],['Disco aparece no guest após cada operação','The disk shows up in the guest after each operation','El disco aparece en el guest tras cada operación']);
-  T('virt-fio','vm','§5 #23','nice',null,['Desempenho de disco com FIO (Longhorn)','Disk performance with FIO (Longhorn)','Rendimiento de disco con FIO (Longhorn)'],['IOPS e latência registrados e coerentes com o esperado','IOPS and latency recorded and in line with expectations','IOPS y latencia registrados y acordes a lo esperado']);
-  T('virt-cpu-pin','vm','§5 #24','nice',null,['CPU pinning (quota de CPU)','CPU pinning (CPU quota)','CPU pinning (cuota de CPU)'],['VM com CPU dedicada, sem contenção','VM with dedicated CPU, no contention','VM con CPU dedicada, sin contención']);
-  T('virt-container','vm','§5 #28','nice',null,['Carga de container ao lado das VMs','Container workload next to VMs','Carga de contenedores junto a las VMs'],['Workload de container executa no mesmo cluster','A container workload runs on the same cluster','Una carga de contenedores corre en el mismo clúster']);
-  T('virt-multidisk','vm','§4.3','nice',null,['VM com vários discos','Multi-disk VM','VM con varios discos'],['Todos os discos visíveis e utilizáveis no guest','All disks visible and usable in the guest','Todos los discos visibles y utilizables en el guest']);
   T('virt-livemig','vm','§5 #25','must','multinode',['Live migration de VM','VM live migration','Live migration de VM'],['VM migra sem perder conectividade e volta a Running','The VM migrates without losing connectivity and returns to Running','La VM migra sin perder conectividad y vuelve a Running']);
   T('virt-backup-target','backup','§15.1.1','must',null,['Configurar o backup target (S3/MinIO/NFS)','Configure the backup target (S3/MinIO/NFS)','Configurar el backup target (S3/MinIO/NFS)'],['Target aceito nas Settings sem erro de conexão','Target accepted in Settings with no connection error','Target aceptado en Settings sin error de conexión']);
   T('virt-backup','backup','§5 #26','must',null,['Backup de VM para S3/MinIO','VM backup to S3/MinIO','Backup de VM a S3/MinIO'],['Backup concluído e visível no target','Backup completes and is visible on the target','Backup completado y visible en el target']);
   T('virt-restore','backup','§5 #27','must',null,['Restaurar VM a partir do backup (nova VM e substituição)','Restore a VM from backup (new VM and replace)','Restaurar VM desde el backup (nueva VM y reemplazo)'],['VM restaurada inicia com os dados do backup','The restored VM boots with the backup data','La VM restaurada inicia con los datos del backup']);
-  T('virt-snapshot','backup','§15.2','nice',null,['Snapshot e restore de VM','VM snapshot and restore','Snapshot y restore de VM'],['VM volta ao estado do snapshot','The VM returns to the snapshot state','La VM vuelve al estado del snapshot']);
   T('virt-rancher-deploy','rancher','§5 #29','must','rancher',['Implantar o Rancher para gerenciar o cluster','Deploy Rancher to manage the cluster','Desplegar Rancher para gestionar el clúster'],['Rancher acessível; nós alcançam o LB na porta 443','Rancher is reachable; nodes reach the LB on port 443','Rancher accesible; los nodos alcanzan el LB en el puerto 443']);
   T('virt-rancher-import','rancher','§5 #31','must','rancher',['Importar o cluster no Rancher (Virtualization Management)','Import the cluster into Rancher (Virtualization Management)','Importar el clúster en Rancher (Virtualization Management)'],['Cluster em Active e VMs gerenciáveis pelo Rancher','Cluster Active and VMs manageable from Rancher','Clúster en Active y VMs gestionables desde Rancher']);
-  T('virt-rancher-rke2','rancher','§18','nice','rancher',['Criar cluster RKE2/K3s com o node driver Harvester','Create an RKE2/K3s cluster with the Harvester node driver','Crear clúster RKE2/K3s con el node driver de Harvester'],['Cluster guest provisionado e Ready','Guest cluster provisioned and Ready','Clúster guest aprovisionado y Ready']);
-  T('virt-auth','auth','§5 #30','nice','rancher',['Política de senha/lockout e integração AD no Rancher','Password/lockout policy and AD integration in Rancher','Política de contraseña/lockout e integración AD en Rancher'],['Login via AD funciona e o lockout é aplicado','AD login works and lockout is enforced','El login por AD funciona y se aplica el lockout']);
-  T('virt-tenancy','auth','§17.3','nice','rancher',['Multi-tenancy: project-owner e read-only','Multi-tenancy: project-owner and read-only','Multi-tenancy: project-owner y read-only'],['Cada usuário vê e altera só o que o papel permite','Each user sees and changes only what the role allows','Cada usuario ve y cambia solo lo que permite el rol']);
   T('virt-maint','resilience','§5 #32','must','multinode',['Manutenção de nó: comportamento das VMs','Node maintenance: VM behaviour','Mantenimiento de nodo: comportamiento de las VMs'],['VMs migram ou param conforme a política definida','VMs migrate or stop per the configured policy','Las VMs migran o se detienen según la política definida']);
   T('virt-dr-node-fail','resilience','§5 #35','must','multinode',['Desligar ou cortar a energia de um nó','Shut down or power off a node','Apagar o cortar la energía de un nodo'],['VMs reiniciam em outro nó; tempo de failover registrado','VMs restart on another node; failover time recorded','Las VMs reinician en otro nodo; tiempo de failover registrado']);
   T('virt-dr-failback','resilience','§5 #36–37','must','multinode',['Religar o nó: rebuild Longhorn e failback','Power the node back on: Longhorn rebuild and failback','Reencender el nodo: rebuild de Longhorn y failback'],['Réplicas reconstruídas; tempo de rebuild/failback registrado','Replicas rebuilt; rebuild/failback time recorded','Réplicas reconstruidas; tiempo de rebuild/failback registrado']);
-  T('virt-dr-nofailback','resilience','§5 #38','nice','multinode',['Failover de nó sem failback','Node failover without failback','Failover de nodo sin failback'],['Cluster estável com o nó removido de forma definitiva','Cluster stable with the node permanently removed','Clúster estable con el nodo retirado de forma definitiva']);
-  T('virt-dr-net-access','resilience','§5 #33','nice','multinode',['Failover de rede (porta access)','Network failover (access port)','Failover de red (puerto access)'],['Adição, remoção e queda de link sem perder o acesso','Link add, removal and failure without losing access','Alta, baja y caída de enlace sin perder el acceso']);
-  T('virt-dr-net-trunk','resilience','§5 #34','nice','multinode',['Failover de rede (porta trunk)','Network failover (trunk port)','Failover de red (puerto trunk)'],['Adição, remoção e queda de link sem perder VLANs','Link add, removal and failure without losing VLANs','Alta, baja y caída de enlace sin perder VLANs']);
-  T('virt-dr-pcap','resilience','§5 #39','nice','multinode',['Análise de pacotes e sessões durante a falha','Packet and session analysis during failure','Análisis de paquetes y sesiones durante la falla'],['Impacto nas sessões medido e documentado','Session impact measured and documented','Impacto en las sesiones medido y documentado']);
-  T('virt-dr-netfail-vm','resilience','§5 #40','nice','multinode',['Failover de VM durante falha de rede','VM failover during a network failure','Failover de VM durante una falla de red'],['VMs se recuperam após a falha de rede','VMs recover after the network failure','Las VMs se recuperan tras la falla de red']);
-  T('virt-vsphere','migration','§4.3','nice',null,['Migrar uma VM do vSphere (opcional)','Migrate a VM from vSphere (optional)','Migrar una VM desde vSphere (opcional)'],['VM migrada inicia e funciona no SUSE Virtualization','The migrated VM boots and works on SUSE Virtualization','La VM migrada inicia y funciona en SUSE Virtualization']);
 })();
 
 /* Rancher Prime. Fontes: documentação oficial do Rancher (install, import, auth, RBAC, backup/restore),
@@ -644,18 +621,15 @@ const mkT = (product) => (id,group,guide,tier,when,t,x,opts) => TEST_CATALOG.pus
   T('rancher-tls','r-platform','Docs · Install','must',null,['Certificado TLS do hostname','TLS certificate for the hostname','Certificado TLS del hostname'],['O certificado cobre o hostname (CN/SAN) e vem da fonte planejada (rancher, letsEncrypt ou secret)','The certificate covers the hostname (CN/SAN) and comes from the planned source (rancher, letsEncrypt or secret)','El certificado cubre el hostname (CN/SAN) y viene de la fuente planificada (rancher, letsEncrypt o secret)']);
   T('rancher-system','r-platform','EIB notes','must',null,['Componentes de sistema saudáveis','System components healthy','Componentes de sistema saludables'],['Pods do Rancher, fleet, rancher-webhook, turtles e scc-operator em Running, sem reinícios em loop','Rancher, fleet, rancher-webhook, turtles and scc-operator pods Running, no restart loops','Pods de Rancher, fleet, rancher-webhook, turtles y scc-operator en Running, sin reinicios en bucle']);
   T('rancher-airgap','r-platform','EIB notes','must','airgap',['Prova de air-gap: sem saída, tudo sobe','Air-gap proof: with no egress, everything starts','Prueba de air-gap: sin salida, todo arranca'],['Com a saída bloqueada nenhum pod fica em ImagePull; toda imagem em uso está no registry embarcado (diff do catálogo)','With egress blocked no pod sits in ImagePull; every image in use is in the embedded registry (catalog diff)','Con la salida bloqueada ningún pod queda en ImagePull; toda imagen en uso está en el registry embebido (diff del catálogo)']);
-  T('rancher-prime','r-platform','SUSE docs','nice',null,['Registro no SCC (Rancher Prime)','SCC registration (Rancher Prime)','Registro en SCC (Rancher Prime)'],['Registro concluído e edição Prime reconhecida; registry.rancher.com acessível quando houver internet','Registration completed and the Prime edition recognised; registry.rancher.com reachable when online','Registro completado y edición Prime reconocida; registry.rancher.com accesible cuando haya internet'],{unverified:true});
   T('rancher-provision','r-clusters','Rancher UI','must',null,['Provisionar um cluster downstream','Provision a downstream cluster','Aprovisionar un clúster downstream'],['O cluster criado pelo Rancher chega a Active e fica gerenciável','A cluster created from Rancher reaches Active and is manageable','El clúster creado desde Rancher llega a Active y es gestionable']);
   T('rancher-import','r-clusters','Docs · Import','must',null,['Importar um cluster existente','Import an existing cluster','Importar un clúster existente'],['O comando de registro roda no cluster; o estado vai de Pending a Active e surgem os projetos Default e System','The registration command runs on the cluster; state goes from Pending to Active and the Default and System projects appear','El comando de registro corre en el clúster; el estado pasa de Pending a Active y aparecen los proyectos Default y System']);
   T('rancher-agent','r-clusters','Docs · Import','must',null,['Agentes alcançam o Rancher (443)','Agents reach Rancher (443)','Los agentes alcanzan Rancher (443)'],['O cattle-cluster-agent do cluster gerenciado conecta ao Server URL na porta 443 (com proxy/no-proxy corretos, se houver)','The managed cluster’s cattle-cluster-agent connects to the Server URL on port 443 (with correct proxy/no-proxy, if any)','El cattle-cluster-agent del clúster gestionado conecta al Server URL en el puerto 443 (con proxy/no-proxy correctos, si los hay)']);
   T('rancher-apps','r-clusters','Rancher UI','must',null,['Instalar um app Helm via Apps','Install a Helm app via Apps','Instalar una app Helm vía Apps'],['Release instalada e workloads em Running; em air-gap as imagens vêm do registry local','Release installed and workloads Running; in air-gap the images come from the local registry','Release instalada y workloads en Running; en air-gap las imágenes vienen del registry local']);
-  T('rancher-fleet','r-clusters','Fleet','nice',null,['Entrega contínua com Fleet (GitRepo)','Continuous delivery with Fleet (GitRepo)','Entrega continua con Fleet (GitRepo)'],['GitRepo em Ready e recursos aplicados nos clusters-alvo; em air-gap o servidor Git precisa estar acessível','GitRepo Ready and resources applied to the target clusters; in air-gap the Git server must be reachable','GitRepo en Ready y recursos aplicados en los clústeres destino; en air-gap el servidor Git debe ser accesible'],{unverified:true});
   T('rancher-auth','r-access','Docs · Auth','must','novirt',['Provedor externo de autenticação (AD/LDAP)','External authentication provider (AD/LDAP)','Proveedor externo de autenticación (AD/LDAP)'],['Login com usuário do diretório funciona; o usuário local fica só como acesso de emergência','Login with a directory user works; the local user stays only as emergency access','El login con usuario del directorio funciona; el usuario local queda solo como acceso de emergencia']);
   T('rancher-rbac','r-access','Docs · RBAC','must',null,['RBAC: papéis globais, de cluster e de projeto','RBAC: global, cluster and project roles','RBAC: roles globales, de clúster y de proyecto'],['Dois usuários com papéis diferentes veem e fazem só o que o papel permite','Two users with different roles see and do only what their role allows','Dos usuarios con roles distintos ven y hacen solo lo que su rol permite']);
   T('rancher-backup','r-ops','Docs · Backup','must',null,['Backup do Rancher (rancher-backup)','Rancher backup (rancher-backup)','Backup de Rancher (rancher-backup)'],['Chart Rancher Backups no cluster local; o Backup gera um .tar.gz em S3/MinIO/PV e a EncryptionConfiguration fica guardada','Rancher Backups chart on the local cluster; the Backup writes a .tar.gz to S3/MinIO/PV and the EncryptionConfiguration is saved','Chart Rancher Backups en el clúster local; el Backup genera un .tar.gz en S3/MinIO/PV y la EncryptionConfiguration queda guardada']);
   T('rancher-restore','r-ops','Docs · Backup','must',null,['Restore do Rancher em instalação limpa','Rancher restore on a clean install','Restore de Rancher en una instalación limpia'],['Na mesma versão do Rancher, o Restore recupera clusters, usuários e configurações; secrets do Fleet GitRepo conferidos (problema conhecido)','On the same Rancher version, the Restore brings back clusters, users and settings; Fleet GitRepo secrets checked (known issue)','En la misma versión de Rancher, el Restore recupera clústeres, usuarios y configuraciones; secrets de Fleet GitRepo revisados (problema conocido)']);
   T('rancher-restart','r-ops','EIB notes','must',null,['Reinício do nó do Rancher','Rancher node reboot','Reinicio del nodo de Rancher'],['Após o reboot, Rancher e clusters gerenciados voltam a Active sem intervenção','After the reboot, Rancher and the managed clusters return to Active unattended','Tras el reinicio, Rancher y los clústeres gestionados vuelven a Active sin intervención']);
-  T('rancher-upgrade','r-ops','SUSE docs','nice',null,['Upgrade do Rancher e rollback','Rancher upgrade and rollback','Upgrade de Rancher y rollback'],['Upgrade para a versão alvo sem perder clusters gerenciados; rollback ensaiado a partir do backup','Upgrade to the target version without losing managed clusters; rollback rehearsed from the backup','Upgrade a la versión objetivo sin perder clústeres gestionados; rollback ensayado desde el backup'],{unverified:true});
 })();
 /* Demais produtos: os testes que já existiam, agora com resultado esperado, evidência e prioridade.
    Ainda sem fonte própria — ampliar exige o guia de PoC de cada produto. */
@@ -676,29 +650,12 @@ const mkT = (product) => (id,group,guide,tier,when,t,x,opts) => TEST_CATALOG.pus
   M('mlm-disk','general','Docs · Hardware','must',null,['Espaço suficiente para os repositórios','Enough space for the repositories','Espacio suficiente para los repositorios'],['A sincronização completa sem falta de espaço em /var/lib/containers/storage/volumes (a falta de espaço faz a sincronização falhar)','The synchronisation completes without running out of space in /var/lib/containers/storage/volumes (running out of space makes it fail)','La sincronización se completa sin quedarse sin espacio en /var/lib/containers/storage/volumes (quedarse sin espacio hace fallar la sincronización)']);
   one('manager','mlm-minion',['Registrar um cliente/minion e aplicar uma policy de patch','Register a client/minion and apply a patch policy','Registrar un cliente/minion y aplicar una policy de patch'],['Minion registrado e patches aplicados conforme a policy','Minion registered and patches applied per the policy','Minion registrado y patches aplicados según la policy']);
 })();
-/* Testes de versões anteriores (texto livre): mapeados para o catálogo na migração. */
-const LEGACY_TESTS = [
-  { product:'virtualization', id:'virt-livemig', texts:['Criar e migrar uma VM entre hosts (live migration)','Create and live-migrate a VM between hosts','Crear y migrar una VM entre hosts (live migration)'] },
-  { product:'virtualization', id:'virt-dr-node-fail', texts:['Simular falha de um nó e validar failover do cluster','Simulate node failure and validate cluster failover','Simular una falla de nodo y validar el failover del clúster'] },
-  { product:'rancher', id:'rancher-import', texts:['Importar/provisionar um cluster downstream','Import/provision a downstream cluster','Importar/aprovisionar un clúster downstream'] },
-  { product:'rancher', id:'rancher-apps', texts:['Aplicar um Helm chart via Apps & Marketplace','Deploy a Helm chart via Apps & Marketplace','Desplegar un Helm chart vía Apps & Marketplace'] },
-  { product:'security', id:'sec-admission', texts:['Bloquear deploy de imagem com CVE crítico via policy','Block deployment of an image with a critical CVE via policy','Bloquear el despliegue de una imagen con CVE crítico vía policy'] },
-  { product:'security', id:'sec-runtime', texts:['Validar alerta de comportamento anômalo em runtime','Validate runtime anomalous-behavior alert','Validar alerta de comportamiento anómalo en runtime'] },
-  { product:'storage', id:'sto-rwx', texts:['Criar um PVC RWX e validar acesso simultâneo','Create an RWX PVC and validate concurrent access','Crear un PVC RWX y validar el acceso simultáneo'] },
-  { product:'storage', id:'sto-rebuild', texts:['Derrubar um nó e validar reconstrução de réplica','Take down a node and validate replica rebuild','Apagar un nodo y validar la reconstrucción de la réplica'] },
-  { product:'observability', id:'obs-topology', texts:['Visualizar topologia correlacionando métricas/traces de um workload','View topology correlating metrics/traces for a workload','Visualizar la topología correlacionando métricas/trazas de un workload'] },
-  { product:'observability', id:'obs-alert', texts:['Configurar um alerta e validar notificação','Configure an alert and validate notification','Configurar una alerta y validar la notificación'] },
-  { product:'registry', id:'reg-airgap', texts:['Fazer push/pull de uma imagem espelhada em modo air-gap','Push/pull a mirrored image in air-gap mode','Hacer push/pull de una imagen espejada en modo air-gap'] },
-  { product:'appcollection', id:'app-sbom', texts:['Deploy de uma app do catálogo validando SBOM/assinatura','Deploy a catalog app validating SBOM/signature','Desplegar una app del catálogo validando SBOM/firma'] },
-  { product:'manager', id:'mlm-minion', texts:['Registrar um cliente/minion e aplicar uma policy de patch','Register a client/minion and apply a patch policy','Registrar un cliente/minion y aplicar una policy de patch'] },
-];
 const TEST_BY_ID = Object.fromEntries(TEST_CATALOG.map((x,i)=>[x.id,Object.assign({order:i},x)]));
 function testApplies(it){
   switch(it.when){
     case 'multinode': return state.infra.virtualization.nodeCount >= 2;
     case 'pxe': return state.virtInstall.installMethod === 'pxe';
     case 'storagenet': return !!state.virtNet.storageNet.dedicated;
-    case 'proxy': return !!state.network.hasProxy;
     case 'rancher': return !!state.selectedProducts.rancher;
     case 'airgap': return !!state.network.hasAirGap;
     case 'novirt': return !state.selectedProducts.virtualization;
@@ -781,8 +738,7 @@ function orderedTests(productId){
 }
 
 /* ---------------- STATE ---------------- */
-const APP_VERSION = '1.2.0';
-const STORAGE_KEY = 'suse_poc_planner_v1';
+const APP_VERSION = '1.0.0';
 const PROJECTS_INDEX_KEY = 'suse_poc_planner_projects';
 const ACTIVE_PROJECT_KEY = 'suse_poc_planner_active';
 function projectKey(id){ return 'suse_poc_planner_project_' + id; }
@@ -793,18 +749,19 @@ function defaultState(){
   return {
     lang:'pt',
     view:'dashboard',
-    project:{ projectName:'', leadEngineer:'', leadEmail:'', organization:'', clientOrganization:'', contacts:[{name:'',role:'',email:'',phone:''}], startDate:todayISO(), targetDate:'', goals:[], presalesUseCase:'', businessIssue:'', targetInfrastructure:'' },
+    lastStep:'',   // última etapa do wizard aberta: o botão Continuar do painel volta para ela
+    project:{ projectName:'', leadEngineer:'', leadEmail:'', organization:'', clientOrganization:'', contacts:[{name:'',role:'',email:'',phone:''}], startDate:todayISO(), targetDate:'', presalesUseCase:'', businessIssue:'', targetInfrastructure:'' },
     selectedProducts:{ virtualization:true, rancher:true, security:false, storage:false, observability:false, registry:false, appcollection:false, manager:false },
     infra:{
       virtualization:{ nodeCount:3, cpuCores:8, ramGb:32, diskGb:250, diskType:'SSD' },
-      rancher:{ vmSize:{cpu:4,ram:4,disk:50} },
-      observability:{ vmSize:{cpu:8,ram:32,disk:150} },
+      rancher:{ vmSize:{cpu:8,ram:16,disk:80} },
+      observability:{ vmSize:{cpu:8,ram:32,disk:300} },
       manager:{ nodeCount:1, cpuCores:4, ramGb:32, diskGb:230, clientProducts:[] },
-      addons:{ vmSize:{cpu:8,ram:16,disk:100} }
+      addons:{ vmSize:{cpu:8,ram:16,disk:150} }
     },
     network:{
       managementCidr:'192.168.1.0/24', gatewayIp:'192.168.1.1', subnetMask:'255.255.255.0',
-      clusterVip:'192.168.1.10', dnsServers:'8.8.8.8, 1.1.1.1', ntpServers:'pool.ntp.org', vlanId:'', domain:'poc.local',
+      clusterVip:'192.168.1.10', dnsServers:'8.8.8.8, 1.1.1.1', ntpServers:'pool.ntp.org', domain:'poc.local',
       httpProxy:'', httpsProxy:'', noProxy:'',
       hasFirewall:true, hasProxy:false, hasAirGap:false, hasExternalStorage:false, hasLoadBalancer:true,
       ipPoolStart:'192.168.1.20', ipPoolEnd:'192.168.1.60',
@@ -829,6 +786,7 @@ function defaultState(){
     installDates:{},
     installNotes:{},
     installApproach:'manual',
+    k3sVersionPin:'', rancherVersionPin:'',
   };
 }
 function isPlainObject(v){ return !!v && typeof v==='object' && !Array.isArray(v); }
@@ -847,24 +805,11 @@ function deepMerge(def, src){
 }
 function normalizeLoadedState(raw){
   try{
-    const parsed = JSON.parse(raw);
+    let parsed = JSON.parse(raw);
+    /* Arquivo unificado {schema, planner, eib}: só `planner` é estado. `eib` é derivado e regenerado a cada exportação. */
+    if(parsed && typeof parsed.schema==='number' && parsed.planner && typeof parsed.planner==='object') parsed = parsed.planner;
     const merged = deepMerge(defaultState(), parsed);
-    if(merged.view==='cloudinit') merged.view='install';   // etapa removida
-    /* Passos de instalação antigos (10) → ids novos; o que estava marcado continua marcado. */
-    const LEG_INSTALL = {prep:['pf-hardware'],'install-virt':['virt-install-first','virt-install-join'],downstream:['downstream'],'install-rancher':['rancher-manual','rancher-online','eib1-boot'],
-      'install-storage':['storage-apps'],'install-security':['security-apps'],'install-obs':['obs-manual','obs-online'],'install-registry':['registry-manual','registry-online'],'install-appcol':['appcol-config'],'install-manager':['manager-install']};
-    Object.keys(LEG_INSTALL).forEach(k=>{
-      if(merged.installProgress[k]) LEG_INSTALL[k].forEach(n=>{ if(merged.installProgress[n]===undefined) merged.installProgress[n]=true; });
-      delete merged.installProgress[k];
-    });
     if(INSTALL_APPROACHES.indexOf(merged.installApproach)<0) merged.installApproach='manual';
-    /* O campo único "VLAN ID" virou a lista de redes de VM: projetos antigos levam o valor junto. */
-    const oldVlan = parsed.network && String(parsed.network.vlanId||'').trim();
-    if(oldVlan && !merged.virtNet.vmNetworks.length) merged.virtNet.vmNetworks = [{ name:'VLAN '+oldVlan, vlan:oldVlan, uplink:'' }];
-    const legacyContact = parsed.project && (parsed.project.clientContactName || parsed.project.clientContactEmail || parsed.project.clientContactRole || parsed.project.clientContactPhone);
-    if(legacyContact && (!Array.isArray(merged.project.contacts) || !merged.project.contacts.length || !merged.project.contacts[0].name)){
-      merged.project.contacts = [{ name:parsed.project.clientContactName||'', role:parsed.project.clientContactRole||'', email:parsed.project.clientContactEmail||'', phone:parsed.project.clientContactPhone||'' }];
-    }
     if(!Array.isArray(merged.project.contacts) || !merged.project.contacts.length){
       merged.project.contacts = [{name:'',role:'',email:'',phone:''}];
     }
@@ -879,27 +824,11 @@ function loadProjectsIndex(){
 function saveProjectsIndex(idx){ localStorage.setItem(PROJECTS_INDEX_KEY, JSON.stringify(idx)); }
 function projectLabel(st){ return (st && st.project && (st.project.projectName || st.project.clientOrganization)) || null; }
 
-function migrateLegacyProjectIfNeeded(){
-  const idx = loadProjectsIndex();
-  if(idx.length) return idx;
-  const legacyRaw = localStorage.getItem(STORAGE_KEY);
-  if(!legacyRaw) return idx;
-  const st = normalizeLoadedState(legacyRaw);
-  if(!st) return idx;
-  const id = uid();
-  localStorage.setItem(projectKey(id), legacyRaw);
-  localStorage.removeItem(STORAGE_KEY);
-  const entry = { id, name: projectLabel(st) || 'Novo Projeto', updatedAt: Date.now() };
-  saveProjectsIndex([entry]);
-  localStorage.setItem(ACTIVE_PROJECT_KEY, id);
-  return [entry];
-}
-
 let activeProjectId = null;
 let lastSavedAt = null;
 
 function initState(){
-  let idx = migrateLegacyProjectIfNeeded();
+  const idx = loadProjectsIndex();
   let id = localStorage.getItem(ACTIVE_PROJECT_KEY);
   if(!id || !idx.find(p=>p.id===id)) id = idx.length ? idx[0].id : null;
   if(!id){
@@ -916,10 +845,6 @@ function initState(){
 
 let state = initState();
 lastSavedAt = Date.now();
-
-/* Idioma unificado: o planejador roda no mesmo documento que o resto do POC Control agora
-   (sem iframe), então o idioma vem direto de mountPlannerEngine()/P.setLang() chamados pelo
-   componente React (ver features/planejar-poc/pages/PlanPoc.tsx) em vez de postMessage/querystring. */
 function saveState(){
   localStorage.setItem(projectKey(activeProjectId), JSON.stringify(state));
   const idx = loadProjectsIndex();
@@ -955,6 +880,17 @@ function deleteProjectById(id){
   }
 }
 
+/* ---------------- THEME (separado do projeto — não entra no export/import) ---------------- */
+const THEME_KEY = 'suse_poc_planner_theme';
+function loadTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  if(saved === 'light' || saved === 'dark') return saved;
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+let theme = loadTheme();
+function applyTheme(){ document.documentElement.setAttribute('data-theme', theme); }
+applyTheme();
+
 /* ---------------- deep set/get helper ---------------- */
 function setPath(obj, path, value){
   const keys = path.split('.');
@@ -984,11 +920,12 @@ function render(){
     + '</div>';
   }
 }
-function go(view){ state.view = view; saveState(); render(); window.scrollTo(0,0); }
+function setView(v){ state.view = v; if(WIZARD_STEPS.indexOf(v)>=0) state.lastStep = v; }
+function go(view){ setView(view); saveState(); render(); window.scrollTo(0,0); }
 
 /* ---------------- WIZARD STRUCTURE ---------------- */
-const WIZARD_STEPS = ['project','products','infra','network','credentials','ports','architecture','tests','install','summary'];
-const STEP_ICON = {project:'doc',products:'box',infra:'server',network:'network',credentials:'key',ports:'shield',architecture:'eye',install:'checksq',tests:'activity',summary:'book'};
+const WIZARD_STEPS = ['project','products','infra','network','credentials','ports','tests','install','summary'];
+const STEP_ICON = {project:'doc',products:'box',infra:'server',network:'network',credentials:'key',ports:'shield',install:'checksq',tests:'activity',summary:'book'};
 
 function renderShell(){
   const isDashboard = state.view === 'dashboard';
@@ -1006,13 +943,29 @@ function fmtTime(ts){
   const d = new Date(ts);
   return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
 }
+/* Menu único de exportação, disponível em qualquer etapa. Impressões levam à tela de Resumo, onde as folhas existem. */
+function exportMenuHtml(){
+  const g=(pt,en,es)=>({pt,en,es})[state.lang] || en;
+  const item=(fn,icon,t,d)=>'<button class="export-item" onclick="this.closest(\'details\').removeAttribute(\'open\');P.'+fn+'()">'+Icon(icon)+'<span><b>'+t+'</b><small>'+d+'</small></span></button>';
+  return '<details class="export-menu no-print"><summary class="btn btn-ghost">' + Icon('download') + ' ' + tr('common.export') + '</summary><div class="export-pop">'
+    + item('exportProject','download',g('Projeto (JSON)','Project (JSON)','Proyecto (JSON)'),g('Estado completo + seção para o EIB (run.sh)','Full state + EIB section (run.sh)','Estado completo + sección para EIB (run.sh)'))
+    + item('printReport','print',g('Relatório do cliente','Client report','Informe del cliente'),g('Imprimir ou salvar em PDF','Print or save as PDF','Imprimir o guardar en PDF'))
+    + item('printInstall','terminal',g('Checklist de instalação','Install checklist','Checklist de instalación'),g('Folha própria, fora do relatório','Own sheet, outside the report','Hoja propia, fuera del informe'))
+    + item('printOperatorSheet','key',g('Folha do operador','Operator sheet','Hoja del operador'),g('Credenciais em texto claro — uso interno','Credentials in clear text — internal use','Credenciales en texto claro — uso interno'))
+  + '</div></details>';
+}
 function renderHeader(){
-  // Cabeçalho reduzido: a marca e o idioma já vêm da topbar compartilhada do POC Control
-  // (ver web/src/pages/Layout.tsx). Aqui fica só o essencial deste wizard: voltar ao
-  // dashboard de projetos e o indicador de "salvo em".
+  // Cabeçalho reduzido: a marca e o idioma já vêm da topbar compartilhada do POC Control (ver
+  // web/src/pages/Layout.tsx). Aqui fica só o essencial deste wizard: voltar ao dashboard de
+  // projetos, o indicador de "salvo em" e o menu de exportação (novo na v2, útil em qualquer
+  // etapa -- o app principal não tem nada equivalente). O alternador de tema claro/escuro da
+  // v2 saiu pelo mesmo motivo do idioma: o app não tem alternância de tema.
   return '<header class="header"><div class="header-inner">'
     + '<button class="btn btn-ghost" onclick="P.go(\'dashboard\')">' + Icon('home') + ' ' + tr('common.home') + '</button>'
-    + (lastSavedAt && state.view!=='dashboard' ? '<span class="text-xs" style="opacity:.65;white-space:nowrap;">' + Icon('check') + ' ' + tr('common.savedAt') + ' ' + fmtTime(lastSavedAt) + '</span>' : '')
+    + '<div class="flex items-center gap-3">'
+      + (lastSavedAt && state.view!=='dashboard' ? '<span class="text-xs" style="opacity:.65;white-space:nowrap;">' + Icon('check') + ' ' + tr('common.savedAt') + ' ' + fmtTime(lastSavedAt) + '</span>' : '')
+      + exportMenuHtml()
+    + '</div>'
   + '</div></header>';
 }
 
@@ -1073,7 +1026,7 @@ function renderFooterBar(){
       + '<div style="font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:10px;">' + tr('common.step') + ' ' + (idx+1) + ' ' + tr('common.of') + ' ' + WIZARD_STEPS.length + '</div>'
       + '<div style="width:140px;height:5px;background:var(--gray-100);border-radius:99px;margin-top:4px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:var(--suse-base);"></div></div>'
     + '</div>'
-    + '<button class="btn btn-primary" onclick="P.wizardNext()">' + (isLast? tr('common.finish') : tr('common.next')) + ' ' + Icon('chevronR') + '</button>'
+    + '<button class="btn btn-primary" onclick="'+(isLast?'P.openExportMenu()':'P.wizardNext()')+'">' + (isLast? Icon('download') + ' ' + tr('common.export') : tr('common.next') + ' ' + Icon('chevronR')) + '</button>'
   + '</div>';
 }
 
@@ -1086,7 +1039,6 @@ function renderView(){
     case 'network': return renderNetworkView();
     case 'credentials': return renderCredentialsView();
     case 'ports': return renderPortsView();
-    case 'architecture': return renderArchitectureView();
     case 'install': return renderInstallView();
     case 'tests': return renderTestsView();
     case 'summary': return renderSummaryView();
@@ -1096,45 +1048,42 @@ function renderView(){
 
 /* ---------------- DASHBOARD ---------------- */
 function renderDashboard(){
-  const selectedCount = Object.values(state.selectedProducts).filter(Boolean).length;
+  const L=state.lang;
+  const inProgress = !!state.project.projectName;
+  const resume = WIZARD_STEPS.indexOf(state.lastStep)>=0 ? state.lastStep : 'project';
   return '<div class="fade-in" style="text-align:center;max-width:760px;margin:40px auto 0;">'
     + '<div style="display:inline-flex;padding:16px;background:var(--suse-base);border-radius:24px;box-shadow:0 16px 40px rgba(48,186,120,.3);margin-bottom:22px;">' + Icon('layout') + '</div>'
     + '<h1 style="font-size:32px;font-weight:900;color:var(--ink);margin:0 0 10px;">' + tr('dashboard.title') + '</h1>'
     + '<p class="text-muted" style="font-size:14px;line-height:1.6;margin-bottom:28px;">' + tr('dashboard.subtitle') + '</p>'
     + '<div class="flex gap-3" style="justify-content:center;flex-wrap:wrap;">'
-      + '<button class="btn btn-primary" style="padding:16px 32px;font-size:14px;" onclick="P.go(\'project\')">' + Icon('plus') + ' ' + tr('dashboard.start') + '</button>'
-      + (state.project.projectName ? '<button class="btn btn-outline" style="padding:16px 32px;font-size:14px;" onclick="P.go(\'summary\')">' + Icon('book') + ' ' + tr('dashboard.continue') + '</button>' : '')
+      + (inProgress
+          ? '<button class="btn btn-primary" style="padding:16px 32px;font-size:14px;" onclick="P.go(\''+resume+'\')">' + Icon('chevronR') + ' ' + tr('dashboard.continue') + '</button>'
+          : '<button class="btn btn-primary" style="padding:16px 32px;font-size:14px;" onclick="P.go(\'project\')">' + Icon('plus') + ' ' + tr('dashboard.start') + '</button>')
     + '</div>'
     + '<div class="flex gap-3 mt-4" style="justify-content:center;">'
-      + '<button class="btn btn-outline btn-sm" onclick="P.exportProject()">' + Icon('download') + ' ' + tr('common.export') + '</button>'
       + '<label class="btn btn-outline btn-sm" style="cursor:pointer;">' + Icon('upload') + ' ' + tr('common.import') + '<input type="file" accept=".json" style="display:none" onchange="P.importProject(this)"></label>'
-      + '<button class="btn btn-outline btn-sm" onclick="P.newProject()">' + Icon('trash') + ' ' + tr('common.newProject') + '</button>'
+      + (inProgress ? '<button class="btn btn-outline btn-sm" onclick="P.newProject()">' + Icon('plus') + ' ' + tr('common.newProject') + '</button>' : '')
     + '</div>'
-    + (state.project.projectName ? ('<div class="card mt-4" style="text-align:left;">'
-        + '<div class="flex justify-between items-center">'
-          + '<div><div style="font-weight:900;font-size:16px;">' + esc(state.project.projectName) + '</div>'
-          + '<div class="text-xs text-muted mt-1">' + esc(state.project.clientOrganization||'') + ' · ' + selectedCount + ' ' + ({pt:'produtos selecionados',en:'products selected',es:'productos seleccionados'}[state.lang]) + '</div></div>'
-          + '<button class="btn btn-primary btn-sm" onclick="P.go(\'summary\')">' + Icon('chevronR') + '</button>'
-        + '</div>'
-      + '</div>') : '')
     + renderProjectsList()
-    + '<div class="grid grid-4 mt-4" style="text-align:left;">'
-      + PRODUCTS.map(p => '<div class="card" style="padding:16px;"><div class="flex items-center gap-2"><span class="badge-dot" style="background:'+p.color+'"></span><span style="font-weight:800;font-size:12px;">'+p.name+'</span></div><div class="text-xs text-muted mt-1">'+ (p.desc[state.lang]||p.desc.en) +'</div></div>').join('')
-    + '</div>'
   + '</div>';
 }
+/* Uma lista só: o projeto aberto (destacado) e os demais salvos. */
 function renderProjectsList(){
-  const idx = loadProjectsIndex().filter(p=>p.id!==activeProjectId).sort((a,b)=>b.updatedAt-a.updatedAt);
-  if(!idx.length) return '';
+  const current = state.project.projectName ? { id:activeProjectId, name:state.project.projectName, updatedAt:null, cur:true } : null;
+  const others = loadProjectsIndex().filter(p=>p.id!==activeProjectId).sort((a,b)=>b.updatedAt-a.updatedAt);
+  const rows = (current ? [current] : []).concat(others);
+  if(!rows.length) return '';
+  const nProducts = Object.values(state.selectedProducts).filter(Boolean).length;
+  const unit = {pt:'produtos selecionados',en:'products selected',es:'productos seleccionados'}[state.lang];
   return '<div class="card mt-4" style="text-align:left;">'
     + '<h3 style="font-weight:900;font-size:14px;margin:0 0 10px;display:flex;align-items:center;gap:8px;">' + Icon('folder') + ' ' + tr('projects.title') + '</h3>'
-    + idx.map(p => '<div class="flex justify-between items-center" style="padding:8px 0;border-top:1px solid var(--gray-100);">'
-        + '<div><div style="font-weight:700;font-size:13px;">' + esc(p.name) + '</div>'
-        + '<div class="text-xs text-muted">' + tr('projects.updated') + ' ' + fmtTime(p.updatedAt) + '</div></div>'
-        + '<div class="flex gap-2">'
+    + rows.map(p => '<div class="flex justify-between items-center" style="padding:8px 0;border-top:1px solid var(--gray-100);">'
+        + '<div><div style="font-weight:'+(p.cur?'900':'700')+';font-size:13px;">' + esc(p.name) + (p.cur ? ' <span class="pill pill-ok">'+tr('projects.current')+'</span>' : '') + '</div>'
+        + '<div class="text-xs text-muted">' + (p.cur ? esc(state.project.clientOrganization||'') + ' · ' + nProducts + ' ' + unit : tr('projects.updated') + ' ' + fmtTime(p.updatedAt)) + '</div></div>'
+        + (p.cur ? '' : '<div class="flex gap-2">'
           + '<button class="btn btn-outline btn-sm" onclick="P.switchProject(\''+p.id+'\')">' + Icon('chevronR') + ' ' + tr('projects.open') + '</button>'
           + '<button class="btn btn-ghost btn-sm" title="'+tr('projects.delete')+'" onclick="P.deleteProject(\''+p.id+'\')">' + Icon('trash') + '</button>'
-        + '</div>'
+        + '</div>')
       + '</div>').join('')
   + '</div>';
 }
@@ -1197,21 +1146,12 @@ function renderProjectView(){
         + '</div>'
       + '</div>'
     )).join('')
-    + '<h3 class="mt-4" style="font-size:14px;font-weight:900;color:var(--ink);">' + g('Contexto Comercial (Salesforce)','Sales Context (Salesforce)','Contexto Comercial (Salesforce)') + '</h3>'
-    + '<p class="text-xs text-muted mt-1">' + g('Campos de referência da oportunidade no Salesforce, para manter a PoC rastreável ao negócio.','Reference fields from the Salesforce opportunity, to keep the PoC traceable to the deal.','Campos de referencia de la oportunidad en Salesforce, para mantener la PoC trazable al negocio.') + '</p>'
+    + '<h3 class="mt-4" style="font-size:14px;font-weight:900;color:var(--ink);">' + g('Contexto Comercial','Sales Context','Contexto Comercial') + '</h3>'
+    + '<p class="text-xs text-muted mt-1">' + g('Campos de referência da oportunidade, para manter a PoC rastreável ao negócio.','Reference fields from the opportunity, to keep the PoC traceable to the deal.','Campos de referencia de la oportunidad, para mantener la PoC trazable al negocio.') + '</p>'
     + '<div class="grid grid-3 mt-2">'
       + field(g('Caso de uso (pré-vendas)','Presales Use Case','Caso de uso (preventa)'),'project.presalesUseCase',{placeholder:g('ex.: Substituição de VMware/VCF','e.g. VMware/VCF replacement','ej.: Reemplazo de VMware/VCF')})
       + field(g('Problema de negócio','Business Issue','Problema de negocio'),'project.businessIssue',{placeholder:g('ex.: Custo de licenciamento, fim de suporte','e.g. Licensing cost, end of support','ej.: Costo de licenciamiento, fin de soporte')})
       + field(g('Infraestrutura Alvo','Target Infrastructure','Infraestructura Objetivo'),'project.targetInfrastructure',{placeholder:g('ex.: 3 hosts Dell R760, on-prem','e.g. 3x Dell R760 hosts, on-prem','ej.: 3 hosts Dell R760, on-prem')})
-    + '</div>'
-    + '<h3 class="mt-4" style="font-size:14px;font-weight:900;color:var(--ink);">' + g('Objetivos da PoC','PoC Goals','Objetivos de la PoC') + '</h3>'
-    + '<p class="text-xs text-muted mt-1">' + g('O que precisa ser demonstrado/validado para considerar a PoC bem-sucedida.','What needs to be demonstrated/validated for the PoC to be considered successful.','Qué debe demostrarse/validarse para considerar exitosa la PoC.') + '</p>'
-    + '<div class="flex gap-2 mt-2">'
-      + '<input type="text" id="goalInput" placeholder="'+g('ex.: Validar live migration de VMs','e.g. Validate VM live migration','ej.: Validar live migration de VMs')+'" style="flex:1" onkeydown="if(event.key===\'Enter\'){P.addGoal()}">'
-      + '<button class="btn btn-primary btn-sm" onclick="P.addGoal()">' + Icon('plus') + '</button>'
-    + '</div>'
-    + '<div class="flex flex-wrap gap-2 mt-3">'
-      + state.project.goals.map((goal,i)=>'<span class="pill pill-off" style="background:var(--gray-100);color:var(--gray-700);">'+esc(goal)+' <span style="cursor:pointer;margin-left:4px;" onclick="P.removeGoal('+i+')">✕</span></span>').join('')
     + '</div>'
   + '</div>';
 }
@@ -1221,7 +1161,7 @@ function renderProductsView(){
   const L = state.lang; const g=(pt,en,es)=>({pt,en,es})[L] || en;
   return '<div class="card">'
     + '<h2 class="section-title">' + Icon('box') + ' ' + g('Quais produtos fazem parte desta PoC?','Which products are part of this PoC?','¿Qué productos forman parte de esta PoC?') + '</h2>'
-    + '<p class="section-sub">' + g('As próximas telas (hardware, rede, portas, arquitetura, instalação) se adaptam aos produtos selecionados.','The next screens (hardware, network, ports, architecture, install) adapt to the selected products.','Las siguientes pantallas (hardware, red, puertos, arquitectura, instalación) se adaptan a los productos seleccionados.') + '</p>'
+    + '<p class="section-sub">' + g('As próximas telas (hardware, rede, portas, instalação) se adaptam aos produtos selecionados.','The next screens (hardware, network, ports, install) adapt to the selected products.','Las siguientes pantallas (hardware, red, puertos, instalación) se adaptan a los productos seleccionados.') + '</p>'
     + '<div class="grid grid-3">'
       + PRODUCTS.map(p=>{
           const sel = !!state.selectedProducts[p.id];
@@ -1233,6 +1173,19 @@ function renderProductsView(){
           + '</div>';
         }).join('')
     + '</div>'
+    + essencialBundleNote(g)
+  + '</div>';
+}
+/* A ISO Essencial do EIB é um pacote fixo (Longhorn + NeuVector + Harbor): escolher só parte dos três não monta uma ISO menor. */
+function essencialBundleNote(g){
+  const sp = state.selectedProducts, trio = [['storage','Longhorn'],['security','NeuVector'],['registry','Harbor']];
+  const chosen = trio.filter(x=>sp[x[0]]);
+  if(!chosen.length || chosen.length===trio.length) return '';
+  const extra = trio.filter(x=>!sp[x[0]]).map(x=>x[1]).join(' + ');
+  return '<div class="alert alert-info mt-3">' + Icon('info') + ' '
+    + g('A ISO air-gapped “Essencial” (EIB) é um pacote fixo: Longhorn + NeuVector + Harbor sempre vão juntos. Com a seleção atual, a ISO também traria '+extra+'.',
+        'The air-gapped “Essencial” ISO (EIB) is a fixed bundle: Longhorn + NeuVector + Harbor always ship together. With the current selection the ISO would also include '+extra+'.',
+        'La ISO air-gapped “Essencial” (EIB) es un paquete fijo: Longhorn + NeuVector + Harbor siempre van juntos. Con la selección actual, la ISO también incluiría '+extra+'.')
   + '</div>';
 }
 
@@ -1260,20 +1213,10 @@ function renderVirtInstallBody(L,g){
     + '<div class="grid grid-3 mt-3">'
       + field(g('Modo do VIP (instalador)','VIP mode (installer)','Modo de la VIP (instalador)'),'virtInstall.vipMode',{type:'select',liveRender:true,options:[opt('static',g('Estático','Static','Estático')),opt('dhcp','DHCP')]})
       + (v.vipMode==='dhcp' ? field(g('Mapeamento MAC→IP no DHCP feito e VIP único','Static MAC→IP mapping done and VIP unique','Mapeo MAC→IP en el DHCP hecho y VIP única'),'virtInstall.vipReserved',{type:'checkbox'}) : '')
-      + field(g('URL das chaves SSH (opcional)','SSH keys URL (optional)','URL de las claves SSH (opcional)'),'virtInstall.sshKeysUrl',{placeholder:'https://github.com/<user>.keys'})
-      + field(g('URL do arquivo de configuração Harvester (opcional)','Harvester configuration file URL (optional)','URL del archivo de configuración de Harvester (opcional)'),'virtInstall.configUrl',{placeholder:'https://…/config.yaml'})
     + '</div>'
-    + '<p class="text-xs text-muted mt-2">' + g('Guia §8.1 (passos 7 e 12): com VIP por DHCP é preciso um mapeamento MAC→IP fixo no servidor DHCP e o VIP deve ser único; as duas URLs são lidas pelo instalador, então o nó precisa alcançá-las (em air-gap, hospede-as internamente). O arquivo de configuração costuma levar token e senha — evite URL com credencial.','Guide §8.1 (steps 7 and 12): with a DHCP VIP you need a static MAC→IP mapping on the DHCP server and the VIP must be unique; both URLs are read by the installer, so the node must reach them (in air-gap, host them internally). The configuration file usually carries the token and password — avoid a URL with a credential.','Guía §8.1 (pasos 7 y 12): con VIP por DHCP se necesita un mapeo MAC→IP fijo en el servidor DHCP y la VIP debe ser única; el instalador lee las dos URL, así que el nodo debe alcanzarlas (en air-gap, hospédelas internamente). El archivo de configuración suele llevar token y contraseña — evite una URL con credencial.') + '</p>'
-    + '<div class="flex gap-4 flex-wrap mt-3">'
-      + field(g('product_uuid único em cada nó (verificado)','Unique product_uuid on every node (verified)','product_uuid único en cada nodo (verificado)'),'virtInstall.uuidChecked',{type:'checkbox'})
-      + field(g('Hardware server-class com virtualização na BIOS (verificado)','Server-class hardware with BIOS virtualization (verified)','Hardware server-class con virtualización en BIOS (verificado)'),'virtInstall.serverClass',{type:'checkbox'})
-    + '</div>'
+    + '<p class="text-xs text-muted mt-2">' + g('Guia §8.1 (passo 7): com VIP por DHCP é preciso um mapeamento MAC→IP fixo no servidor DHCP e o VIP deve ser único.','Guide §8.1 (step 7): with a DHCP VIP you need a static MAC→IP mapping on the DHCP server and the VIP must be unique.','Guía §8.1 (paso 7): con VIP por DHCP se necesita un mapeo MAC→IP fijo en el servidor DHCP y la VIP debe ser única.') + '</p>'
     + '<p class="text-xs text-muted mt-2">' + g('Versão-alvo: sempre um release Prime suportado (a linha comunitária não é alvo). A última e as datas de suporte estão em ','Target version: always a supported Prime release (the community track is not a target). The latest one and the support dates are on ','Versión objetivo: siempre un release Prime soportado (la línea comunitaria no es objetivo). La última y las fechas de soporte están en ') + '<a href="'+SUSE_LIFECYCLE_URL+'" target="_blank">suse.com/lifecycle</a>.</p>'
-    + '<p class="text-xs text-muted mt-2">' + g('Guia §7.1 e §8.1: product_uuid duplicado quebra a live migration; com disco único a partição persistente tem mínimo de 150 GiB; o maior disco deve ter ao menos 4× o maior volume.','Guide §7.1 and §8.1: a duplicate product_uuid breaks live migration; with a single disk the persistent partition needs at least 150 GiB; the largest disk must be at least 4× the largest volume.','Guía §7.1 y §8.1: un product_uuid duplicado rompe la live migration; con disco único la partición persistente requiere al menos 150 GiB; el mayor disco debe ser al menos 4× el mayor volumen.') + '</p>'
-    + '<div class="mt-3"><label class="field-label">' + g('VMs de teste do cliente (opcional)','Customer test VMs (optional)','VMs de prueba del cliente (opcional)') + '</label>'
-      + virtListRows('virtInstall.testVms', v.testVms, [{label:g('Nome / função','Name / role','Nombre / función'),key:'name'},{label:g('Sistema','OS','Sistema'),key:'os'},{label:'vCPU',key:'cpu',num:true},{label:'RAM (GB)',key:'ram',num:true}], g)
-      + '<div class="flex gap-2 flex-wrap mt-2"><button class="btn btn-outline btn-sm" onclick="P.addTestVm()">' + Icon('plus') + ' ' + tr('common.add') + '</button>'
-      + '<button class="btn btn-outline btn-sm" onclick="P.addGuideTestVms()">' + Icon('copy') + ' ' + g('Sugestões do guia (§6)','Guide suggestions (§6)','Sugerencias de la guía (§6)') + '</button></div></div>';
+    + '<p class="text-xs text-muted mt-2">' + g('Guia §8.1: com disco único a partição persistente tem mínimo de 150 GiB; o maior disco deve ter ao menos 4× o maior volume.','Guide §8.1: with a single disk the persistent partition needs at least 150 GiB; the largest disk must be at least 4× the largest volume.','Guía §8.1: con disco único la partición persistente requiere al menos 150 GiB; el mayor disco debe ser al menos 4× el mayor volumen.') + '</p>';
 }
 function renderVirtNetCard(L,g){
   const n = state.virtNet;
@@ -1334,7 +1277,6 @@ function renderInfraView(){
       : st.status==='confirm'
       ? '<div class="alert alert-info mt-3">' + Icon('info') + ' ' + g('Atende o mínimo de testes; abaixo do nível de produção em: ','Meets the testing minimum; below production level on: ','Cumple el mínimo de pruebas; por debajo del nivel de producción en: ') + names(st.belowProd) + '.</div>'
       : '<div class="alert alert-ok mt-3">' + Icon('check') + ' ' + g('Atende também o nível de produção do guia.','Also meets the guide’s production level.','Cumple también el nivel de producción de la guía.') + '</div>';
-    const tv = String(state.virtInstall.targetVersion||'').trim();
     out += '<div class="card">'
       + '<h2 class="section-title mb-3">' + Icon('server') + ' SUSE Virtualization</h2>'
       + '<div class="grid grid-4">'
@@ -1348,11 +1290,7 @@ function renderInfraView(){
       + '</div>'
       + alertHtml
       + '<p class="text-xs text-muted mt-2">' + g('Por nó — testes: ','Per node — testing: ','Por nodo — pruebas: ') + fig(z.min) + ' · ' + g('produção: ','production: ','producción: ') + fig(z.prod) + '. ' + g('Mesmos números nas docs v1.7 e v1.8 e no SUSE Virtualization PoC Guide v1.7.0 §7.1.','Same figures in the v1.7 and v1.8 docs and in PoC Guide v1.7.0 §7.1.','Mismas cifras en las docs v1.7 y v1.8 y en el SUSE Virtualization PoC Guide v1.7.0 §7.1.') + '</p>'
-      + (tv && !virtVersionChecked() ? '<div class="alert alert-info mt-2">' + Icon('info') + ' ' + g('A versão alvo ('+esc(tv)+') não foi conferida: os números acima e os links de documentação valem para v1.7 e v1.8.','The target version ('+esc(tv)+') was not checked: the figures above and the documentation links hold for v1.7 and v1.8.','La versión objetivo ('+esc(tv)+') no se verificó: las cifras de arriba y los enlaces de documentación valen para v1.7 y v1.8.') + '</div>' : '')
       + '<p class="text-xs text-muted mt-2">' + g('Apenas disco local/RAID por hardware é suportado para o cluster base (sem storage externo). Mínimo 5.000 IOPS em SSD/NVMe. NTP é obrigatório (sincronismo do etcd).','Only local disk/hardware RAID is supported for the base cluster (no external storage). Minimum 5,000 IOPS on SSD/NVMe. NTP is mandatory (etcd sync).','Solo se soporta disco local/RAID por hardware para el clúster base (sin almacenamiento externo). Mínimo 5.000 IOPS en SSD/NVMe. NTP es obligatorio (sincronismo de etcd).') + '</p>'
-      + '<hr style="border:none;border-top:1px solid var(--gray-100);margin:18px 0 14px;">'
-      + '<h3 class="text-xs" style="font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin:0 0 10px;">' + g('Instalação e disco','Installation and disk','Instalación y disco') + '</h3>'
-      + renderVirtInstallBody(L,g)
     + '</div>';
   }
 
@@ -1368,6 +1306,8 @@ function renderInfraView(){
       + eibSizingHint(1, state.infra.rancher.vmSize, g)
     + '</div>';
   }
+
+  out += renderVersionPinCard(g, sp);
 
   if(sp.observability){
     out += '<div class="card">'
@@ -1405,6 +1345,7 @@ function renderInfraView(){
   if(addon.length){
     out += '<div class="card"><h2 class="section-title mb-3">' + Icon('box') + ' ' + g('Cluster downstream','Downstream cluster','Clúster downstream') + '</h2>'
       + '<div class="grid grid-2 mb-3">' + addon.map(id=>{ const p=PRODUCTS.find(x=>x.id===id); return '<div class="field-box"><div style="font-weight:800;font-size:13px;">'+p.name+'</div><div class="text-xs text-muted mt-1">'+(p.desc[L]||p.desc.en)+'</div></div>'; }).join('') + '</div>'
+      + (sp.appcollection ? '<p class="text-xs text-muted mb-2">' + g('O Application Collection é um serviço externo (SaaS): o cluster só baixa (pull) apps dele, não o hospeda, e as ISOs do EIB não trazem seu conteúdo.','Application Collection is an external service (SaaS): the cluster only pulls apps from it, it does not host it, and the EIB ISOs do not carry its content.','Application Collection es un servicio externo (SaaS): el clúster solo descarga (pull) apps de él, no lo aloja, y las ISOs de EIB no traen su contenido.') + '</p>' : '')
       + '<p class="text-xs text-muted mb-2">' + g('Dimensionamento do cluster downstream que hospeda estes produtos — ajuste conforme necessário.','Sizing of the downstream cluster that hosts these products — adjust as needed.','Dimensionamiento del clúster downstream que aloja estos productos — ajuste según sea necesario.') + '</p>'
       + '<div class="grid grid-3">'
         + field('vCPU','infra.addons.vmSize.cpu',{type:'number',liveRender:true})
@@ -1428,7 +1369,7 @@ function rebuildVms(){
   if(sp.rancher){ desired.push({key:'rancher-vm',product:'rancher',role:'Rancher Server',defaultUser:'opensuse'}); }
   if(sp.observability){ desired.push({key:'observability-vm',product:'observability',role:'Observability',defaultUser:'opensuse'}); }
   if(sp.manager){ for(let i=0;i<state.infra.manager.nodeCount;i++) desired.push({key:'manager-'+i,product:'manager',role:'Multi-Linux Manager Server',defaultUser:'root'}); }
-  { const addonIds=['security','storage','registry','appcollection'].filter(id=>sp[id]); if(addonIds.length){ desired.push({key:'addons-vm',product:'addons',role:'Downstream cluster ('+addonIds.join(', ')+')',defaultUser:'opensuse'}); } }
+  { const addonIds=['security','storage','registry','appcollection'].filter(id=>sp[id]); if(addonIds.length){ desired.push({key:'addons-vm',product:'addons',role:'Downstream cluster ('+addonIds.filter(id=>id!=='appcollection').join(', ')+(addonIds.indexOf('appcollection')>=0 ? (addonIds.length>1?' · ':'')+'pulls from Application Collection' : '')+')',defaultUser:'opensuse'}); } }
 
   const existingByKey = {}; (state.network.vms||[]).forEach(v=>existingByKey[v.key]=v);
   const usedIps = new Set(Object.values(existingByKey).map(v=>v.ip).filter(Boolean));
@@ -1445,6 +1386,73 @@ function rebuildVms(){
   });
   state.network.vms = newList;
   saveState();
+}
+/* ---------------- VERSION PIN (K3s / Rancher) ----------------
+   Busca as últimas versões via API pública com CORS liberado (confirmado: GitHub API
+   e releases.rancher.com; update.k3s.io NÃO tem CORS, por isso não é usado aqui) pra
+   popular os dropdowns de pin de versão. Cacheado em localStorage por 24h; offline ou
+   bloqueado, cai de volta pra só "Automático (stable)" sem quebrar a tela. */
+const VERSION_CACHE_KEY = 'poc-planner-version-cache';
+const VERSION_CACHE_TTL = 24*60*60*1000;
+let versionCache = null, versionFetchInFlight = false, versionFetchFailedAt = 0;
+function loadVersionCache(){
+  if(versionCache) return versionCache;
+  try{ versionCache = JSON.parse(localStorage.getItem(VERSION_CACHE_KEY)||'null'); }catch(e){ versionCache = null; }
+  return versionCache;
+}
+function versionCacheFresh(){
+  const c = loadVersionCache();
+  return !!(c && c.fetchedAt && (Date.now()-c.fetchedAt) < VERSION_CACHE_TTL);
+}
+async function fetchK3sVersions(){
+  const res = await fetch('https://api.github.com/repos/k3s-io/k3s/releases?per_page=40');
+  if(!res.ok) throw new Error('k3s fetch failed');
+  const data = await res.json();
+  return data.filter(r=>!r.prerelease && !r.draft).map(r=>r.tag_name).slice(0,12);
+}
+async function fetchRancherVersions(){
+  const res = await fetch('https://releases.rancher.com/server-charts/stable/index.yaml');
+  if(!res.ok) throw new Error('rancher fetch failed');
+  const text = await res.text();
+  /* Isola só o bloco da chart "rancher" (o index.yaml também tem rancher-alerting-drivers,
+     rancher-partner-charts etc. — um grep ingênuo de "version:" pegaria as deles também). */
+  const m = text.match(/\n {2}rancher:\n([\s\S]*?)(?=\n {2}(?!- )\S|\n\S|$)/);
+  const block = m ? m[1] : '';
+  const versions = Array.from(block.matchAll(/\n\s*version:\s*([0-9]+\.[0-9]+\.[0-9]+)/g)).map(x=>x[1]);
+  const uniq = Array.from(new Set(versions));
+  uniq.sort((a,b)=>b.localeCompare(a, undefined, {numeric:true}));
+  return uniq.slice(0,12);
+}
+function refreshVersionCache(){
+  /* Após uma falha (ex.: 429 da API do GitHub) não tenta de novo por 5 min: o .finally()
+     abaixo re-renderiza, e o render chama este refresh — sem esse freio vira loop infinito. */
+  if(versionFetchInFlight || versionCacheFresh() || (Date.now()-versionFetchFailedAt) < 5*60*1000) return;
+  versionFetchInFlight = true;
+  Promise.all([fetchK3sVersions(), fetchRancherVersions()])
+    .then(([k3s, rancher])=>{
+      versionCache = { k3s, rancher, fetchedAt: Date.now() };
+      localStorage.setItem(VERSION_CACHE_KEY, JSON.stringify(versionCache));
+    })
+    .catch(()=>{ /* offline ou bloqueado: mantém o que já tinha e segue só com "Automático" */ versionFetchFailedAt = Date.now(); })
+    .finally(()=>{ versionFetchInFlight = false; if(state.view==='infra') render(); });
+}
+function versionPinOptions(list, g){
+  return [{value:'',label:g('Automático (stable)','Automatic (stable)','Automático (stable)')}]
+    .concat((list||[]).map(v=>({value:v,label:v})));
+}
+function renderVersionPinCard(g, sp){
+  if(!eibApplicableProfiles().length) return '';
+  if(!versionCacheFresh()) refreshVersionCache();
+  const vc = loadVersionCache() || {};
+  return '<div class="card">'
+    + '<h2 class="section-title mb-3">' + Icon('box') + ' ' + g('Versões para build via EIB','Versions for the EIB build','Versiones para el build vía EIB') + '</h2>'
+    + '<p class="text-xs text-muted mb-2">' + g('Opcional — só é usado se você gerar a ISO via EIB (run.sh). Deixe em "Automático" para resolver a última versão estável no momento do build.','Optional — only used if you build the ISO via EIB (run.sh). Leave as "Automatic" to resolve the latest stable version at build time.','Opcional — solo se usa si genera la ISO vía EIB (run.sh). Deje en "Automático" para resolver la última versión estable en el momento del build.') + '</p>'
+    + '<div class="grid grid-3">'
+      + field(g('Versão do K3s','K3s version','Versión de K3s'),'k3sVersionPin',{type:'select',liveRender:true,options:versionPinOptions(vc.k3s,g)})
+      + (sp.rancher ? field(g('Versão do Rancher','Rancher version','Versión de Rancher'),'rancherVersionPin',{type:'select',liveRender:true,options:versionPinOptions(vc.rancher,g)}) : '')
+    + '</div>'
+    + '<p class="text-xs text-muted mt-2">' + g('Fixar a versão garante o mesmo build em dias diferentes (reprodutibilidade). Replicado para o EIB ao exportar (menu Exportar → JSON).','Pinning the version guarantees the same build on different days (reproducibility). Replicated to EIB on export (Export menu → JSON).','Fijar la versión garantiza el mismo build en días diferentes (reproducibilidad). Se replica al EIB al exportar (menú Exportar → JSON).') + '</p>'
+  + '</div>';
 }
 /* ---------------- EIB-SUSE-PoC EXPORT ----------------
    Gera um JSON "achatado" por perfil (1=Rancher, 2=Essencial, 3=Observability)
@@ -1468,7 +1476,8 @@ function eibCommonFields(){
     SSH_KEY: '',   // run.sh pergunta; o planner não coleta chave SSH
     CLIENT_NAME: normClient(proj.clientOrganization || proj.projectName),
     POC_DAYS: pocDays,
-    SCC_REG_CODE: state.credentials.suseRegistrationCode || ''
+    SCC_REG_CODE: state.credentials.suseRegistrationCode || '',
+    K3S_VERSION: state.k3sVersionPin || ''   // vazio = run.sh resolve 'stable' no build
   };
 }
 function eibVmFields(product){
@@ -1485,7 +1494,8 @@ function buildEibProfileJson(profile){
     return Object.assign({profile:1}, common, vm, {
       RANCHER_FQDN: 'rancher.'+vm.NODE_FQDN,
       RANCHER_BOOTSTRAP_PASS: cred.rancherBootstrapPassword||'',
-      AC_USER: cred.appCollectionUser||'', AC_TOKEN: cred.appCollectionToken||''
+      AC_USER: cred.appCollectionUser||'', AC_TOKEN: cred.appCollectionToken||'',
+      RANCHER_VERSION: state.rancherVersionPin || ''   // vazio = run.sh resolve 'stable' no build
     });
   }
   if(profile===2){
@@ -1512,6 +1522,55 @@ function eibApplicableProfiles(){
 /* Um único arquivo pro run.sh ler: cada campo vira "p<N>_CAMPO" (ex: p1_NODE_HOSTNAME),
    em vez de um JSON por perfil com um campo "profile". Mantém o parser do run.sh simples
    (grep/sed num objeto plano, sem aninhamento) e evita múltiplos downloads. */
+/* Arquivo de exportação único. `planner` = estado completo (reimportável); `eib` = as chaves p<N>_ que o run.sh lê
+   (grep puro, ignora aninhamento: valores precisam seguir strings e os prefixos p<N>_ únicos no arquivo). */
+const EXPORT_SCHEMA = 2;
+function buildExportJson(){
+  rebuildVms();
+  return { schema:EXPORT_SCHEMA, planner:state, eib:buildEibCombinedJson(), poc_markdown:buildPocMarkdown() };
+}
+/* Resumo da PoC em Markdown para o diretório de build (script de build do EIB). Nunca leva segredo: nada de
+   credenciais, senhas de VM nem URLs com usuário/token. Também não pode conter chaves "p<N>_…" (o run.sh lê o arquivo por grep). */
+function buildPocMarkdown(){
+  const L=state.lang, g=(pt,en,es)=>({pt,en,es})[L] || en;
+  const sp=state.selectedProducts, pr=state.project, n=state.network;
+  const c=(v)=>String(v==null||v===''?'—':v).replace(/\r?\n/g,' ').replace(/\|/g,'\\|');
+  const safeUrl=(u)=>!u ? '—' : (urlHasSecret(u) ? g('(oculta: contém credenciais)','(hidden: contains credentials)','(oculta: contiene credenciales)') : c(u));
+  const yn=(b)=>b?g('sim','yes','sí'):g('não','no','no');
+  const table=(head,rows)=>'| '+head.join(' | ')+' |\n|'+head.map(()=>'---').join('|')+'|\n'+rows.map(r=>'| '+r.map(c).join(' | ')+' |').join('\n')+'\n';
+  const today=new Date().toISOString().slice(0,10);
+  let md='# '+c(pr.projectName||g('PoC sem nome','Untitled PoC','PoC sin nombre'))+'\n\n'
+    +'> '+c(pr.organization)+(pr.clientOrganization?' → '+c(pr.clientOrganization):'')+' · '+g('Gerado pelo PoC Planner v','Generated by PoC Planner v','Generado por PoC Planner v')+APP_VERSION+' · '+today+'\n\n';
+  md+='## '+g('Projeto','Project','Proyecto')+'\n\n'
+    +'- '+g('Engenheiro responsável','Lead engineer','Ingeniero responsable')+': '+c(pr.leadEngineer)+(pr.leadEmail?' ('+c(pr.leadEmail)+')':'')+'\n'
+    +'- '+g('Início','Start','Inicio')+': '+c(pr.startDate)+' · '+g('Data alvo','Target date','Fecha objetivo')+': '+c(pr.targetDate)+'\n'
+    +'- '+g('Caso de uso','Use case','Caso de uso')+': '+c(pr.presalesUseCase)+'\n'
+    +'- '+g('Problema de negócio','Business issue','Problema de negocio')+': '+c(pr.businessIssue)+'\n'
+    +'- '+g('Infraestrutura alvo','Target infrastructure','Infraestructura objetivo')+': '+c(pr.targetInfrastructure)+'\n\n';
+  const contacts=(pr.contacts||[]).filter(x=>x.name||x.email);
+  if(contacts.length) md+='### '+g('Contatos do cliente','Client contacts','Contactos del cliente')+'\n\n'+table([g('Nome','Name','Nombre'),g('Função','Role','Función'),'E-mail',g('Telefone','Phone','Teléfono')],contacts.map(x=>[x.name,x.role,x.email,x.phone]))+'\n';
+  md+='## '+g('Escopo','Scope','Alcance')+'\n\n'+(PRODUCTS.filter(p=>sp[p.id]).map(p=>'- '+c(p.name)).join('\n')||'—')+'\n\n';
+  md+='## '+g('Rede','Network','Red')+'\n\n'
+    +'- CIDR: '+c(n.managementCidr)+' · Gateway: '+c(n.gatewayIp)+' · VIP: '+c(n.clusterVip)+'\n'
+    +'- DNS: '+c(n.dnsServers)+' · NTP: '+c(n.ntpServers)+' · '+g('Domínio','Domain','Dominio')+': '+c(n.domain)+'\n'
+    +'- '+g('Pool de IPs','IP pool','Pool de IPs')+': '+c(n.ipPoolStart)+' – '+c(n.ipPoolEnd)+'\n'
+    +'- Firewall: '+yn(n.hasFirewall)+' · Air-gap: '+yn(n.hasAirGap)+' · Load Balancer: '+yn(n.hasLoadBalancer)+'\n'
+    +(n.hasProxy?'- Proxy: HTTP '+safeUrl(n.httpProxy)+' · HTTPS '+safeUrl(n.httpsProxy)+' · No proxy: '+c(n.noProxy)+'\n':'')+'\n';
+  if(n.vms.length) md+='### '+g('Inventário de VMs / nós','VM / node inventory','Inventario de VMs / nodos')+'\n\n'
+    +table([g('Produto','Product','Producto'),g('Papel','Role','Rol'),'vCPU','RAM (GB)',g('Disco (GB)','Disk (GB)','Disco (GB)'),'Hostname','IP'],
+      n.vms.map(v=>{ const sz=vmSizeFor(v); return [productOrFallback(v.product).name,v.role,sz.cpu,sz.ram,sz.disk,v.hostname,v.ip]; }))+'\n';
+  const isoName={1:'K3s + cert-manager + Rancher Prime',2:'K3s + Longhorn + NeuVector + Harbor',3:'K3s + SUSE Observability'}, isoVm={1:'rancher',2:'addons',3:'observability'};
+  const profs=eibApplicableProfiles();
+  if(profs.length) md+='## '+g('ISOs air-gapped (EIB)','Air-gapped ISOs (EIB)','ISOs air-gapped (EIB)')+'\n\n'
+    +table([g('Perfil','Profile','Perfil'),g('Conteúdo','Contents','Contenido'),'FQDN','IP'],
+      profs.map(p=>{ const v=eibVmFields(isoVm[p])||{}; return [p,isoName[p],v.NODE_FQDN,v.STATIC_IP]; }))+'\n';
+  const ts=testStats(sp), tot=ts.must.total+ts.nice.total;
+  if(tot) md+='## '+g('Plano de testes','Test plan','Plan de pruebas')+'\n\n'
+    +table([g('Prioridade','Priority','Prioridad'),g('Total','Total','Total'),g('Demonstrados','Demonstrated','Demostrados'),g('Pendentes','Pending','Pendientes')],
+      [['must-have',ts.must.total,ts.must.pass,ts.must.pending],['nice-to-have',ts.nice.total,ts.nice.pass,ts.nice.pending]])+'\n';
+  md+='---\n\n_'+g('Credenciais, senhas e tokens ficam de fora deste documento de propósito.','Credentials, passwords and tokens are left out of this document on purpose.','Credenciales, contraseñas y tokens quedan fuera de este documento a propósito.')+'_\n';
+  return md;
+}
 function buildEibCombinedJson(){
   const combined = {};
   eibApplicableProfiles().forEach(p=>{
@@ -1675,7 +1734,7 @@ function renderPortsView(){
       + (portSources(p.id).length ? '<p class="text-xs text-muted mt-2">'+g('Fonte','Source','Fuente')+': '+portSources(p.id).map(x=>'<a href="'+esc(x[1])+'" target="_blank">'+esc(x[0])+'</a>').join(' · ')+'</p>' : '')
       + (p.id==='storage'||p.id==='security'||p.id==='virtualization' ? '<p class="text-xs text-muted">'+g('Portas entre os próprios nós só passam por um firewall se houver um entre eles; num cluster de 1 nó não há o que liberar.','Ports between the nodes themselves only cross a firewall if one sits between them; on a 1-node cluster there is nothing to open.','Los puertos entre los propios nodos solo cruzan un firewall si hay uno entre ellos; en un clúster de 1 nodo no hay nada que habilitar.')+'</p>' : '')
     + '</div>';
-  }).join('') + renderHostsCard(L,g) || '<div class="card"><div class="alert alert-info">'+Icon('info')+' '+g('Selecione produtos na etapa anterior.','Select products in a previous step.','Seleccione productos en la etapa anterior.')+'</div></div>';
+  }).join('') + renderHostsCard(L,g);
 }
 function renderHostsCard(L,g){
   const t=hostsTableHtml(L,g,true), pr=hostsProgress();
@@ -1799,14 +1858,6 @@ function buildArchitectureDiagram(L){
   y += 8;
   return '<svg class="arch-svg" viewBox="0 0 '+W+' '+y+'" width="100%" role="img" aria-label="'+e(g('Arquitetura integrada','Integrated architecture','Arquitectura integrada'))+'" xmlns="http://www.w3.org/2000/svg">' + body + '</svg>';
 }
-function renderArchitectureView(){
-  const L=state.lang; const g=(pt,en,es)=>({pt,en,es})[L] || en;
-  return '<div class="card">'
-    + '<h2 class="section-title">' + Icon('eye') + ' ' + g('Arquitetura Integrada','Integrated Architecture','Arquitectura Integrada') + '</h2>'
-    + '<p class="section-sub">' + g('Visão em camadas dos produtos selecionados, da infraestrutura até os add-ons.','Layered view of selected products, from infrastructure to add-ons.','Vista en capas de los productos seleccionados, desde la infraestructura hasta los add-ons.') + '</p>'
-    + buildArchitectureDiagram(L)
-  + '</div>';
-}
 
 /* ---------------- INSTALL GUIDE ---------------- */
 function installValuesHtml(st, g){
@@ -1839,6 +1890,14 @@ function renderInstallView(){
     + (sp && state.network.hasAirGap && ap==='online' ? '<div class="alert alert-warn mt-2">' + Icon('alert') + ' ' + g('A rede é air-gap: o caminho online precisa de internet. Considere a ISO air-gapped (EIB).','The network is air-gapped: the online path needs internet. Consider the air-gapped ISO (EIB).','La red es air-gap: el camino online necesita internet. Considere la ISO air-gapped (EIB).') + '</div>' : '')
     + (outside ? '<div class="alert alert-info mt-2">' + Icon('info') + ' ' + g('SUSE Virtualization e Multi-Linux Manager não são gerados pelo EIB: seus passos seguem o procedimento manual.','SUSE Virtualization and Multi-Linux Manager are not built by EIB: their steps follow the manual procedure.','SUSE Virtualization y Multi-Linux Manager no los genera EIB: sus pasos siguen el procedimiento manual.') + '</div>' : '')
   + '</div>';
+  const tv = String(state.virtInstall.targetVersion||'').trim();
+  const virtInstallCard = sp.virtualization
+    ? '<div class="card">'
+        + '<h2 class="section-title mb-3">' + Icon('server') + ' ' + g('SUSE Virtualization — instalação e disco','SUSE Virtualization — installation and disk','SUSE Virtualization — instalación y disco') + '</h2>'
+        + (tv && !virtVersionChecked() ? '<div class="alert alert-info mb-3">' + Icon('info') + ' ' + g('A versão alvo ('+esc(tv)+') não foi conferida: os números e os links de documentação valem para v1.7 e v1.8.','The target version ('+esc(tv)+') was not checked: the figures and documentation links hold for v1.7 and v1.8.','La versión objetivo ('+esc(tv)+') no se verificó: las cifras y los enlaces de documentación valen para v1.7 y v1.8.') + '</div>' : '')
+        + renderVirtInstallBody(L,g)
+      + '</div>'
+    : '';
   let n = 0, phaseNo = 0;
   const phases = INSTALL_PHASE_ORDER.map(ph=>{
     const list = steps.filter(x=>x.phase===ph); if(!list.length) return '';
@@ -1858,7 +1917,7 @@ function renderInstallView(){
         }).join('')
     + '</div>';
   }).join('');
-  return intro + (phases || '<div class="card"><div class="alert alert-info">'+Icon('info')+' '+g('Selecione produtos na etapa anterior.','Select products in a previous step.','Seleccione productos en la etapa anterior.')+'</div></div>');
+  return intro + virtInstallCard + (phases || '<div class="card"><div class="alert alert-info">'+Icon('info')+' '+g('Selecione produtos na etapa anterior.','Select products in a previous step.','Seleccione productos en la etapa anterior.')+'</div></div>');
 }
 
 /* ---------------- TEST PLAN ---------------- */
@@ -1870,20 +1929,9 @@ function ensureTestCases(){
     const items = TEST_CATALOG.filter(it=>it.product===p.id);
     if(!items.length) return;
     const list = state.testCases[p.id] || (state.testCases[p.id] = []);
-    /* Migração dos testes de texto livre de versões antigas: sem resultado → o catálogo traz o
-       equivalente; com resultado → mantém e vincula ao item do catálogo, sem duplicar. */
-    LEGACY_TESTS.filter(lg=>lg.product===p.id).forEach(lg=>{
-      for(let i=list.length-1;i>=0;i--){
-        const t=list[i];
-        if(t.catalogId || lg.texts.indexOf(t.text)<0) continue;
-        if(t.result==='pending') list.splice(i,1); else { t.catalogId=lg.id; delete t.text; }
-        changed = true;
-      }
-    });
-    list.forEach(t=>{ const it=testItem(t); if(it && it.unverified && t.fit===undefined){ t.fit='validate'; changed=true; } });   // projetos salvos antes do campo "aderência"
     items.forEach(it=>{
       if(!testApplies(it) || list.some(t=>t.catalogId===it.id) || state.testDismissed.indexOf(it.id)>=0) return;
-      list.push({ id:uid(), catalogId:it.id, result:'pending', priority:it.tier, fit:it.unverified?'validate':'', led:'', owner:'', evidence:'', notes:'' });
+      list.push({ id:uid(), catalogId:it.id, result:'pending', priority:it.tier, fit:it.unverified?'validate':'native', led:'', owner:'', evidence:'', notes:'' });
       changed = true;
     });
   });
@@ -1923,11 +1971,14 @@ function renderTestFilters(g, L, shown, total){
   syncTestFilters(); const f = testFilters, sel = (key, map, order, label, none) => '<select class="t-compact" onchange="P.setTestFilterAndRender(\''+key+'\', this.value)"><option value="">'+label+'</option>'
     + (none ? '<option value="_none" '+(f[key]==='_none'?'selected':'')+'>'+(TEST_TODEFINE[L]||TEST_TODEFINE.en)+'</option>' : '')
     + (order||Object.keys(map)).map(k=>'<option value="'+k+'" '+(f[key]===k?'selected':'')+'>'+(map[k][L]||map[k].en)+'</option>').join('') + '</select>';
+  /* Nenhum teste "nice" vem mais pré-cadastrado (podado nesta sessão) — só mostra o filtro
+     se existir algum, reclassificado manualmente, pra não oferecer uma opção sempre vazia. */
+  const hasNice = Object.values(state.testCases).some(list=>(list||[]).some(t=>testPriority(t)==='nice'));
   return '<div class="card no-print test-filters" style="padding:10px 14px;"><div class="flex gap-2 flex-wrap items-center">'
     + sel('status', TEST_STATUS, TEST_STATUS_ORDER, g('Todo status','All status','Todo estado'))
     + sel('fit', TEST_FIT, null, g('Toda aderência','All fit','Toda adherencia'), true)
     + sel('led', TEST_LED, null, g('Toda condução','All led by','Todo conducido por'), true)
-    + '<select class="t-compact" onchange="P.setTestFilterAndRender(\'prio\', this.value)"><option value="">'+g('Toda prioridade','All priorities','Toda prioridad')+'</option><option value="must" '+(f.prio==='must'?'selected':'')+'>must-have</option><option value="nice" '+(f.prio==='nice'?'selected':'')+'>nice-to-have</option></select>'
+    + (hasNice ? '<select class="t-compact" onchange="P.setTestFilterAndRender(\'prio\', this.value)"><option value="">'+g('Toda prioridade','All priorities','Toda prioridad')+'</option><option value="must" '+(f.prio==='must'?'selected':'')+'>must-have</option><option value="nice" '+(f.prio==='nice'?'selected':'')+'>nice-to-have</option></select>' : '')
     + '<input type="text" class="t-compact" value="'+esc(f.owner)+'" placeholder="'+g('Responsável...','Owner...','Responsable...')+'" oninput="P.setTestFilter(\'owner\', this.value)" onchange="render()">'
     + '<span class="text-xs text-muted" style="white-space:nowrap;">'+shown+' '+g('de','of','de')+' '+total+' '+g('exibidos','shown','mostrados')+'</span>'
     + (testFiltersActive() ? '<button class="btn btn-ghost btn-sm" style="color:var(--ink);background:var(--gray-100);" onclick="P.clearTestFilters()">'+g('Limpar filtros','Clear filters','Limpiar filtros')+'</button>' : '')
@@ -1983,7 +2034,7 @@ function renderTestsView(){
    Relatório único, em ordem fixa (segue o formato dos documentos de PoC entregues a clientes
    + SUSE Virtualization PoC Guide v1.7.0). Credenciais ficam numa folha do operador separada. */
 function summaryField(label, value){
-  return '<div><div class="text-xs text-muted" style="font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:10px;">'+label+'</div><div style="font-size:13px;font-weight:600;margin-top:2px;">'+ (value? esc(value) : '—') +'</div></div>';
+  return '<div style="min-width:0;"><div class="text-xs text-muted" style="font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:10px;">'+label+'</div><div style="font-size:13px;font-weight:600;margin-top:2px;overflow-wrap:anywhere;">'+ (value? esc(value) : '—') +'</div></div>';
 }
 /* O Chrome ignora "não quebrar depois" em linhas de tabela. Então a linha de grupo (fase, grupo de testes)
    vai num <tbody> junto com a linha seguinte, e esse bloco não se parte: o título nunca fica sozinho. */
@@ -2016,7 +2067,7 @@ function summaryInfraSection(L,g,sp){
     const i=state.infra.virtualization, vst=virtSpecStatus(i);
     rows += summaryProductBlock('virtualization', i.nodeCount+' '+g('nós','nodes','nodos')+' · '+i.cpuCores+' cores/'+g('nó','node','nodo')+' · '+i.ramGb+' GB RAM · '+i.diskGb+' GB '+g('disco','disk','disco')+' ('+i.diskType+')'+(vst.status==='gap'?' — '+g('abaixo do mínimo de testes do guia','below the guide testing minimum','por debajo del mínimo de pruebas de la guía'):vst.status==='confirm'?' — '+g('abaixo do nível de produção','below production level','por debajo del nivel de producción'):''));
   }
-  const eibNote = (profile, vm) => { const st = eibSizingStatus(profile, vm); return st.status==='gap' ? ' — '+g('abaixo do mínimo do run.sh','below the run.sh minimum','por debajo del mínimo de run.sh') : st.status==='confirm' ? ' — '+g('abaixo do recomendado','below recommended','por debajo de lo recomendado') : ''; };
+  const eibNote = (profile, vm) => { const st = eibSizingStatus(profile, vm); return st.status==='gap' ? ' — '+g('abaixo do mínimo recomendado','below the recommended minimum','por debajo del mínimo recomendado') : st.status==='confirm' ? ' — '+g('abaixo do recomendado','below recommended','por debajo de lo recomendado') : ''; };
   if(sp.rancher){
     const i=state.infra.rancher;
     rows += summaryProductBlock('rancher', eibSizingText({cpu:i.vmSize.cpu,ram:i.vmSize.ram,disk:i.vmSize.disk},g)+eibNote(1,i.vmSize));
@@ -2109,8 +2160,8 @@ function buildReadiness(g){
   const add=(area,label,status,detail)=>items.push({area:area,label:label,status:status,detail:detail||''});
 
   add(A.scope, g('Cliente identificado','Client identified','Cliente identificado'), pr.clientOrganization?'ok':'gap', pr.clientOrganization||g('Informe o cliente em Projeto.','Fill in the client under Project.','Indique el cliente en Proyecto.'));
-  add(A.scope, g('Objetivos e casos de uso definidos','Goals and use cases defined','Objetivos y casos de uso definidos'), (pr.goals&&pr.goals.length)?'ok':'gap',
-    (pr.goals&&pr.goals.length) ? pr.goals.length+' '+g('objetivo(s)','goal(s)','objetivo(s)') : g('Guia §4.2: defina casos de uso e o que é must-have vs. nice-to-have.','Guide §4.2: define use cases and must-have vs. nice-to-have.','Guía §4.2: defina casos de uso y qué es must-have vs. nice-to-have.'));
+  add(A.scope, g('Caso de uso e problema de negócio definidos','Use case and business issue defined','Caso de uso y problema de negocio definidos'), (pr.presalesUseCase&&pr.businessIssue)?'ok':'gap',
+    (pr.presalesUseCase&&pr.businessIssue) ? pr.presalesUseCase : g('Guia §4.2: defina casos de uso e o que é must-have vs. nice-to-have.','Guide §4.2: define use cases and must-have vs. nice-to-have.','Guía §4.2: defina casos de uso y qué es must-have vs. nice-to-have.'));
   const days = (pr.startDate && pr.targetDate) ? Math.round((new Date(pr.targetDate)-new Date(pr.startDate))/86400000) : null;
   add(A.scope, g('Janela da PoC (recomendado: até 3 semanas)','PoC window (recommended: up to 3 weeks)','Ventana de la PoC (recomendado: hasta 3 semanas)'),
     days===null||days<=0 ? 'gap' : (days<=21?'ok':'confirm'),
@@ -2153,9 +2204,9 @@ function buildReadiness(g){
       cp.length ? cp.map(x=>x.name+(x.arch?' · '+x.arch:'')).join('; ') : g('Defina quais SO de cliente serão gerenciados: é isso que a sincronização baixa e que define o disco.','Define which client OSes will be managed: that is what the synchronisation downloads and what sizes the disk.','Defina qué SO de cliente se gestionarán: eso es lo que descarga la sincronización y lo que dimensiona el disco.'));
   }
   /* VMs dos perfis EIB: mínimo (gap) e recomendado (a confirmar) do run.sh */
-  [[sp.rancher,1,g('VM do Rancher Prime (perfil EIB 1)','Rancher Prime VM (EIB profile 1)','VM de Rancher Prime (perfil EIB 1)'),state.infra.rancher.vmSize],
-   [sp.security||sp.storage||sp.registry,2,g('VM do cluster downstream (perfil EIB 2)','Downstream cluster VM (EIB profile 2)','VM del clúster downstream (perfil EIB 2)'),state.infra.addons.vmSize],
-   [sp.observability,3,g('VM do SUSE Observability (perfil EIB 3)','SUSE Observability VM (EIB profile 3)','VM de SUSE Observability (perfil EIB 3)'),state.infra.observability.vmSize],
+  [[sp.rancher,1,g('VM do Rancher Prime','Rancher Prime VM','VM de Rancher Prime'),state.infra.rancher.vmSize],
+   [sp.security||sp.storage||sp.registry,2,g('VM do cluster downstream','Downstream cluster VM','VM del clúster downstream'),state.infra.addons.vmSize],
+   [sp.observability,3,g('VM do SUSE Observability','SUSE Observability VM','VM de SUSE Observability'),state.infra.observability.vmSize],
    [sp.manager,'mlm',g('Servidor do Multi-Linux Manager (docs 5.1)','Multi-Linux Manager server (docs 5.1)','Servidor de Multi-Linux Manager (docs 5.1)'),{cpu:state.infra.manager.cpuCores,ram:state.infra.manager.ramGb,disk:state.infra.manager.diskGb}]
   ].forEach(([on,profile,label,vm])=>{ if(!on) return;
     const z=profile==='mlm'?MLM_SIZING:EIB_SIZING[profile], st=sizingStatusOf(z,vm);
@@ -2184,6 +2235,8 @@ function buildReadiness(g){
   }
   if(n.hasAirGap) add(A.net, g('Air-gap: imagens dos clusters guest','Air-gap: guest cluster images','Air-gap: imágenes de clústeres guest'), sp.registry?'ok':'confirm',
     g('Guia §9.1.3: o ISO do Virtualization é autossuficiente, mas clusters RKE2 guest precisam de registry privado.','Guide §9.1.3: the Virtualization ISO is self-contained, but guest RKE2 clusters need a private registry.','Guía §9.1.3: el ISO de Virtualization es autosuficiente, pero los clústeres RKE2 guest necesitan un registry privado.'));
+  if(sp.appcollection) add(A.net, g('Application Collection é SaaS (dp.apps.rancher.io)','Application Collection is SaaS (dp.apps.rancher.io)','Application Collection es SaaS (dp.apps.rancher.io)'), n.hasAirGap?'confirm':'ok',
+    n.hasAirGap ? g('Rede air-gap: as ISOs do EIB não embarcam conteúdo do catálogo (só o Rancher usa o AC, no build, para o cert-manager). Para instalar apps do AC no cluster é preciso saída 443 para dp.apps.rancher.io ou um espelho local.','Air-gap network: the EIB ISOs do not embed catalog content (only Rancher uses the AC, at build time, for cert-manager). Installing AC apps in the cluster needs outbound 443 to dp.apps.rancher.io or a local mirror.','Red air-gap: las ISOs de EIB no embeben contenido del catálogo (solo Rancher usa el AC, en el build, para cert-manager). Instalar apps del AC en el clúster requiere salida 443 a dp.apps.rancher.io o un espejo local.') : g('Saída 443 para dp.apps.rancher.io (ver Portas).','Outbound 443 to dp.apps.rancher.io (see Ports).','Salida 443 a dp.apps.rancher.io (ver Puertos).'));
   if(sp.rancher) add(A.net, g('Load Balancer para o Rancher (nós Harvester → TCP 443)','Load Balancer for Rancher (Harvester nodes → TCP 443)','Load Balancer para Rancher (nodos Harvester → TCP 443)'), n.hasLoadBalancer?'ok':'confirm', g('Guia §7.2.2: todos os nós precisam alcançar a porta 443 do LB do Rancher.','Guide §7.2.2: all nodes must reach port 443 of the Rancher LB.','Guía §7.2.2: todos los nodos deben alcanzar el puerto 443 del LB de Rancher.'));
 
   if(sp.virtualization){
@@ -2239,10 +2292,11 @@ function summaryReadinessSection(g, items){
   let areaPrev = '';
   return '<div class="flex gap-2 flex-wrap mb-3">'
       + '<span class="pill pill-ok">OK · '+cnt.ok+'</span><span class="pill pill-bad">'+g('Pendências','Gaps','Pendientes')+' · '+cnt.gap+'</span><span class="pill pill-warn">'+g('A confirmar','To confirm','A confirmar')+' · '+cnt.confirm+'</span></div>'
-    + '<table class="data-table"><thead><tr><th>'+g('Área','Area','Área')+'</th><th>'+g('Requisito','Requirement','Requisito')+'</th><th>'+g('Situação','Status','Estado')+'</th><th>'+g('Detalhe','Detail','Detalle')+'</th></tr></thead><tbody>'
-    + items.map(i=>{ const showArea = i.area!==areaPrev; areaPrev=i.area;
+    + (cnt.gap+cnt.confirm===0 ? '<div class="alert alert-ok">'+Icon('check')+' '+g('Todos os requisitos verificados estão atendidos.','All checked requirements are met.','Todos los requisitos verificados se cumplen.')+'</div>' :
+      '<table class="data-table"><thead><tr><th>'+g('Área','Area','Área')+'</th><th>'+g('Requisito','Requirement','Requisito')+'</th><th>'+g('Situação','Status','Estado')+'</th><th>'+g('Detalhe','Detail','Detalle')+'</th></tr></thead><tbody>'
+    + items.filter(i=>i.status!=='ok').map(i=>{ const showArea = i.area!==areaPrev; areaPrev=i.area;
         return '<tr><td class="text-xs" style="font-weight:800;">'+(showArea?i.area:'')+'</td><td class="text-xs">'+i.label+'</td><td>'+readinessStatusPill(i.status,g)+'</td><td class="text-xs text-muted">'+esc(i.detail)+'</td></tr>';
-      }).join('') + '</tbody></table>'
+      }).join('') + '</tbody></table>')
     + '<p class="text-xs text-muted mt-2">' + g('Limiares do SUSE Virtualization PoC Guide v1.7.0 (os números de hardware são os mesmos nas docs v1.7 e v1.8). “A confirmar” = item que o planner ainda não coleta e deve ser verificado no ambiente do cliente.','Thresholds from the SUSE Virtualization PoC Guide v1.7.0 (the hardware figures are the same in the v1.7 and v1.8 docs). “To confirm” = item the planner does not collect yet and must be verified on the client environment.','Umbrales del SUSE Virtualization PoC Guide v1.7.0 (las cifras de hardware son las mismas en las docs v1.7 y v1.8). “A confirmar” = ítem que el planner aún no recopila y debe verificarse en el entorno del cliente.') + '</p>';
 }
 
@@ -2260,8 +2314,8 @@ function summaryTimelineSection(g){
 function summaryVersionsSection(g, sp){
   const row=(name,ver,note)=>'<tr><td style="font-weight:800;">'+name+'</td><td class="mono">'+ver+'</td><td class="text-xs text-muted">'+note+'</td></tr>';
   let r='';
-  if(sp.virtualization) r += row('SUSE Virtualization (Harvester)','v1.7.x',g('Guia validado em v1.7.1; upgrades só entre versões/caminhos suportados.','Guide validated on v1.7.1; upgrades only along supported versions/paths.','Guía validada en v1.7.1; upgrades solo entre versiones/rutas soportadas.'));
-  if(sp.rancher) r += row('Rancher Prime','v2.15.x',g('Linha Prime atual (página de lifecycle da SUSE).','Current Prime line (SUSE lifecycle page).','Línea Prime actual (página de lifecycle de SUSE).')+(state.installApproach==='eib'?' '+g('O build EIB resolve o patch estável mais recente; fixe com RANCHER_VERSION.','The EIB build resolves the newest stable patch; pin it with RANCHER_VERSION.','El build EIB resuelve el parche estable más reciente; fíjelo con RANCHER_VERSION.'):''));
+  if(sp.virtualization) r += row('SUSE Virtualization (Harvester)',esc(state.virtInstall.targetVersion||'v1.7.x'),g('Guia validado em v1.7.1; upgrades só entre versões/caminhos suportados.','Guide validated on v1.7.1; upgrades only along supported versions/paths.','Guía validada en v1.7.1; upgrades solo entre versiones/rutas soportadas.'));
+  if(sp.rancher) r += row('Rancher Prime','v2.15.x',g('Linha Prime atual (página de lifecycle da SUSE).','Current Prime line (SUSE lifecycle page).','Línea Prime actual (página de lifecycle de SUSE).'));
   PRODUCTS.filter(p=>sp[p.id] && p.id!=='virtualization' && p.id!=='rancher').forEach(p=>{ r += row(p.name,'—',g('Conforme a documentação oficial vigente.','Per current official documentation.','Según la documentación oficial vigente.')); });
   return '<table class="data-table"><thead><tr><th>'+g('Produto','Product','Producto')+'</th><th>'+g('Versão','Version','Versión')+'</th><th>'+g('Observação','Note','Observación')+'</th></tr></thead><tbody>'+r+'</tbody></table>';
 }
@@ -2278,8 +2332,6 @@ function summaryVirtDesignSection(L,g){
     + summaryField(g('NICs mgmt / VMs','mgmt / VM NICs','NICs mgmt / VMs'), (vn.mgmtNics||'?')+' / '+(vn.vmNics||'?')) + summaryField(g('Velocidade das NICs','NIC speed','Velocidad de las NICs'), vn.nicSpeed)
     + summaryField(g('Switch em trunk','Switch trunked','Switch en trunk'), yn(vn.switchTrunk)) + summaryField(g('IP dos nós / VIP','Node IP / VIP','IP de nodos / VIP'), ip)
     + summaryField(g('Modo do VIP','VIP mode','Modo de la VIP'), vi.vipMode==='dhcp' ? 'DHCP' + (vi.vipReserved ? ' · '+g('com mapeamento MAC→IP','with MAC→IP mapping','con mapeo MAC→IP') : ' · '+g('mapeamento pendente','mapping pending','mapeo pendiente')) : g('Estático','Static','Estático'))
-    + summaryField(g('Chaves SSH (URL)','SSH keys (URL)','Claves SSH (URL)'), urlHasSecret(vi.sshKeysUrl) ? urlHost(vi.sshKeysUrl)+'/…' : vi.sshKeysUrl)
-    + summaryField(g('Arquivo de configuração (URL)','Configuration file (URL)','Archivo de configuración (URL)'), urlHasSecret(vi.configUrl) ? urlHost(vi.configUrl)+'/…' : vi.configUrl)
     + summaryField(g('Rede de storage dedicada','Dedicated storage network','Red de storage dedicada'), vn.storageNet.dedicated ? [vn.storageNet.nics, vn.storageNet.vlan?'VLAN '+vn.storageNet.vlan:''].filter(Boolean).join(' · ') || tr('common.yes') : tr('common.no'))
     + summaryField(g('Alvo de backup','Backup target','Destino de backup'), vn.backup.type ? vn.backup.type.toUpperCase()+(vn.backup.endpoint?' · '+vn.backup.endpoint:'')+(vn.backup.bucket?' · '+vn.backup.bucket:'') : '')
     + (state.selectedProducts.rancher ? summaryField(g('Autenticação (Rancher)','Authentication (Rancher)','Autenticación (Rancher)'), vn.auth.provider ? vn.auth.provider.toUpperCase()+(vn.auth.server?' · '+vn.auth.server:'') : '') : '')
@@ -2294,8 +2346,6 @@ function summaryVirtDesignSection(L,g){
         + '</div>' : '');
   if(vn.vmNetworks.length) html += '<div class="text-xs mt-3" style="font-weight:800;color:var(--ink);">'+g('Redes de VM','VM networks','Redes de VM')+'</div><table class="data-table mt-1"><thead><tr><th>'+g('Nome','Name','Nombre')+'</th><th>VLAN</th><th>Uplink</th></tr></thead><tbody>'
     + vn.vmNetworks.map(x=>'<tr><td>'+esc(x.name)+'</td><td class="mono">'+esc(x.vlan)+'</td><td>'+esc(x.uplink)+'</td></tr>').join('') + '</tbody></table>';
-  if(vi.testVms.length) html += '<div class="text-xs mt-3" style="font-weight:800;color:var(--ink);">'+g('VMs de teste do cliente','Customer test VMs','VMs de prueba del cliente')+'</div><table class="data-table mt-1"><thead><tr><th>'+g('Nome / função','Name / role','Nombre / función')+'</th><th>'+g('Sistema','OS','Sistema')+'</th><th>vCPU</th><th>RAM</th></tr></thead><tbody>'
-    + vi.testVms.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.os)+'</td><td>'+(Number(x.cpu)||0)+'</td><td>'+(Number(x.ram)||0)+' GB</td></tr>').join('') + '</tbody></table>';
   return html;
 }
 
@@ -2339,20 +2389,20 @@ function summaryRunbookSection(L,g,sp){
   const steps = installSteps(); if(!steps.length) return '<p class="text-xs text-muted">—</p>';
   const ap = {eib:g('ISO air-gapped (EIB)','Air-gapped ISO (EIB)','ISO air-gapped (EIB)'),online:g('Online (scripts)','Online (scripts)','Online (scripts)'),manual:g('Manual (Helm e interface)','Manual (Helm and UI)','Manual (Helm e interfaz)')}[state.installApproach];
   let n = 0;
-  const cell = (st) => { const v = st.vals ? st.vals(g).map(r=>'<div class="text-xs" style="display:flex;gap:6px;"><span class="text-muted" style="flex:0 0 34%;">'+esc(r[0])+'</span><span style="flex:1;min-width:0;white-space:pre-line;word-break:break-word;font-weight:600;">'+esc(r[1])+'</span></div>').join('') : '<span class="text-muted">—</span>'; return v; };
   let rows = '';
   let phaseNo = 0;
   INSTALL_PHASE_ORDER.forEach(ph=>{
     const list = steps.filter(x=>x.phase===ph); if(!list.length) return;
-    rows += '<tr><td colspan="4" class="text-xs grp-row" style="font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);">'+(++phaseNo)+'. '+esc(INSTALL_PHASES[ph][L]||INSTALL_PHASES[ph].en)+'</td></tr>';
+    rows += '<tr><td colspan="3" class="text-xs grp-row" style="font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);">'+(++phaseNo)+'. '+esc(INSTALL_PHASES[ph][L]||INSTALL_PHASES[ph].en)+'</td></tr>';
     list.forEach(st=>{ n++;
       const done = !!state.installProgress[st.id], note = state.installNotes[st.id];
-      rows += '<tr><td>'+n+'</td><td><div style="font-weight:800;">'+esc(st.t[L]||st.t.en)+'</div><div class="text-xs text-muted">'+esc(st.d[L]||st.d.en)+'</div>'+(st.docs?'<div class="text-xs">'+st.docs().map(d=>'<a href="'+esc(d[1])+'" target="_blank" style="color:var(--suse-base);">'+esc(d[0])+' ↗</a>').join(' · ')+'</div>':'')+'</td>'
-        + '<td>'+cell(st)+'</td><td>'+(done?'<span class="pill pill-ok">✓ '+esc(state.installDates[st.id]||'')+'</span>':'<span class="pill pill-off">—</span>')+(note?'<div class="text-xs mt-1">'+esc(note)+'</div>':'')+'</td></tr>';
+      rows += '<tr><td>'+n+'</td><td><div style="font-weight:800;">'+esc(st.t[L]||st.t.en)+'</div><div class="text-xs text-muted">'+esc(st.d[L]||st.d.en)+'</div></td>'
+        + '<td>'+(done?'<span class="pill pill-ok">✓ '+esc(state.installDates[st.id]||'')+'</span>':'<span class="pill pill-off">—</span>')+(note?'<div class="text-xs mt-1">'+esc(note)+'</div>':'')+'</td></tr>';
     });
   });
   return '<p class="text-xs text-muted mb-2">'+g('Abordagem de instalação','Install approach','Enfoque de instalación')+': <b>'+esc(ap)+'</b></p>'
-    + '<table class="data-table multi" style="table-layout:fixed;width:100%;"><colgroup><col style="width:4%"><col style="width:36%"><col style="width:44%"><col style="width:16%"></colgroup><thead><tr><th>#</th><th>'+g('Etapa','Step','Etapa')+'</th><th>'+g('Valores do plano','Plan values','Valores del plan')+'</th><th>'+g('Concluída / notas','Done / notes','Completada / notas')+'</th></tr></thead>'+keepHeads(rows)+'</table>';
+    + '<div class="alert alert-warn mb-3">' + Icon('alert') + ' ' + g('A instalação realizada nesta PoC prioriza velocidade de entrega e não necessariamente segue todas as boas práticas de hardening recomendadas para produção. Antes de promover este ambiente para produção, revise configurações de segurança, segredos e redundância com a equipe de arquitetura.','The installation performed in this PoC prioritizes delivery speed and does not necessarily follow every hardening best practice recommended for production. Before promoting this environment to production, review security settings, secrets and redundancy with the architecture team.','La instalación realizada en esta PoC prioriza la velocidad de entrega y no necesariamente sigue todas las buenas prácticas de hardening recomendadas para producción. Antes de promover este entorno a producción, revise la configuración de seguridad, los secretos y la redundancia con el equipo de arquitectura.') + '</div>'
+    + '<table class="data-table multi" style="table-layout:fixed;width:100%;"><colgroup><col style="width:6%"><col style="width:64%"><col style="width:30%"></colgroup><thead><tr><th>#</th><th>'+g('Etapa','Step','Etapa')+'</th><th>'+g('Concluída / notas','Done / notes','Completada / notas')+'</th></tr></thead>'+keepHeads(rows)+'</table>';
 }
 
 function summaryTestsOverview(L,g,sp){
@@ -2360,11 +2410,10 @@ function summaryTestsOverview(L,g,sp){
   const all = []; active.forEach(p=>state.testCases[p.id].forEach(t=>{ if(testCounts(t)) all.push({p:p,t:t}); }));
   if(!all.length) return '';
   const count = (fn) => { const o={}; all.forEach(x=>{ const k=fn(x.t); o[k]=(o[k]||0)+1; }); return o; };
-  const byStatus = count(t=>TEST_STATUS[t.result]?t.result:'pending'), byFit = count(t=>t.fit||''), byLed = count(t=>t.led||'');
+  const byFit = count(t=>t.fit||''), byLed = count(t=>t.led||'');
   const kv = (label, n) => '<div class="flex justify-between text-xs" style="padding:2px 0;"><span>'+label+'</span><span style="font-weight:800;">'+(n||0)+'</span></div>';
   const card = (title, rows) => '<div class="card" style="padding:10px 12px;margin-top:0;"><h4 style="margin:0 0 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);">'+title+'</h4>'+rows+'</div>';
   const none = TEST_TODEFINE[L]||TEST_TODEFINE.en;
-  const statusCard = card(g('Status','Status','Estado'), TEST_STATUS_ORDER.map(k=>kv(testMapLabel(TEST_STATUS,k,L),byStatus[k])).join(''));
   const fitCard = card(g('Aderência','Fit','Adherencia'), Object.keys(TEST_FIT).map(k=>kv(testMapLabel(TEST_FIT,k,L),byFit[k])).join('') + kv(none,byFit['']));
   const ledCard = card(g('Condução','Led by','Conducido por'), Object.keys(TEST_LED).map(k=>kv(testMapLabel(TEST_LED,k,L),byLed[k])).join('') + kv(none,byLed['']));
   const th = (txt) => '<th style="padding:3px 6px;text-align:right;color:var(--gray-500);font-weight:700;">'+txt+'</th>';
@@ -2375,7 +2424,7 @@ function summaryTestsOverview(L,g,sp){
           + TEST_STATUS_ORDER.map(k=>'<td style="padding:3px 6px;text-align:right;">'+(items.filter(t=>(TEST_STATUS[t.result]?t.result:'pending')===k).length||'–')+'</td>').join('')
           + '<td style="padding:3px 6px;text-align:right;font-weight:800;">'+items.length+'</td></tr>'; }).join('')
     + '</tbody></table>';
-  return '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">'+statusCard+fitCard+ledCard+'</div><div class="mt-2" style="overflow-x:auto;">'+matrix+'</div>'
+  return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">'+fitCard+ledCard+'</div><div class="mt-2" style="overflow-x:auto;">'+matrix+'</div>'
     + '<div class="mt-3" style="font-weight:900;font-size:11px;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;">'+g('Detalhamento','Breakdown','Detalle')+'</div>';
 }
 function summaryTestsSection(L,g,sp){
@@ -2384,7 +2433,7 @@ function summaryTestsSection(L,g,sp){
   const st = testStats(sp), cov = (b) => b.pass+'/'+b.total;
   const resPill = (r) => { const w = TEST_STATUS[r] ? r : 'pending'; return '<span class="pill" style="background:'+TEST_STATUS[w].color+';color:#fff;white-space:nowrap;letter-spacing:.04em;">'+resultWord(w,L)+'</span>'; };
   let html = summaryTestsOverview(L,g,sp)
-    + '<div class="flex gap-2 flex-wrap mt-2 mb-2"><span class="pill pill-warn">must-have '+cov(st.must)+'</span><span class="pill pill-off">nice-to-have '+cov(st.nice)+'</span>'
+    + '<div class="flex gap-2 flex-wrap mt-2 mb-2"><span class="pill pill-warn">must-have '+cov(st.must)+'</span>'+(st.nice.total?'<span class="pill pill-off">nice-to-have '+cov(st.nice)+'</span>':'')+''
     + '<span class="pill pill-bad">'+g('não atende','does not meet','no cumple')+' · '+(st.must.fail+st.nice.fail)+'</span><span class="pill pill-warn">'+g('parcial','partial','parcial')+' · '+(st.must.partial+st.nice.partial)+'</span><span class="pill pill-off">'+g('pendentes','pending','pendientes')+' · '+(st.must.pending+st.nice.pending)+'</span>'+(st.na?'<span class="pill pill-off">N/A · '+st.na+'</span>':'')+'</div>';
   active.forEach(p=>{
     const rows = orderedTests(p.id).filter(x=>testCounts(x.t));
@@ -2405,8 +2454,7 @@ function summaryTestsSection(L,g,sp){
 /* Riscos e pendências: derivados do que já foi coletado, sem entrada nova. */
 function summaryRisksSection(L,g,sp,readiness){
   const rows=[];
-  readiness.filter(i=>i.status==='gap').forEach(i=>rows.push({sev:'high', src:i.area, text:i.label}));
-  readiness.filter(i=>i.status==='confirm').forEach(i=>rows.push({sev:'med', src:i.area, text:i.label}));
+  /* Pendências de prontidão (gap/confirm) já estão na tabela de prontidão logo acima; aqui só entra o que não está lá. */
   let pendPorts=0; PRODUCTS.filter(p=>sp[p.id]&&PORT_REQUIREMENTS[p.id]).forEach(p=>PORT_REQUIREMENTS[p.id].forEach((r,i)=>{ if(!state.ports.checked[p.id+'-'+i]) pendPorts++; }));
   pendPorts += hostsProgress().t - hostsProgress().d;
   if(pendPorts) rows.push({sev:'med', src:g('Portas','Ports','Puertos'), text:pendPorts+' '+g('regra(s) de firewall ainda não liberada(s)','firewall rule(s) not yet opened','regla(s) de firewall aún no habilitada(s)')});
@@ -2419,6 +2467,7 @@ function summaryRisksSection(L,g,sp,readiness){
   if(ts.nice.partial) rows.push({sev:'low', src:T, text:ts.nice.partial+' '+g('teste(s) nice-to-have parcial(is)','nice-to-have test(s) partial','prueba(s) nice-to-have parcial(es)')});
   if(ts.must.pending) rows.push({sev:'med', src:T, text:ts.must.pending+' '+g('teste(s) must-have ainda pendente(s)','must-have test(s) still pending','prueba(s) must-have aún pendiente(s)')});
   if(ts.nice.pending) rows.push({sev:'low', src:T, text:ts.nice.pending+' '+g('teste(s) nice-to-have ainda pendente(s)','nice-to-have test(s) still pending','prueba(s) nice-to-have aún pendiente(s)')});
+  if(!rows.length && readiness.some(i=>i.status!=='ok')) return '<p class="text-xs text-muted">'+g('Sem outros riscos além dos itens de prontidão acima.','No other risks beyond the readiness items above.','Sin otros riesgos además de los ítems de preparación anteriores.')+'</p>';
   if(!rows.length) return '<div class="alert alert-ok">'+Icon('check')+' '+g('Nenhuma pendência identificada.','No open items identified.','Ningún punto pendiente identificado.')+'</div>';
   const sev={high:['pill-bad',g('Alto','High','Alto')], med:['pill-warn',g('Médio','Medium','Medio')], low:['pill-off',g('Baixo','Low','Bajo')]};
   const order={high:0,med:1,low:2};
@@ -2427,9 +2476,30 @@ function summaryRisksSection(L,g,sp,readiness){
     + rows.map(r=>'<tr><td><span class="pill '+sev[r.sev][0]+'">'+sev[r.sev][1]+'</span></td><td class="text-xs">'+r.src+'</td><td class="text-xs">'+r.text+'</td></tr>').join('') + '</tbody></table>';
 }
 
+function summaryResponsibilitiesSection(g){
+  const providerItems = [
+    g('Engenharia de implementação e configuração conforme este documento','Implementation and configuration engineering as described in this document','Ingeniería de implementación y configuración según este documento'),
+    g('Licenças de avaliação (trial) dos produtos listados no escopo','Evaluation (trial) licenses for the products listed in scope','Licencias de evaluación (trial) de los productos listados en el alcance'),
+    g('Documentação do plano de testes e suporte durante a janela da PoC','Test plan documentation and support during the PoC window','Documentación del plan de pruebas y soporte durante la ventana de la PoC')
+  ];
+  const clientItems = [
+    g('Hardware/infraestrutura conforme o dimensionamento acordado (seção "Dimensionamento da infraestrutura")','Hardware/infrastructure per the agreed sizing (see "Infrastructure sizing" section)','Hardware/infraestructura según el dimensionamiento acordado (sección "Dimensionamiento de la infraestructura")'),
+    g('Acesso de rede e liberação de portas conforme a seção "Portas e firewall"','Network access and port openings per the "Ports and firewall" section','Acceso de red y apertura de puertos según la sección "Puertos y firewall"'),
+    g('Ponto(s) de contato técnico disponível(is) durante a janela da PoC','Technical point(s) of contact available during the PoC window','Punto(s) de contacto técnico disponible(s) durante la ventana de la PoC'),
+    g('Ambiente de testes não-produtivo, isolado de dados e cargas de produção','A non-production test environment, isolated from production data and workloads','Un entorno de pruebas no productivo, aislado de datos y cargas de producción')
+  ];
+  const list = (items) => '<ul class="mt-1" style="padding-left:18px;">' + items.map(i=>'<li class="text-sm" style="margin-bottom:4px;">'+esc(i)+'</li>').join('') + '</ul>';
+  return '<div class="grid grid-2">'
+    + '<div><div class="text-xs" style="font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);">' + g('SUSE / Parceiro fornece','SUSE / Partner provides','SUSE / Partner provee') + '</div>' + list(providerItems) + '</div>'
+    + '<div><div class="text-xs" style="font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);">' + g('Cliente fornece','Client provides','Cliente provee') + '</div>' + list(clientItems) + '</div>'
+  + '</div>';
+}
+
 function summarySignoffSection(g){
+  const t = state.project.targetDate;
   const cell=(who)=>'<div style="flex:1;min-width:200px;"><div style="height:48px;border-bottom:1px solid var(--gray-400);"></div><div class="text-xs mt-1" style="font-weight:800;">'+who+'</div><div class="text-xs text-muted">'+g('Nome / data','Name / date','Nombre / fecha')+'</div></div>';
-  return '<div class="flex gap-4 flex-wrap mt-2">'+cell(g('Cliente','Client','Cliente'))+cell('SUSE')+cell(g('Parceiro','Partner','Partner'))+'</div>';
+  return '<p class="text-sm">' + g('Esta PoC será considerada bem-sucedida se todos os testes classificados como must-have (ver seção de Plano de testes) forem aprovados até a data alvo'+(t?' ('+esc(t)+')':'')+'.','This PoC will be considered successful if every test classified as must-have (see the Test plan section) passes by the target date'+(t?' ('+esc(t)+')':'')+'.','Esta PoC se considerará exitosa si todas las pruebas clasificadas como must-have (ver la sección Plan de pruebas) aprueban antes de la fecha objetivo'+(t?' ('+esc(t)+')':'')+'.') + '</p>'
+    + '<div class="flex gap-4 flex-wrap mt-2">'+cell(g('Cliente','Client','Cliente'))+cell('SUSE')+cell(g('Parceiro','Partner','Partner'))+'</div>';
 }
 
 function renderSummaryView(){
@@ -2448,11 +2518,6 @@ function renderSummaryView(){
   html += '<div class="card">'
     + '<div class="flex justify-between items-center no-print mb-3">'
       + '<h2 class="section-title" style="margin:0;">' + Icon('book') + ' ' + g('Relatório da PoC','PoC Report','Informe de la PoC') + '</h2>'
-      + '<div class="flex gap-2 flex-wrap">'
-        + '<button class="btn btn-outline btn-sm" onclick="window.print()">' + Icon('print') + ' ' + g('Imprimir relatório','Print report','Imprimir informe') + '</button>'
-        + '<button class="btn btn-outline btn-sm" onclick="P.exportProject()">' + Icon('download') + ' ' + tr('common.export') + '</button>'
-        + '<button class="btn btn-primary btn-sm" onclick="P.exportEib()">' + Icon('terminal') + ' ' + g('Exportar p/ EIB','Export for EIB','Exportar para EIB') + '</button>'
-      + '</div>'
     + '</div>'
     + '<h1 style="font-size:26px;font-weight:900;color:var(--ink);margin:0 0 4px;">' + esc(proj.projectName||g('(sem nome)','(untitled)','(sin nombre)')) + '</h1>'
     + '<p class="text-sm text-muted">' + esc(proj.organization||'') + (proj.organization && proj.clientOrganization ? ' → ' : '') + esc(proj.clientOrganization||'') + '</p>'
@@ -2477,21 +2542,22 @@ function renderSummaryView(){
       + summaryField(g('Caso de uso (pré-vendas)','Presales Use Case','Caso de uso (preventa)'), proj.presalesUseCase) + summaryField(g('Problema de negócio','Business Issue','Problema de negocio'), proj.businessIssue)
       + summaryField(g('Infraestrutura Alvo','Target Infrastructure','Infraestructura Objetivo'), proj.targetInfrastructure)
     + '</div>'
-    + '<div class="mt-3"><div class="text-xs text-muted" style="font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:10px;">' + g('Objetivos da PoC','PoC Goals','Objetivos de la PoC') + '</div>'
-      + ((proj.goals&&proj.goals.length) ? '<ul class="mt-1">' + proj.goals.map(gl=>'<li class="text-sm">'+esc(gl)+'</li>').join('') + '</ul>' : '<p class="text-xs text-muted">—</p>') + '</div>');
+    + '<p class="text-xs text-muted mt-3">' + g('Este documento e o cronograma descrito são válidos enquanto o escopo e a infraestrutura aqui descritos permanecerem inalterados. Mudanças de escopo, hardware ou rede podem exigir revisão do planejamento.','This document and the schedule described are valid as long as the scope and infrastructure described here remain unchanged. Changes to scope, hardware or network may require revising the plan.','Este documento y el cronograma descrito son válidos mientras el alcance y la infraestructura aquí descritos permanezcan sin cambios. Cambios de alcance, hardware o red pueden requerir revisar la planificación.') + '</p>');
 
+  html += S('folder', g('Responsabilidades','Responsibilities','Responsabilidades'), summaryResponsibilitiesSection(g));
   html += S('activity', g('Cronograma','Schedule','Cronograma'), summaryTimelineSection(g));
+  html += S('checksq', g('Prontidão, riscos e pendências (guia v1.7.0)','Readiness, risks and open items (guide v1.7.0)','Preparación, riesgos y puntos pendientes (guía v1.7.0)'),
+    summaryReadinessSection(g, readiness) + '<h4 style="font-weight:900;font-size:13px;margin:18px 0 8px;color:var(--ink);">' + g('Riscos e pendências','Risks and open items','Riesgos y puntos pendientes') + '</h4>' + summaryRisksSection(L,g,sp,readiness));
+  html += S('eye', g('Arquitetura integrada','Integrated architecture','Arquitectura integrada'), buildArchitectureDiagram(L)).replace('<div class="card">','<div class="card keep-together">');
+  html += S('activity', g('Plano de testes e resultados','Test plan and results','Plan de pruebas y resultados'), summaryTestsSection(L,g,sp));
+  html += S('doc', g('Autorização / aceite','Authorization / sign-off','Autorización / aceptación'), summarySignoffSection(g));
+  /* Apêndice técnico: o que já está nas abas de configuração, depois da assinatura. O checklist de instalação sai do relatório (menu Exportar). */
+  html += '<h2 class="section-title mt-4" style="break-before:page;">' + g('Apêndice técnico','Technical appendix','Apéndice técnico') + '</h2>';
   html += S('box', g('Versões de software','Software versions','Versiones de software'), summaryVersionsSection(g, sp));
-  html += S('checksq', g('Prontidão e requisitos (guia v1.7.0)','Readiness and requirements (guide v1.7.0)','Preparación y requisitos (guía v1.7.0)'), summaryReadinessSection(g, readiness));
   html += S('server', g('Dimensionamento da infraestrutura','Infrastructure sizing','Dimensionamiento de la infraestructura'), summaryInfraSection(L,g,sp));
   html += S('network', g('Rede e endereçamento','Network and addressing','Red y direccionamiento'), summaryNetworkSection(L,g));
   if(sp.virtualization) html += S('settings', g('Design do SUSE Virtualization','SUSE Virtualization design','Diseño de SUSE Virtualization'), summaryVirtDesignSection(L,g));
-  html += S('eye', g('Arquitetura integrada','Integrated architecture','Arquitectura integrada'), buildArchitectureDiagram(L)).replace('<div class="card">','<div class="card keep-together">');
   html += S('shield', g('Portas e firewall','Ports and firewall','Puertos y firewall'), summaryPortsSection(L,g,sp));
-  html += S('terminal', g('Checklist de instalação','Installation checklist','Checklist de instalación'), summaryRunbookSection(L,g,sp));
-  html += S('activity', g('Plano de testes e resultados','Test plan and results','Plan de pruebas y resultados'), summaryTestsSection(L,g,sp));
-  html += S('alert', g('Riscos e pendências','Risks and open items','Riesgos y puntos pendientes'), summaryRisksSection(L,g,sp,readiness));
-  html += S('doc', g('Autorização / aceite','Authorization / sign-off','Autorización / aceptación'), summarySignoffSection(g));
   html += '</div>';
 
   html += '<div class="card operator-sheet">'
@@ -2505,6 +2571,12 @@ function renderSummaryView(){
     + (state.credentials.notes ? '<div class="mt-3">'+summaryField(g('Notas','Notes','Notas'), state.credentials.notes)+'</div>' : '')
   + '</div>';
 
+  /* Folha do checklist de instalação: invisível na tela, impressa pelo menu Exportar (body.print-install). */
+  html += '<div class="install-sheet">'
+    + '<h3 style="margin:0 0 10px;">' + esc(proj.projectName||'') + ' — ' + g('Checklist de instalação','Installation checklist','Checklist de instalación') + '</h3>'
+    + summaryRunbookSection(L,g,sp)
+  + '</div>';
+
   return html;
 }
 
@@ -2512,24 +2584,25 @@ function renderSummaryView(){
 window.P = {
   go,
   setLang(l){ state.lang=l; saveState(); render(); },
+  toggleTheme(){ theme = theme==='dark' ? 'light' : 'dark'; localStorage.setItem(THEME_KEY, theme); applyTheme(); render(); },
   setField(path,value){
     setPath(state,path,value); saveState();
   },
   setFieldAndRender(path,value){ this.setField(path,value); render(); },
+  /* Último passo: em vez de "Finalizar" sem efeito, abre o menu Exportar, onde saem os entregáveis. */
+  openExportMenu(){
+    const m = document.querySelector('.export-menu'); if(m) m.setAttribute('open','');
+    window.scrollTo(0,0);
+  },
   wizardNext(){
     const idx = WIZARD_STEPS.indexOf(state.view);
-    if(idx < WIZARD_STEPS.length-1){ state.view = WIZARD_STEPS[idx+1]; saveState(); render(); window.scrollTo(0,0); }
+    if(idx < WIZARD_STEPS.length-1){ setView(WIZARD_STEPS[idx+1]); saveState(); render(); window.scrollTo(0,0); }
   },
   wizardBack(){
     const idx = WIZARD_STEPS.indexOf(state.view);
-    if(idx > 0){ state.view = WIZARD_STEPS[idx-1]; saveState(); render(); window.scrollTo(0,0); } else { go('dashboard'); }
+    if(idx > 0){ setView(WIZARD_STEPS[idx-1]); saveState(); render(); window.scrollTo(0,0); } else { go('dashboard'); }
   },
   toggleProduct(id){ state.selectedProducts[id] = !state.selectedProducts[id]; saveState(); render(); },
-  addGoal(){
-    const input = document.getElementById('goalInput');
-    if(input && input.value.trim()){ state.project.goals.push(input.value.trim()); input.value=''; saveState(); render(); }
-  },
-  removeGoal(i){ state.project.goals.splice(i,1); saveState(); render(); },
   addContact(){ state.project.contacts.push({name:'',role:'',email:'',phone:''}); saveState(); render(); },
   removeContact(i){ state.project.contacts.splice(i,1); if(!state.project.contacts.length) state.project.contacts.push({name:'',role:'',email:'',phone:''}); saveState(); render(); },
   setVmField(i,key,value){ state.network.vms[i][key]=value; saveState(); },
@@ -2550,14 +2623,8 @@ window.P = {
   addTest(productId){ if(!state.testCases[productId]) state.testCases[productId]=[]; state.testCases[productId].push({id:uid(), text:'', result:'pending', fit:'', led:'', owner:'', evidence:'', notes:''}); saveState(); render(); },
   addVmNetwork(){ state.virtNet.vmNetworks.push({name:'',vlan:'',uplink:''}); saveState(); render(); },
   addClientProduct(){ state.infra.manager.clientProducts.push({name:'',arch:''}); saveState(); render(); },
-  addTestVm(){ state.virtInstall.testVms.push({name:'',os:'',cpu:0,ram:0}); saveState(); render(); },
-  addGuideTestVms(){
-    [['Repo server','CentOS Linux',4,16],['Proxy server','RHEL',4,8],['File server cluster','Windows Server 2022',8,32],['AD server','Windows Server 2022',8,32]]
-      .forEach(([name,os,cpu,ram])=>state.virtInstall.testVms.push({name,os,cpu,ram}));
-    saveState(); render();
-  },
   removeListItem(path,i){
-    if(['virtNet.vmNetworks','virtInstall.testVms','infra.manager.clientProducts'].indexOf(path)<0) return;
+    if(['virtNet.vmNetworks','infra.manager.clientProducts'].indexOf(path)<0) return;
     getPath(state,path).splice(i,1); saveState(); render();
   },
   setInstallDone(id,checked){
@@ -2595,32 +2662,23 @@ window.P = {
   deleteProject(id){
     if(confirm(tr('projects.deleteConfirm'))){ deleteProjectById(id); render(); }
   },
-  printOperatorSheet(){
-    document.body.classList.add('print-operator');
-    const done = () => { document.body.classList.remove('print-operator'); window.removeEventListener('afterprint', done); };
+  /* As folhas existem na tela de Resumo; de outra etapa, vai para lá antes de imprimir. */
+  printMode(cls){
+    if(state.view!=='summary'){ setView('summary'); saveState(); render(); }
+    if(!cls){ window.print(); return; }
+    document.body.classList.add(cls);
+    const done = () => { document.body.classList.remove(cls); window.removeEventListener('afterprint', done); };
     window.addEventListener('afterprint', done);
     window.print();
   },
+  printReport(){ P.printMode(''); },
+  printInstall(){ P.printMode('print-install'); },
+  printOperatorSheet(){ P.printMode('print-operator'); },
   exportProject(){
-    const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+    const blob = new Blob([JSON.stringify(buildExportJson(),null,2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = (state.project.projectName || 'suse-poc') + '.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  },
-  exportEib(){
-    rebuildVms();
-    const combined = buildEibCombinedJson();
-    if(!Object.keys(combined).length){
-      alert(state.lang==='pt' ? 'Nenhum JSON gerado: selecione Rancher, Security/Storage/Private Registry e/ou Observability, e preencha a rede (Rede & Pool de IPs) antes.' : state.lang==='es' ? 'No se generó ningún JSON: seleccione Rancher, Security/Storage/Private Registry y/u Observability, y complete antes la red (Red & Pool de IPs).' : 'No JSON generated: select Rancher, Security/Storage/Private Registry and/or Observability, and fill in the network (Network & IP Pool) first.');
-      return;
-    }
-    const clientSlug = normClient(state.project.clientOrganization || state.project.projectName);
-    const blob = new Blob([JSON.stringify(combined,null,2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = clientSlug+'-eib.json';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
   },

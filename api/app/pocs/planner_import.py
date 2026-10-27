@@ -19,13 +19,20 @@ def extrair_parametros_tecnicos(texto: str) -> dict[str, Any] | None:
         dados = json.loads(texto)
     except (ValueError, TypeError):
         return None
-    if not isinstance(dados, dict) or "selectedProducts" not in dados:
+    if not isinstance(dados, dict):
         return None
 
-    projeto = dados.get("project") or {}
-    produtos_selecionados = sorted(k for k, v in (dados.get("selectedProducts") or {}).items() if v)
-    rede = dados.get("network") or {}
-    portas = dados.get("ports") or {}
+    # v2 do Planejar PoC (schema 2) exporta {schema, planner, eib, poc_markdown}, com o estado
+    # de verdade dentro de `planner` -- antes (v1) era o estado solto, direto na raiz do JSON.
+    # Aceita os dois formatos: se tiver `planner`, usa ele; senão assume que já é o estado.
+    estado = dados.get("planner") if isinstance(dados.get("planner"), dict) else dados
+    if "selectedProducts" not in estado:
+        return None
+
+    projeto = estado.get("project") or {}
+    produtos_selecionados = sorted(k for k, v in (estado.get("selectedProducts") or {}).items() if v)
+    rede = estado.get("network") or {}
+    portas = estado.get("ports") or {}
 
     return {
         "origem": "planejador",
@@ -43,7 +50,7 @@ def extrair_parametros_tecnicos(texto: str) -> dict[str, Any] | None:
             "pool_ip_fim": rede.get("ipPoolEnd"),
             "vms": rede.get("vms") or [],
         },
-        "infra": dados.get("infra") or {},
+        "infra": estado.get("infra") or {},
         "portas_concluidas": sum(1 for v in (portas.get("checked") or {}).values() if v),
         "portas_total": len(portas.get("checked") or {}),
     }

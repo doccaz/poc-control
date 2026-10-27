@@ -10,14 +10,19 @@ declare global {
 }
 
 // O planejador roda no mesmo bundle/documento que o resto do POC Control agora (antes era um
-// HTML estático embutido num iframe). A lógica original (wizard de 10 etapas, dimensionamento,
-// geração de JSON do EIB, diagrama de arquitetura etc.) foi portada quase sem alterações para
+// HTML estático embutido num iframe). A lógica original (wizard de 9 etapas, dimensionamento,
+// geração de JSON do EIB, diagrama de arquitetura embutido no Resumo, menu de exportação com
+// relatório/checklist/folha do operador etc.) foi portada quase sem alterações para
 // engine/plannerEngine.js — ela continua sendo um motor imperativo (render-to-string + innerHTML,
 // com um objeto global `window.P` para os handlers), e não uma árvore de componentes React por
 // etapa. Reescrever isso em componentes idiomáticos é um projeto futuro maior (ver README,
 // seção Roadmap); o que mudou agora é que deixou de ser um documento HTML separado: compila no
 // mesmo build, compartilha o tema visual (engine/planner.css, escopado em #planner-root) e recebe
 // o idioma direto do seletor único do app, sem iframe nem postMessage.
+// v2 (schema 2, 2026-10): trocado o motor inteiro pela versão nova do colega (era 10 etapas com
+// "Arquitetura" própria; agora são 9 -- o diagrama entrou dentro do Resumo). O JSON exportado
+// mudou de formato: antes era o estado solto; agora é {schema, planner, eib, poc_markdown}, com
+// o estado de verdade dentro de `planner` -- ver app/pocs/planner_import.py no backend.
 export function PlanPoc() {
   const { lang } = useLanguage();
   const appRef = useRef<HTMLDivElement>(null);

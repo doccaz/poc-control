@@ -171,15 +171,17 @@ técnica para extrair uma estrutura de acompanhamento.
 
 O documento pode vir em formatos diferentes:
 - Um PDF ou texto livre de escopo/plano de testes.
-- Um JSON exportado pela ferramenta interna de planejamento de PoC ("SUSE PoC Planner"), com campos como \
-`project.projectName`, `project.clientOrganization`, `selectedProducts` (produtos habilitados) e \
-`testCases` (um array de casos de teste por produto, cada um com `text`, `fit`, `led`, `owner`, \
-`evidence`, `notes`). Se for esse JSON: use `project.projectName` como título sugerido e \
-`project.clientOrganization` (ou `project.organization`) como cliente sugerido; agrupe os itens por \
-produto (as chaves marcadas `true` em `selectedProducts`) como fases; cada entrada de \
-`testCases[<produto>]` é um item, com `titulo` a partir de `text`, `categoria` a partir do nome do \
-produto, e `criterio_aceite` inferido do próprio `text` (esse formato não tem um campo de critério \
-separado).
+- Um JSON exportado pela ferramenta interna de planejamento de PoC ("SUSE PoC Planner"), com os campos \
+de interesse em `project.projectName`, `project.clientOrganization`, `selectedProducts` (produtos \
+habilitados) e `testCases` (um array de casos de teste por produto, cada um com `text`, `fit`, `led`, \
+`owner`, `evidence`, `notes`) — esses campos podem estar na raiz do JSON (formato antigo) ou dentro de \
+um campo `planner` (formato atual: `{schema, planner: {project, selectedProducts, testCases, ...}, eib, \
+poc_markdown}` — ignore `eib` e `poc_markdown`, são derivados). Se for esse formato: use \
+`project.projectName` como título sugerido e `project.clientOrganization` (ou `project.organization`) \
+como cliente sugerido; agrupe os itens por produto (as chaves marcadas `true` em `selectedProducts`) \
+como fases; cada entrada de `testCases[<produto>]` é um item, com `titulo` a partir de `text`, \
+`categoria` a partir do nome do produto, e `criterio_aceite` inferido do próprio `text` (esse formato \
+não tem um campo de critério separado).
 
 Devolva:
 - titulo_sugerido: título curto da PoC (produto/tecnologia principal).
