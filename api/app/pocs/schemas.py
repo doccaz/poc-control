@@ -39,6 +39,7 @@ class ClassificacaoOut(BaseModel):
     justificativa: str | None
     fontes: list[FonteOut]
     procedimento_id: uuid.UUID | None
+    modelo: str | None
     created_at: datetime
 
 
@@ -153,6 +154,7 @@ class PocListItem(BaseModel):
 class PocDetail(PocListItem):
     escopo: str | None
     erro_extracao: str | None
+    modelo_extracao: str | None
     resumo_executivo: str | None
     parametros_tecnicos: dict | None
     fases: list[FaseOut]

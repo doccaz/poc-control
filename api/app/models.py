@@ -105,6 +105,10 @@ class Poc(Base):
     # JSON (sem passar pelo Gemini) para não arriscar perder/alucinar IPs e hostnames.
     # Nunca contém credenciais. Usado no roteiro do dia (app/pocs/roteiro.py).
     parametros_tecnicos: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Nome do modelo do Gemini que de fato extraiu os itens (resolve_model(user) ou o default do
+    # servidor) — exibido na UI pra confirmar qual modelo respondeu, sem precisar olhar os logs
+    # do container na Raspberry.
+    modelo_extracao: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -214,6 +218,9 @@ class Classificacao(Base):
     procedimento_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("procedimentos.id", ondelete="SET NULL"), nullable=True
     )
+    # Nome do modelo do Gemini que de fato classificou o item (só em classificações automáticas
+    # — override manual não chama o Gemini, então fica nulo). Mesma motivação de Poc.modelo_extracao.
+    modelo: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

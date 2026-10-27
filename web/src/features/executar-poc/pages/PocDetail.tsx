@@ -250,6 +250,11 @@ export function PocDetail() {
       </div>
 
       {poc.status_extracao === "extraindo" && <p className="alert alert-success">{t("pocDetail.extraindo")}</p>}
+      {poc.status_extracao === "pronto" && poc.modelo_extracao && (
+        <p className="muted" style={{ fontSize: 13 }}>
+          {t("pocDetail.extraidoCom").replace("{modelo}", poc.modelo_extracao)}
+        </p>
+      )}
       {poc.status_extracao === "erro" && (
         <p className="alert alert-error">
           {t("pocDetail.erroExtracao")} {poc.erro_extracao ?? t("pocDetail.erroDesconhecido")}
@@ -1180,6 +1185,9 @@ function ItemRow({
                   <span>
                     ({item.classificacao.origem === "manual" ? t("itemRow.ajustadoManualmente") : t("itemRow.automatico")})
                   </span>
+                  {item.classificacao.modelo && (
+                    <span> — {t("itemRow.respondidoPorModelo").replace("{modelo}", item.classificacao.modelo)}</span>
+                  )}
                 </div>
                 {item.classificacao.justificativa && <p style={{ marginTop: 6 }}>{item.classificacao.justificativa}</p>}
                 {procedimentoVinculado && (

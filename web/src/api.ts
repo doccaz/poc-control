@@ -97,6 +97,7 @@ export interface Classificacao {
   justificativa: string | null;
   fontes: Fonte[];
   procedimento_id: string | null;
+  modelo: string | null;
   created_at: string;
 }
 
@@ -192,6 +193,7 @@ export interface ParametrosTecnicos {
 export interface PocDetail extends PocListItem {
   escopo: string | null;
   erro_extracao: string | null;
+  modelo_extracao: string | null;
   resumo_executivo: string | null;
   parametros_tecnicos: ParametrosTecnicos | null;
   fases: Fase[];

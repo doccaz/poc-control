@@ -2,7 +2,7 @@ import logging
 import uuid
 
 from app.db import SessionLocal
-from app.gemini import extrair_itens_poc, interpretar_erro_gemini
+from app.gemini import extrair_itens_poc, interpretar_erro_gemini, modelo_efetivo
 from app.models import Item, Poc, Prerequisito, StatusExtracao
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,8 @@ def processar_extracao(
         poc = db.get(Poc, poc_id)
         if poc is None:
             return
+
+        poc.modelo_extracao = modelo_efetivo(model)
 
         try:
             extraido = extrair_itens_poc(pdf_bytes=pdf_bytes, texto=texto, api_key=api_key, model=model)

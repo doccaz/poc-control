@@ -7,6 +7,7 @@ from app.gemini import (
     classificar_viabilidade,
     confirmar_match,
     embed_query,
+    modelo_efetivo,
     pesquisar_viabilidade_web,
 )
 from app.models import (
@@ -50,6 +51,7 @@ def _salvar_auto(
     justificativa: str,
     fontes: list[dict],
     procedimento_id: uuid.UUID | None,
+    modelo: str,
 ) -> Classificacao:
     classificacao = item.classificacao
     if classificacao is None:
@@ -61,6 +63,7 @@ def _salvar_auto(
     classificacao.justificativa = justificativa
     classificacao.fontes = fontes
     classificacao.procedimento_id = procedimento_id
+    classificacao.modelo = modelo
 
     db.commit()
     db.refresh(classificacao)
@@ -73,6 +76,7 @@ def classificar_item(
     """Semáforo: busca vetorial nos procedimentos validados → confirmação pelo Gemini →
     se não houver match, pesquisa de viabilidade na web com grounding do Google Search."""
     texto = texto_item(item)
+    modelo_usado = modelo_efetivo(model)
 
     chunks = _buscar_candidatos(db, embed_query(texto, api_key=api_key))
     if chunks:
@@ -94,6 +98,7 @@ def classificar_item(
                 justificativa=confirmacao.justificativa,
                 fontes=[],
                 procedimento_id=procedimento.id,
+                modelo=modelo_usado,
             )
 
     texto_pesquisa, fontes = pesquisar_viabilidade_web(texto, api_key=api_key, model=model)
@@ -110,4 +115,6 @@ def classificar_item(
         flag = FlagClassificacao.amarelo
         justificativa = f"Amarelo — baixa confiança (sem evidência de viabilidade). {avaliacao.justificativa}".strip()
 
-    return _salvar_auto(db, item, flag=flag, justificativa=justificativa, fontes=fontes_dump, procedimento_id=None)
+    return _salvar_auto(
+        db, item, flag=flag, justificativa=justificativa, fontes=fontes_dump, procedimento_id=None, modelo=modelo_usado
+    )

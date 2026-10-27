@@ -186,6 +186,7 @@ def obter_poc(poc_id: uuid.UUID, db: Session = Depends(get_db)):
         itens_concluidos=concluidos,
         escopo=poc.escopo,
         erro_extracao=poc.erro_extracao,
+        modelo_extracao=poc.modelo_extracao,
         resumo_executivo=poc.resumo_executivo,
         parametros_tecnicos=poc.parametros_tecnicos,
         fases=[FaseOut(**f) for f in (poc.fases or [])],
@@ -389,6 +390,7 @@ def sobrescrever_classificacao(
     classificacao.origem = OrigemClassificacao.manual
     classificacao.justificativa = payload.justificativa
     classificacao.procedimento_id = payload.procedimento_id
+    classificacao.modelo = None
     if classificacao.fontes is None:
         classificacao.fontes = []
 

@@ -20,6 +20,13 @@ def _client(api_key: str | None = None) -> genai.Client:
     return genai.Client(api_key=api_key or settings.gemini_api_key)
 
 
+def modelo_efetivo(model: str | None) -> str:
+    """Nome do modelo de texto que uma chamada vai de fato usar, aplicando a mesma regra
+    (`model or _TEXT_MODEL`) usada dentro de cada função deste módulo — pra quem chama poder
+    persistir/exibir qual modelo respondeu sem duplicar o fallback."""
+    return model or _TEXT_MODEL
+
+
 def interpretar_erro_gemini(exc: Exception) -> str:
     """Traduz os erros mais comuns da API do Gemini pra uma mensagem acionável, em vez do
     dump cru da exceção (ex.: "503 UNAVAILABLE {'error': {...}}"), que é o que aparecia antes
