@@ -135,6 +135,7 @@ export interface Anexo {
   id: string;
   sessao_id: string | null;
   nome_arquivo: string;
+  procedimento_id: string | null;
   created_at: string;
 }
 
@@ -309,6 +310,8 @@ export const api = {
     request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/anexos/${anexoId}`, { method: "DELETE" }),
   urlAnexo: (pocId: string, itemId: string, anexoId: string) =>
     `/api/pocs/${pocId}/itens/${itemId}/anexos/${anexoId}`,
+  validarAnexo: (pocId: string, itemId: string, anexoId: string) =>
+    request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/anexos/${anexoId}/validar`, { method: "POST" }),
 
   sugerirProcedimentos: (pocId: string, itemId: string) =>
     request<ProcedimentoListItem[]>(`/api/pocs/${pocId}/itens/${itemId}/sugestoes-procedimento`),

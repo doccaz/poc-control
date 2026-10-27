@@ -331,7 +331,6 @@ export function PocDetail() {
                     item={item}
                     procedimentos={procedimentos}
                     sessoes={poc.sessoes}
-                    clientePoc={poc.cliente}
                     selecionado={selecionados.has(item.id)}
                     onToggleSelecionado={() => toggleSelecionado(item.id)}
                     onAtualizado={handleItemAtualizado}
@@ -932,7 +931,6 @@ function ItemRow({
   item,
   procedimentos,
   sessoes,
-  clientePoc,
   selecionado,
   onToggleSelecionado,
   onAtualizado,
@@ -942,7 +940,6 @@ function ItemRow({
   item: ItemPoc;
   procedimentos: ProcedimentoListItem[];
   sessoes: Sessao[];
-  clientePoc: string;
   selecionado: boolean;
   onToggleSelecionado: () => void;
   onAtualizado: (item: ItemPoc) => void;
@@ -954,7 +951,7 @@ function ItemRow({
   const FLAG_LABEL = flagLabels(t);
 
   const [open, setOpen] = useState(false);
-  const [editando, setEditando] = useState(false);
+  const [editandoModal, setEditandoModal] = useState(false);
   const [titulo, setTitulo] = useState(item.titulo);
   const [descricao, setDescricao] = useState(item.descricao ?? "");
   const [criterio, setCriterio] = useState(item.criterio_aceite ?? "");
@@ -982,13 +979,7 @@ function ItemRow({
   const [sessaoAnexoId, setSessaoAnexoId] = useState("");
   const [arquivoAnexo, setArquivoAnexo] = useState<File | null>(null);
   const [enviandoAnexo, setEnviandoAnexo] = useState(false);
-
-  const [promovendo, setPromovendo] = useState(false);
-  const [tituloProc, setTituloProc] = useState(item.titulo);
-  const [tagsProc, setTagsProc] = useState(item.categoria ?? "");
-  const [textoProc, setTextoProc] = useState("");
-  const [salvandoProc, setSalvandoProc] = useState(false);
-  const [procSalvo, setProcSalvo] = useState(false);
+  const [validandoAnexoId, setValidandoAnexoId] = useState<string | null>(null);
 
   async function adicionarNota() {
     if (!textoNota.trim()) return;
@@ -1059,28 +1050,13 @@ function ItemRow({
     onAtualizado(atualizado);
   }
 
-  async function promoverProcedimento() {
-    if (!tituloProc.trim() || !textoProc.trim()) return;
-    setSalvandoProc(true);
+  async function validarAnexo(anexoId: string) {
+    setValidandoAnexoId(anexoId);
     try {
-      const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const paragrafos = textoProc
-        .split(/\n{2,}/)
-        .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
-        .join("\n");
-      const html = `<h2>${escapeHtml(tituloProc)}</h2>\n${paragrafos}`;
-
-      const form = new FormData();
-      form.append("titulo", tituloProc);
-      form.append("tags", tagsProc);
-      form.append("cliente_origem", clientePoc);
-      form.append("status", "validado");
-      form.append("arquivo", new Blob([html], { type: "text/html" }), `${tituloProc}.html`);
-      await api.criarProcedimento(form);
-      setProcSalvo(true);
-      setPromovendo(false);
+      const atualizado = await api.validarAnexo(pocId, item.id, anexoId);
+      onAtualizado(atualizado);
     } finally {
-      setSalvandoProc(false);
+      setValidandoAnexoId(null);
     }
   }
 
@@ -1129,6 +1105,7 @@ function ItemRow({
         conducao: conducao || null,
       });
       onAtualizado(atualizado);
+      setEditandoModal(false);
     } finally {
       setSalvando(false);
     }
@@ -1160,35 +1137,46 @@ function ItemRow({
           {item.titulo}
           {item.categoria && <span className="muted" style={{ marginLeft: 8, fontSize: 12 }}>{item.categoria}</span>}
         </span>
+        <button
+          className="icon-btn"
+          title={t("common.editar")}
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditandoModal(true);
+          }}
+          type="button"
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
         {item.conducao && <span className={`chip chip-${item.conducao}`}>{CONDUCAO_LABEL[item.conducao]}</span>}
         <span className={`badge badge-${item.classificacao?.flag ?? "muted"}`}>
           {item.classificacao ? FLAG_LABEL[item.classificacao.flag] : t("itemRow.semSemaforo")}
         </span>
         <span className={`badge badge-${item.status}`}>{STATUS_LABEL[item.status]}</span>
-        <select
-          className="input"
-          value={item.status}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => mudarStatus(e.target.value as StatusItem)}
-        >
-          {(Object.keys(STATUS_LABEL) as StatusItem[]).map((s) => (
-            <option key={s} value={s}>
-              {STATUS_LABEL[s]}
-            </option>
-          ))}
-        </select>
       </div>
 
       {open && (
         <div className="item-row-body">
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-secondary" onClick={() => setEditando((v) => !v)} type="button">
-              {editando ? t("common.cancelar") : t("common.editar")}
-            </button>
+          <div className="field" style={{ maxWidth: 220 }}>
+            <label>{t("itemRow.status")}</label>
+            <select
+              className="input"
+              value={item.status}
+              onChange={(e) => mudarStatus(e.target.value as StatusItem)}
+            >
+              {(Object.keys(STATUS_LABEL) as StatusItem[]).map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABEL[s]}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {editando && (
-            <>
+          {editandoModal && (
+            <div className="modal-backdrop" onClick={() => setEditandoModal(false)}>
+              <div className="modal-janela" onClick={(e) => e.stopPropagation()}>
               <div className="field">
                 <label>{t("itemRow.titulo")}</label>
                 <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
@@ -1238,46 +1226,19 @@ function ItemRow({
                 <button className="btn btn-secondary" onClick={remover} type="button">
                   {t("itemRow.removerItem")}
                 </button>
+                <button className="btn btn-secondary" onClick={() => setEditandoModal(false)} type="button">
+                  {t("common.fechar")}
+                </button>
               </div>
-            </>
+              </div>
+            </div>
           )}
 
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
-            <strong>{t("itemRow.classificacao")}</strong>
-            {item.classificacao ? (
-              <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
-                <div>
-                  <span className={`badge badge-${item.classificacao.flag}`}>
-                    {FLAG_LABEL[item.classificacao.flag]}
-                  </span>{" "}
-                  <span>
-                    ({item.classificacao.origem === "manual" ? t("itemRow.ajustadoManualmente") : t("itemRow.automatico")})
-                  </span>
-                  {item.classificacao.modelo && (
-                    <span> — {t("itemRow.respondidoPorModelo").replace("{modelo}", item.classificacao.modelo)}</span>
-                  )}
-                </div>
-                {item.classificacao.justificativa && <p style={{ marginTop: 6 }}>{item.classificacao.justificativa}</p>}
-                {item.classificacao.fontes.length > 0 && (
-                  <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                    {item.classificacao.fontes.map((f, i) => (
-                      <li key={i}>
-                        <a href={f.url} target="_blank" rel="noreferrer">
-                          {f.titulo}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : (
-              <p className="empty-state" style={{ marginTop: 8 }}>
-                {t("itemRow.naoClassificado")}
-              </p>
-            )}
+            <strong>{t("itemRow.procedimento")}</strong>
 
             <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              {procedimentoVinculado && (
+              {procedimentoVinculado ? (
                 <>
                   <span>
                     {t("itemRow.procedimentoLabel")}{" "}
@@ -1287,6 +1248,8 @@ function ItemRow({
                     {t("itemRow.abrirTelaCheia")}
                   </button>
                 </>
+              ) : (
+                <span className="empty-state">{t("itemRow.nenhumProcedimentoVinculado")}</span>
               )}
               <button className="btn btn-secondary" onClick={abrirImportar} type="button">
                 {importando ? t("common.cancelar") : t("itemRow.importarProcedimento")}
@@ -1403,6 +1366,38 @@ function ItemRow({
               </div>
             </div>
 
+            {item.classificacao ? (
+              <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+                <div>
+                  <span className={`badge badge-${item.classificacao.flag}`}>
+                    {FLAG_LABEL[item.classificacao.flag]}
+                  </span>{" "}
+                  <span>
+                    ({item.classificacao.origem === "manual" ? t("itemRow.ajustadoManualmente") : t("itemRow.automatico")})
+                  </span>
+                  {item.classificacao.modelo && (
+                    <span> — {t("itemRow.respondidoPorModelo").replace("{modelo}", item.classificacao.modelo)}</span>
+                  )}
+                </div>
+                {item.classificacao.justificativa && <p style={{ marginTop: 6 }}>{item.classificacao.justificativa}</p>}
+                {item.classificacao.fontes.length > 0 && (
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                    {item.classificacao.fontes.map((f, i) => (
+                      <li key={i}>
+                        <a href={f.url} target="_blank" rel="noreferrer">
+                          {f.titulo}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <p className="empty-state" style={{ marginTop: 8 }}>
+                {t("itemRow.naoClassificado")}
+              </p>
+            )}
+
             {editandoManual && (
               <div className="fields" style={{ marginTop: 12, display: "grid", gap: 10 }}>
                 <div className="field">
@@ -1459,7 +1454,6 @@ function ItemRow({
           )}
 
           {maisOpcoes && (
-          <>
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
             <strong>{t("itemRow.anexos")}</strong>
             {item.anexos.length === 0 ? (
@@ -1469,10 +1463,21 @@ function ItemRow({
             ) : (
               <ul style={{ margin: "8px 0", paddingLeft: 18 }}>
                 {item.anexos.map((a) => (
-                  <li key={a.id} style={{ marginBottom: 6, fontSize: 13 }}>
+                  <li key={a.id} style={{ marginBottom: 6, fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
                     <a href={api.urlAnexo(pocId, item.id, a.id)} target="_blank" rel="noreferrer">
                       {a.nome_arquivo}
-                    </a>{" "}
+                    </a>
+                    {/\.(html?|txt|md)$/i.test(a.nome_arquivo) && (
+                      <label style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <input
+                          type="checkbox"
+                          checked={a.procedimento_id != null}
+                          disabled={a.procedimento_id != null || validandoAnexoId === a.id}
+                          onChange={() => validarAnexo(a.id)}
+                        />
+                        {t("itemRow.validado")}
+                      </label>
+                    )}
                     <button
                       className="btn btn-secondary"
                       style={{ fontSize: 11, padding: "1px 6px" }}
@@ -1512,48 +1517,6 @@ function ItemRow({
               </button>
             </div>
           </div>
-
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <strong>{t("itemRow.procedimento")}</strong>
-              <button className="btn btn-secondary" onClick={() => setPromovendo((v) => !v)} type="button">
-                {promovendo ? t("common.cancelar") : t("itemRow.promoverProcedimento")}
-              </button>
-            </div>
-            {procSalvo && <p className="alert alert-success" style={{ marginTop: 8 }}>{t("itemRow.procedimentoSalvo")}</p>}
-            {promovendo && (
-              <div className="fields" style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                <div className="field">
-                  <label>{t("itemRow.tituloProcedimento")}</label>
-                  <input className="input" value={tituloProc} onChange={(e) => setTituloProc(e.target.value)} />
-                </div>
-                <div className="field">
-                  <label>{t("itemRow.tags")}</label>
-                  <input
-                    className="input"
-                    value={tagsProc}
-                    onChange={(e) => setTagsProc(e.target.value)}
-                    placeholder={t("itemRow.tagsPlaceholder")}
-                  />
-                </div>
-                <div className="field">
-                  <label>{t("itemRow.passoAPasso")}</label>
-                  <textarea className="input" rows={6} value={textoProc} onChange={(e) => setTextoProc(e.target.value)} />
-                </div>
-                <div>
-                  <button
-                    className="btn btn-primary"
-                    onClick={promoverProcedimento}
-                    disabled={salvandoProc || !textoProc.trim()}
-                    type="button"
-                  >
-                    {salvandoProc ? t("common.salvando") : t("itemRow.salvarProcedimento")}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          </>
           )}
         </div>
       )}

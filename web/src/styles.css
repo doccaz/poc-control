@@ -773,11 +773,51 @@ textarea.input {
 
 .item-row-head {
   display: grid;
-  grid-template-columns: 56px 1fr auto auto auto 160px;
+  grid-template-columns: 56px 1fr auto auto auto auto;
   gap: 12px;
   align-items: center;
   padding: 10px 14px;
   cursor: pointer;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  color: var(--color-text);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-janela {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.35);
 }
 
 .item-row-head:hover {

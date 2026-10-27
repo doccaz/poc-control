@@ -27,11 +27,13 @@ from app.models import (
     StatusExtracao,
     StatusHistorico,
     StatusItem,
+    StatusProcedimento,
     User,
 )
 from app.pocs.apresentacao import montar_apresentacao_html
 from app.pocs.export import montar_export_html
 from app.pocs.planner_import import extrair_parametros_tecnicos
+from app.procedimentos.router import _criar_procedimento
 from app.procedimentos.schemas import ProcedimentoListItem as ProcedimentoListItemOut
 from app.pocs.roteiro import montar_roteiro_html
 from app.pocs.schemas import (
@@ -610,6 +612,62 @@ def remover_anexo(poc_id: uuid.UUID, item_id: uuid.UUID, anexo_id: uuid.UUID, db
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Anexo não encontrado")
     pathlib.Path(anexo.caminho_arquivo).unlink(missing_ok=True)
     db.delete(anexo)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def _escapar_html(texto: str) -> str:
+    return texto.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+@router.post("/{poc_id}/itens/{item_id}/anexos/{anexo_id}/validar", response_model=ItemOut)
+def validar_anexo(
+    poc_id: uuid.UUID,
+    item_id: uuid.UUID,
+    anexo_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Marca a caixinha "Validado" ao lado de um anexo: pega o conteúdo do arquivo (HTML direto,
+    ou texto simples envolvido num HTML mínimo) e promove a um procedimento validado na
+    biblioteca, com o título do próprio item -- substitui o formulário separado que existia
+    antes pra escrever um procedimento do zero."""
+    item = _get_item_or_404(db, poc_id, item_id)
+    anexo = db.get(Anexo, anexo_id)
+    if anexo is None or anexo.item_id != item.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Anexo não encontrado")
+    if anexo.procedimento_id is not None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Este anexo já foi validado como procedimento")
+
+    caminho = pathlib.Path(anexo.caminho_arquivo)
+    if not caminho.exists():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "O arquivo do anexo não foi encontrado em disco")
+    try:
+        conteudo = caminho.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, ValueError):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Só é possível validar anexos de texto ou HTML")
+
+    if pathlib.Path(anexo.nome_arquivo).suffix.lower() in (".html", ".htm"):
+        html = conteudo
+    else:
+        paragrafos = "\n".join(
+            f"<p>{_escapar_html(p).replace(chr(10), '<br/>')}</p>" for p in conteudo.split("\n\n") if p.strip()
+        )
+        html = f"<h2>{_escapar_html(item.titulo)}</h2>\n{paragrafos}"
+
+    procedimento = _criar_procedimento(
+        db,
+        titulo=item.titulo,
+        tags=[item.categoria] if item.categoria else [],
+        cliente_origem=item.poc.cliente,
+        data_origem=None,
+        status_valor=StatusProcedimento.validado,
+        versao=1,
+        html=html,
+        api_key=resolve_api_key(current_user),
+    )
+    anexo.procedimento_id = procedimento.id
     db.commit()
     db.refresh(item)
     return item

@@ -93,6 +93,7 @@ class AnexoOut(BaseModel):
     id: uuid.UUID
     sessao_id: uuid.UUID | None
     nome_arquivo: str
+    procedimento_id: uuid.UUID | None
     created_at: datetime
 
 

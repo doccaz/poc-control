@@ -301,6 +301,11 @@ class Anexo(Base):
     )
     nome_arquivo: Mapped[str] = mapped_column(String(255), nullable=False)
     caminho_arquivo: Mapped[str] = mapped_column(String(500), nullable=False)
+    # Preenchido quando o usuário marca "Validado" nesse anexo: o conteúdo dele (HTML ou texto)
+    # foi promovido a um Procedimento na biblioteca — ver app/pocs/router.py::validar_anexo.
+    procedimento_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("procedimentos.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
