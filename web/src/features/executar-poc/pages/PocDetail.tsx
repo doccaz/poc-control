@@ -7,13 +7,14 @@ import {
   FlagClassificacao,
   ItemPoc,
   PocDetail as PocDetailData,
+  ProcedimentoDetail,
   ProcedimentoListItem,
   Sessao,
   StatusItem,
 } from "@/api";
 import { useLanguage } from "@/i18n";
 
-const TAB_IDS = ["plano", "pre", "resumo", "andamento", "apresentacao"] as const;
+const TAB_IDS = ["pre", "plano", "resumo", "andamento", "apresentacao"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const TAB_LABEL_KEY: Record<TabId, string> = {
@@ -897,6 +898,35 @@ function SessaoCard({
   );
 }
 
+function ProcedimentoFullscreen({ procedimentoId, onClose }: { procedimentoId: string; onClose: () => void }) {
+  const { t } = useLanguage();
+  const [procedimento, setProcedimento] = useState<ProcedimentoDetail | null>(null);
+
+  useEffect(() => {
+    setProcedimento(null);
+    api.obterProcedimento(procedimentoId).then(setProcedimento);
+  }, [procedimentoId]);
+
+  return (
+    <div className="procedimento-fullscreen">
+      <div className="procedimento-fullscreen-head">
+        <strong>{procedimento?.titulo ?? t("common.carregando")}</strong>
+        <button className="btn btn-secondary" onClick={onClose} type="button">
+          {t("common.fechar")}
+        </button>
+      </div>
+      {procedimento && (
+        <iframe
+          title={procedimento.titulo}
+          sandbox="allow-same-origin"
+          srcDoc={procedimento.html_original}
+          className="html-frame html-frame-fullscreen"
+        />
+      )}
+    </div>
+  );
+}
+
 function ItemRow({
   pocId,
   item,
@@ -924,6 +954,7 @@ function ItemRow({
   const FLAG_LABEL = flagLabels(t);
 
   const [open, setOpen] = useState(false);
+  const [editando, setEditando] = useState(false);
   const [titulo, setTitulo] = useState(item.titulo);
   const [descricao, setDescricao] = useState(item.descricao ?? "");
   const [criterio, setCriterio] = useState(item.criterio_aceite ?? "");
@@ -937,8 +968,14 @@ function ItemRow({
   const [procedimentoManual, setProcedimentoManual] = useState(item.classificacao?.procedimento_id ?? "");
   const [justificativaManual, setJustificativaManual] = useState(item.classificacao?.justificativa ?? "");
   const [salvandoManual, setSalvandoManual] = useState(false);
+  const [maisOpcoes, setMaisOpcoes] = useState(false);
 
-  const [sessaoNotaId, setSessaoNotaId] = useState("");
+  const [importando, setImportando] = useState(false);
+  const [sugestoes, setSugestoes] = useState<ProcedimentoListItem[] | null>(null);
+  const [carregandoSugestoes, setCarregandoSugestoes] = useState(false);
+  const [linkando, setLinkando] = useState(false);
+  const [verProcedimento, setVerProcedimento] = useState(false);
+
   const [textoNota, setTextoNota] = useState("");
   const [salvandoNota, setSalvandoNota] = useState(false);
 
@@ -954,14 +991,46 @@ function ItemRow({
   const [procSalvo, setProcSalvo] = useState(false);
 
   async function adicionarNota() {
-    if (!sessaoNotaId || !textoNota.trim()) return;
+    if (!textoNota.trim()) return;
     setSalvandoNota(true);
     try {
-      const atualizado = await api.criarNota(pocId, item.id, sessaoNotaId, textoNota.trim());
+      const atualizado = await api.criarNota(pocId, item.id, null, textoNota.trim());
       onAtualizado(atualizado);
       setTextoNota("");
     } finally {
       setSalvandoNota(false);
+    }
+  }
+
+  async function abrirImportar() {
+    const abrindo = !importando;
+    setImportando(abrindo);
+    if (abrindo && sugestoes === null) {
+      setCarregandoSugestoes(true);
+      try {
+        const lista = await api.sugerirProcedimentos(pocId, item.id);
+        setSugestoes(lista);
+      } catch {
+        setSugestoes([]);
+      } finally {
+        setCarregandoSugestoes(false);
+      }
+    }
+  }
+
+  async function linkarProcedimento(procedimentoId: string) {
+    if (!procedimentoId) return;
+    setLinkando(true);
+    try {
+      const atualizado = await api.sobrescreverClassificacao(pocId, item.id, {
+        flag: "verde",
+        procedimento_id: procedimentoId,
+        justificativa: null,
+      });
+      onAtualizado(atualizado);
+      setImportando(false);
+    } finally {
+      setLinkando(false);
     }
   }
 
@@ -1112,72 +1181,71 @@ function ItemRow({
 
       {open && (
         <div className="item-row-body">
-          <div className="field">
-            <label>{t("itemRow.titulo")}</label>
-            <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>{t("itemRow.descricao")}</label>
-            <textarea className="input" rows={3} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>{t("itemRow.criterioAceite")}</label>
-            <textarea className="input" rows={2} value={criterio} onChange={(e) => setCriterio(e.target.value)} />
-          </div>
-          <div className="fields" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
-            <div className="field">
-              <label>{t("itemRow.categoria")}</label>
-              <input className="input" value={categoria} onChange={(e) => setCategoria(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>{t("itemRow.fase")}</label>
-              <input
-                type="number"
-                min={1}
-                className="input"
-                value={fase}
-                onChange={(e) => setFase(Number(e.target.value))}
-              />
-            </div>
-            <div className="field">
-              <label>{t("itemRow.conducao")}</label>
-              <select className="input" value={conducao} onChange={(e) => setConducao(e.target.value as CondicaoItem | "")}>
-                <option value="">—</option>
-                <option value="suse">{CONDUCAO_LABEL.suse}</option>
-                <option value="cliente">{CONDUCAO_LABEL.cliente}</option>
-                <option value="lateral">{CONDUCAO_LABEL.lateral}</option>
-              </select>
-            </div>
-          </div>
-          {item.ref && (
-            <p className="field-hint">
-              {t("itemRow.referencia")} {item.ref}
-            </p>
-          )}
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-primary" onClick={salvar} disabled={salvando}>
-              {salvando ? t("common.salvando") : t("common.salvar")}
-            </button>
-            <button className="btn btn-secondary" onClick={remover} type="button">
-              {t("itemRow.removerItem")}
+            <button className="btn btn-secondary" onClick={() => setEditando((v) => !v)} type="button">
+              {editando ? t("common.cancelar") : t("common.editar")}
             </button>
           </div>
 
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <strong>{t("itemRow.classificacao")}</strong>
+          {editando && (
+            <>
+              <div className="field">
+                <label>{t("itemRow.titulo")}</label>
+                <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>{t("itemRow.descricao")}</label>
+                <textarea className="input" rows={3} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>{t("itemRow.criterioAceite")}</label>
+                <textarea className="input" rows={2} value={criterio} onChange={(e) => setCriterio(e.target.value)} />
+              </div>
+              <div className="fields" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
+                <div className="field">
+                  <label>{t("itemRow.categoria")}</label>
+                  <input className="input" value={categoria} onChange={(e) => setCategoria(e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>{t("itemRow.fase")}</label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="input"
+                    value={fase}
+                    onChange={(e) => setFase(Number(e.target.value))}
+                  />
+                </div>
+                <div className="field">
+                  <label>{t("itemRow.conducao")}</label>
+                  <select className="input" value={conducao} onChange={(e) => setConducao(e.target.value as CondicaoItem | "")}>
+                    <option value="">—</option>
+                    <option value="suse">{CONDUCAO_LABEL.suse}</option>
+                    <option value="cliente">{CONDUCAO_LABEL.cliente}</option>
+                    <option value="lateral">{CONDUCAO_LABEL.lateral}</option>
+                  </select>
+                </div>
+              </div>
+              {item.ref && (
+                <p className="field-hint">
+                  {t("itemRow.referencia")} {item.ref}
+                </p>
+              )}
               <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn btn-secondary" onClick={reavaliar} disabled={reavaliando} type="button">
-                  {reavaliando ? t("itemRow.reavaliando") : t("itemRow.reavaliar")}
+                <button className="btn btn-primary" onClick={salvar} disabled={salvando}>
+                  {salvando ? t("common.salvando") : t("common.salvar")}
                 </button>
-                <button className="btn btn-secondary" onClick={() => setEditandoManual((v) => !v)} type="button">
-                  {editandoManual ? t("common.cancelar") : t("itemRow.sobrescrever")}
+                <button className="btn btn-secondary" onClick={remover} type="button">
+                  {t("itemRow.removerItem")}
                 </button>
               </div>
-            </div>
+            </>
+          )}
 
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+            <strong>{t("itemRow.classificacao")}</strong>
             {item.classificacao ? (
-              <div className="muted" style={{ fontSize: 13 }}>
+              <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
                 <div>
                   <span className={`badge badge-${item.classificacao.flag}`}>
                     {FLAG_LABEL[item.classificacao.flag]}
@@ -1190,12 +1258,6 @@ function ItemRow({
                   )}
                 </div>
                 {item.classificacao.justificativa && <p style={{ marginTop: 6 }}>{item.classificacao.justificativa}</p>}
-                {procedimentoVinculado && (
-                  <p>
-                    {t("itemRow.procedimentoLabel")}{" "}
-                    <Link to={`/procedimentos/${procedimentoVinculado.id}`}>{procedimentoVinculado.titulo}</Link>
-                  </p>
-                )}
                 {item.classificacao.fontes.length > 0 && (
                   <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
                     {item.classificacao.fontes.map((f, i) => (
@@ -1209,8 +1271,137 @@ function ItemRow({
                 )}
               </div>
             ) : (
-              <p className="empty-state">{t("itemRow.naoClassificado")}</p>
+              <p className="empty-state" style={{ marginTop: 8 }}>
+                {t("itemRow.naoClassificado")}
+              </p>
             )}
+
+            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              {procedimentoVinculado && (
+                <>
+                  <span>
+                    {t("itemRow.procedimentoLabel")}{" "}
+                    <Link to={`/procedimentos/${procedimentoVinculado.id}`}>{procedimentoVinculado.titulo}</Link>
+                  </span>
+                  <button className="btn btn-secondary" onClick={() => setVerProcedimento(true)} type="button">
+                    {t("itemRow.abrirTelaCheia")}
+                  </button>
+                </>
+              )}
+              <button className="btn btn-secondary" onClick={abrirImportar} type="button">
+                {importando ? t("common.cancelar") : t("itemRow.importarProcedimento")}
+              </button>
+            </div>
+
+            {importando && (
+              <div style={{ marginTop: 10 }}>
+                {carregandoSugestoes ? (
+                  <p className="muted" style={{ fontSize: 13 }}>
+                    {t("itemRow.carregandoSugestoes")}
+                  </p>
+                ) : (
+                  <>
+                    <p className="field-hint">{t("itemRow.sugestoesSimilares")}</p>
+                    {sugestoes && sugestoes.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {sugestoes.map((s) => (
+                          <button
+                            key={s.id}
+                            className="btn btn-secondary"
+                            style={{ textAlign: "left" }}
+                            onClick={() => linkarProcedimento(s.id)}
+                            disabled={linkando}
+                            type="button"
+                          >
+                            {s.titulo}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="empty-state">{t("itemRow.semSugestoes")}</p>
+                    )}
+                  </>
+                )}
+                <div className="field" style={{ marginTop: 10 }}>
+                  <label>{t("itemRow.escolherOutro")}</label>
+                  <select
+                    className="input"
+                    value=""
+                    disabled={linkando}
+                    onChange={(e) => linkarProcedimento(e.target.value)}
+                  >
+                    <option value="">—</option>
+                    {validados.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.titulo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+            <strong>{t("itemRow.notas")}</strong>
+            {item.notas.length === 0 ? (
+              <p className="empty-state" style={{ marginTop: 8 }}>
+                {t("itemRow.nenhumaNota")}
+              </p>
+            ) : (
+              <ul style={{ margin: "8px 0", paddingLeft: 18 }}>
+                {item.notas.map((n) => (
+                  <li key={n.id} style={{ marginBottom: 6, fontSize: 13 }}>
+                    {n.texto}{" "}
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 11, padding: "1px 6px" }}
+                      onClick={() => excluirNota(n.id)}
+                      type="button"
+                    >
+                      {t("itemRow.remover")}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+              <textarea
+                className="input"
+                rows={1}
+                style={{ flex: 1, minWidth: 160 }}
+                value={textoNota}
+                onChange={(e) => setTextoNota(e.target.value)}
+                placeholder={t("itemRow.novaNotaPlaceholder")}
+              />
+              <button
+                className="btn btn-secondary"
+                onClick={adicionarNota}
+                disabled={salvandoNota || !textoNota.trim()}
+                type="button"
+              >
+                {t("itemRow.adicionar")}
+              </button>
+            </div>
+          </div>
+
+          <button className="btn btn-secondary" onClick={() => setMaisOpcoes((v) => !v)} type="button" style={{ marginTop: 16 }}>
+            {maisOpcoes ? t("common.cancelar") : t("itemRow.maisOpcoes")}
+          </button>
+
+          {maisOpcoes && (
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <strong>{t("itemRow.classificacao")}</strong>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn btn-secondary" onClick={reavaliar} disabled={reavaliando} type="button">
+                  {reavaliando ? t("itemRow.reavaliando") : t("itemRow.reavaliar")}
+                </button>
+                <button className="btn btn-secondary" onClick={() => setEditandoManual((v) => !v)} type="button">
+                  {editandoManual ? t("common.cancelar") : t("itemRow.sobrescrever")}
+                </button>
+              </div>
+            </div>
 
             {editandoManual && (
               <div className="fields" style={{ marginTop: 12, display: "grid", gap: 10 }}>
@@ -1265,67 +1456,10 @@ function ItemRow({
               </div>
             )}
           </div>
+          )}
 
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
-            <strong>{t("itemRow.notas")}</strong>
-            {item.notas.length === 0 ? (
-              <p className="empty-state" style={{ marginTop: 8 }}>
-                {t("itemRow.nenhumaNota")}
-              </p>
-            ) : (
-              <ul style={{ margin: "8px 0", paddingLeft: 18 }}>
-                {item.notas.map((n) => (
-                  <li key={n.id} style={{ marginBottom: 6, fontSize: 13 }}>
-                    {n.texto}{" "}
-                    <button
-                      className="btn btn-secondary"
-                      style={{ fontSize: 11, padding: "1px 6px" }}
-                      onClick={() => excluirNota(n.id)}
-                      type="button"
-                    >
-                      {t("itemRow.remover")}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {sessoes.length === 0 ? (
-              <p className="field-hint">{t("itemRow.crieSessaoParaNotas")}</p>
-            ) : (
-              <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
-                <select
-                  className="input"
-                  style={{ maxWidth: 160 }}
-                  value={sessaoNotaId}
-                  onChange={(e) => setSessaoNotaId(e.target.value)}
-                >
-                  <option value="">{t("itemRow.sessaoPlaceholder")}</option>
-                  {sessoes.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {new Date(s.data).toLocaleDateString("pt-BR")}
-                    </option>
-                  ))}
-                </select>
-                <textarea
-                  className="input"
-                  rows={1}
-                  style={{ flex: 1, minWidth: 160 }}
-                  value={textoNota}
-                  onChange={(e) => setTextoNota(e.target.value)}
-                  placeholder={t("itemRow.novaNotaPlaceholder")}
-                />
-                <button
-                  className="btn btn-secondary"
-                  onClick={adicionarNota}
-                  disabled={salvandoNota || !sessaoNotaId || !textoNota.trim()}
-                  type="button"
-                >
-                  {t("itemRow.adicionar")}
-                </button>
-              </div>
-            )}
-          </div>
-
+          {maisOpcoes && (
+          <>
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
             <strong>{t("itemRow.anexos")}</strong>
             {item.anexos.length === 0 ? (
@@ -1419,7 +1553,13 @@ function ItemRow({
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
+      )}
+
+      {verProcedimento && procedimentoVinculado && (
+        <ProcedimentoFullscreen procedimentoId={procedimentoVinculado.id} onClose={() => setVerProcedimento(false)} />
       )}
     </div>
   );

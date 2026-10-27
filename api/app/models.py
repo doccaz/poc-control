@@ -275,8 +275,10 @@ class Nota(Base):
     item_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("itens.id", ondelete="CASCADE"), nullable=False
     )
-    sessao_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("sessoes.id", ondelete="CASCADE"), nullable=False
+    # Opcional: a nota nasce no item (aba Plano de testes) e só eventualmente é associada a
+    # uma sessão depois — ver Andamento, que já agrupa pelo bucket "sem sessão vinculada".
+    sessao_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sessoes.id", ondelete="SET NULL"), nullable=True
     )
     texto: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

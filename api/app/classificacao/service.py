@@ -32,15 +32,32 @@ def texto_item(item: Item) -> str:
     return "\n".join(partes)
 
 
-def _buscar_candidatos(db: Session, vetor: list[float]) -> list[ProcedimentoChunk]:
+def _buscar_candidatos(db: Session, vetor: list[float], limit: int = TOP_K) -> list[ProcedimentoChunk]:
     return (
         db.query(ProcedimentoChunk)
         .join(Procedimento)
         .filter(Procedimento.status == StatusProcedimento.validado)
         .order_by(ProcedimentoChunk.embedding.cosine_distance(vetor))
-        .limit(TOP_K)
+        .limit(limit)
         .all()
     )
+
+
+def sugerir_procedimentos(
+    db: Session, item: Item, api_key: str | None = None, limite: int = 5
+) -> list[Procedimento]:
+    """Procedimentos validados mais parecidos com o item, por similaridade semântica (mesma
+    busca vetorial usada em classificar_item) — sem a confirmação do Gemini nem a busca web,
+    só o ranking, pra alimentar o seletor de "Importar procedimento validado" na UI."""
+    texto = texto_item(item)
+    chunks = _buscar_candidatos(db, embed_query(texto, api_key=api_key), limit=limite * 3)
+    vistos: dict[uuid.UUID, Procedimento] = {}
+    for c in chunks:
+        if c.procedimento_id not in vistos:
+            vistos[c.procedimento_id] = c.procedimento
+        if len(vistos) >= limite:
+            break
+    return list(vistos.values())
 
 
 def _salvar_auto(

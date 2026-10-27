@@ -872,6 +872,39 @@ textarea.input {
   border-radius: var(--radius-sm);
 }
 
+.html-frame-fullscreen {
+  height: 100%;
+  border-radius: 0;
+  border: 0;
+}
+
+/* Visualizador de procedimento em tela cheia, aberto de dentro do item do Plano de testes
+   (position: fixed não depende de onde fica no DOM, por isso dá pra ficar dentro do ItemRow
+   sem precisar de portal). */
+.procedimento-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.procedimento-fullscreen-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-pine);
+  color: var(--head-ink);
+}
+
+.procedimento-fullscreen .html-frame-fullscreen {
+  flex: 1;
+}
+
 /* Login */
 
 .login-shell {

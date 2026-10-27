@@ -126,7 +126,7 @@ export interface SessaoPayload {
 
 export interface Nota {
   id: string;
-  sessao_id: string;
+  sessao_id: string | null;
   texto: string;
   created_at: string;
 }
@@ -295,7 +295,7 @@ export const api = {
       body: JSON.stringify({ resumo_executivo: texto }),
     }),
 
-  criarNota: (pocId: string, itemId: string, sessaoId: string, texto: string) =>
+  criarNota: (pocId: string, itemId: string, sessaoId: string | null, texto: string) =>
     request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/notas`, {
       method: "POST",
       body: JSON.stringify({ sessao_id: sessaoId, texto }),
@@ -309,4 +309,7 @@ export const api = {
     request<ItemPoc>(`/api/pocs/${pocId}/itens/${itemId}/anexos/${anexoId}`, { method: "DELETE" }),
   urlAnexo: (pocId: string, itemId: string, anexoId: string) =>
     `/api/pocs/${pocId}/itens/${itemId}/anexos/${anexoId}`,
+
+  sugerirProcedimentos: (pocId: string, itemId: string) =>
+    request<ProcedimentoListItem[]>(`/api/pocs/${pocId}/itens/${itemId}/sugestoes-procedimento`),
 };

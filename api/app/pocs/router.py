@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.classificacao.service import classificar_item
+from app.classificacao.service import classificar_item, sugerir_procedimentos
 from app.classificacao.tasks import classificar_pendentes
 from app.config import settings
 from app.db import get_db
@@ -32,6 +32,7 @@ from app.models import (
 from app.pocs.apresentacao import montar_apresentacao_html
 from app.pocs.export import montar_export_html
 from app.pocs.planner_import import extrair_parametros_tecnicos
+from app.procedimentos.schemas import ProcedimentoListItem as ProcedimentoListItemOut
 from app.pocs.roteiro import montar_roteiro_html
 from app.pocs.schemas import (
     ClassificacaoManualUpdate,
@@ -375,6 +376,18 @@ def classificar_item_individual(
     return item
 
 
+@router.get("/{poc_id}/itens/{item_id}/sugestoes-procedimento", response_model=list[ProcedimentoListItemOut])
+def sugerir_procedimento_para_item(
+    poc_id: uuid.UUID,
+    item_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    item = _get_item_or_404(db, poc_id, item_id)
+    sugestoes = sugerir_procedimentos(db, item, api_key=resolve_api_key(current_user))
+    return [ProcedimentoListItemOut.model_validate(p) for p in sugestoes]
+
+
 @router.patch("/{poc_id}/itens/{item_id}/classificacao", response_model=ItemOut)
 def sobrescrever_classificacao(
     poc_id: uuid.UUID, item_id: uuid.UUID, payload: ClassificacaoManualUpdate, db: Session = Depends(get_db)
@@ -525,7 +538,8 @@ def obter_resumo_sessao(
 @router.post("/{poc_id}/itens/{item_id}/notas", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
 def criar_nota(poc_id: uuid.UUID, item_id: uuid.UUID, payload: NotaCreate, db: Session = Depends(get_db)):
     item = _get_item_or_404(db, poc_id, item_id)
-    _get_sessao_or_404(db, poc_id, payload.sessao_id)
+    if payload.sessao_id is not None:
+        _get_sessao_or_404(db, poc_id, payload.sessao_id)
     db.add(Nota(item_id=item.id, sessao_id=payload.sessao_id, texto=payload.texto))
     db.commit()
     db.refresh(item)

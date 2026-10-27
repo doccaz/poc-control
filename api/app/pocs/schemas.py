@@ -77,13 +77,13 @@ class NotaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    sessao_id: uuid.UUID
+    sessao_id: uuid.UUID | None
     texto: str
     created_at: datetime
 
 
 class NotaCreate(BaseModel):
-    sessao_id: uuid.UUID
+    sessao_id: uuid.UUID | None = None
     texto: str
 
 
