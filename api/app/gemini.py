@@ -27,6 +27,39 @@ def modelo_efetivo(model: str | None) -> str:
     return model or _TEXT_MODEL
 
 
+class ModeloDisponivel(BaseModel):
+    nome: str
+    nome_exibicao: str
+
+
+_PALAVRAS_EXCLUIDAS_SELETOR = ("tts", "image", "transcribe", "computer-use", "robotics", "omni", "banana")
+
+
+def listar_modelos_texto(api_key: str | None = None) -> list[ModeloDisponivel]:
+    """Modelos de texto que a chave de API (pessoal ou compartilhada) tem acesso de verdade,
+    pra Minha conta oferecer um seletor em vez de um campo livre onde o usuário tem que
+    adivinhar/digitar um nome de modelo que pode nem existir pro plano da chave dele.
+
+    O catálogo completo do Gemini inclui bem mais que os modelos de chat/texto que esta função
+    de fato usa (TTS, geração de imagem, transcrição, robótica, etc. — todos respondem
+    `generateContent`, mas não servem pros prompts com `response_schema` deste app). Por isso,
+    além de exigir o prefixo "gemini-", filtra por palavra-chave em vez de uma lista fixa de
+    nomes, que ficaria desatualizada a cada novo lançamento do Google."""
+    client = _client(api_key)
+    modelos = []
+    for m in client.models.list(config={"page_size": 200}):
+        if "generateContent" not in (m.supported_actions or []):
+            continue
+        nome = (m.name or "").removeprefix("models/")
+        if not nome.startswith("gemini-"):
+            continue
+        if any(palavra in nome for palavra in _PALAVRAS_EXCLUIDAS_SELETOR):
+            continue
+        modelos.append(ModeloDisponivel(nome=nome, nome_exibicao=m.display_name or nome))
+    modelos.sort(key=lambda x: x.nome)
+    return modelos
+
+
 def interpretar_erro_gemini(exc: Exception) -> str:
     """Traduz os erros mais comuns da API do Gemini pra uma mensagem acionável, em vez do
     dump cru da exceção (ex.: "503 UNAVAILABLE {'error': {...}}"), que é o que aparecia antes

@@ -1,5 +1,5 @@
-import { FormEvent, useState } from "react";
-import { api, User } from "../api";
+import { FormEvent, useEffect, useState } from "react";
+import { api, ModeloGemini, User } from "../api";
 import { useLanguage } from "../i18n";
 
 export function MinhaConta({
@@ -19,6 +19,18 @@ export function MinhaConta({
   const [modelo, setModelo] = useState(user.gemini_model ?? "");
   const [salvandoModelo, setSalvandoModelo] = useState(false);
   const [modeloSalvo, setModeloSalvo] = useState(false);
+  const [modelosDisponiveis, setModelosDisponiveis] = useState<ModeloGemini[] | null>(null);
+  const [carregandoModelos, setCarregandoModelos] = useState(true);
+  const [erroModelos, setErroModelos] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .listarModelosGemini()
+      .then(setModelosDisponiveis)
+      .catch(() => setErroModelos(t("minhaConta.modeloErroListar")))
+      .finally(() => setCarregandoModelos(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -51,21 +63,11 @@ export function MinhaConta({
     e.preventDefault();
     setSalvandoModelo(true);
     try {
-      const atualizado = await api.salvarModeloGemini(modelo.trim());
+      const valor = modelo.trim();
+      const atualizado = valor ? await api.salvarModeloGemini(valor) : await api.removerModeloGemini();
       onUserAtualizado(atualizado);
       setModeloSalvo(true);
       window.setTimeout(() => setModeloSalvo(false), 3000);
-    } finally {
-      setSalvandoModelo(false);
-    }
-  }
-
-  async function removerModelo() {
-    setSalvandoModelo(true);
-    try {
-      const atualizado = await api.removerModeloGemini();
-      onUserAtualizado(atualizado);
-      setModelo("");
     } finally {
       setSalvandoModelo(false);
     }
@@ -136,26 +138,43 @@ export function MinhaConta({
         <form onSubmit={salvarModelo} className="form">
           <div className="field">
             <label htmlFor="gemini-model">{t("minhaConta.modeloLabel")}</label>
-            <input
-              id="gemini-model"
-              type="text"
-              className="input"
-              value={modelo}
-              onChange={(e) => setModelo(e.target.value)}
-              placeholder="gemini-3.8-flash"
-              autoComplete="off"
-            />
-            <p className="field-hint">{t("minhaConta.modeloVazioHint")}</p>
+            {erroModelos ? (
+              <input
+                id="gemini-model"
+                type="text"
+                className="input"
+                value={modelo}
+                onChange={(e) => setModelo(e.target.value)}
+                placeholder="gemini-3.8-flash"
+                autoComplete="off"
+              />
+            ) : (
+              <select
+                id="gemini-model"
+                className="input"
+                value={modelo}
+                onChange={(e) => setModelo(e.target.value)}
+                disabled={carregandoModelos}
+              >
+                <option value="">{t("minhaConta.usarDefault")}</option>
+                {modelosDisponiveis?.map((m) => (
+                  <option key={m.nome} value={m.nome}>
+                    {m.nome_exibicao} ({m.nome})
+                  </option>
+                ))}
+                {modelo && modelosDisponiveis && !modelosDisponiveis.some((m) => m.nome === modelo) && (
+                  <option value={modelo}>{modelo}</option>
+                )}
+              </select>
+            )}
+            <p className="field-hint">
+              {erroModelos ?? (carregandoModelos ? t("minhaConta.modeloCarregando") : t("minhaConta.modeloVazioHint"))}
+            </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn btn-primary" disabled={salvandoModelo || !modelo.trim()}>
+            <button type="submit" className="btn btn-primary" disabled={salvandoModelo}>
               {salvandoModelo ? t("common.salvando") : modeloSalvo ? t("minhaConta.salva") : t("common.salvar")}
             </button>
-            {user.gemini_model && (
-              <button type="button" className="btn btn-secondary" onClick={removerModelo} disabled={salvandoModelo}>
-                {t("minhaConta.usarDefault")}
-              </button>
-            )}
           </div>
         </form>
       </div>

@@ -84,7 +84,9 @@ const DICT: Record<Lang, Record<string, string>> = {
     "minhaConta.modeloHint":
       "Por padrão, as chamadas de IA usam o modelo configurado no servidor. Você pode fixar um modelo diferente para a sua conta — útil se a sua chave de API tiver acesso a um modelo diferente do default (o conjunto de modelos disponíveis depende do plano de cada chave).",
     "minhaConta.modeloLabel": "Nome do modelo",
-    "minhaConta.modeloVazioHint": "Deixe em branco e remova para voltar a usar o modelo default do servidor.",
+    "minhaConta.modeloVazioHint": "Lista obtida direto da sua chave de API (ou da compartilhada, se você não tiver a própria) — só aparecem os modelos aos quais ela realmente tem acesso.",
+    "minhaConta.modeloCarregando": "Consultando os modelos disponíveis na sua chave...",
+    "minhaConta.modeloErroListar": "Não foi possível consultar os modelos disponíveis agora. Digite o nome manualmente.",
     "minhaConta.usarDefault": "Usar o default do servidor",
 
     "pocs.titulo": "POCs",
@@ -365,7 +367,9 @@ const DICT: Record<Lang, Record<string, string>> = {
     "minhaConta.modeloHint":
       "By default, AI calls use the model configured on the server. You can pin a different model for your account — useful if your API key has access to a different model than the default (the set of available models depends on each key's plan).",
     "minhaConta.modeloLabel": "Model name",
-    "minhaConta.modeloVazioHint": "Leave it blank and remove it to go back to the server's default model.",
+    "minhaConta.modeloVazioHint": "List fetched straight from your API key (or the shared one, if you don't have your own) — only models it actually has access to show up.",
+    "minhaConta.modeloCarregando": "Checking the models available to your key...",
+    "minhaConta.modeloErroListar": "Could not check the available models right now. Type the name manually.",
     "minhaConta.usarDefault": "Use the server's default",
 
     "pocs.titulo": "PoCs",
@@ -646,7 +650,9 @@ const DICT: Record<Lang, Record<string, string>> = {
     "minhaConta.modeloHint":
       "Por defecto, las llamadas de IA usan el modelo configurado en el servidor. Puede fijar un modelo distinto para su cuenta — útil si su clave de API tiene acceso a un modelo diferente del predeterminado (el conjunto de modelos disponibles depende del plan de cada clave).",
     "minhaConta.modeloLabel": "Nombre del modelo",
-    "minhaConta.modeloVazioHint": "Déjelo en blanco y elimínelo para volver a usar el modelo predeterminado del servidor.",
+    "minhaConta.modeloVazioHint": "Lista obtenida directamente de su clave de API (o de la compartida, si no tiene la suya) — solo aparecen los modelos a los que ella realmente tiene acceso.",
+    "minhaConta.modeloCarregando": "Consultando los modelos disponibles para su clave...",
+    "minhaConta.modeloErroListar": "No se pudieron consultar los modelos disponibles ahora. Escriba el nombre manualmente.",
     "minhaConta.usarDefault": "Usar el predeterminado del servidor",
 
     "pocs.titulo": "POCs",

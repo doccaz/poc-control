@@ -8,6 +8,8 @@ from app.config import settings
 from app.crypto import encrypt_secret
 from app.db import get_db
 from app.deps import SESSION_COOKIE_NAME, get_current_user
+from app.gemini import interpretar_erro_gemini, listar_modelos_texto
+from app.gemini_key import resolve_api_key
 from app.models import User
 from app.security import create_session_cookie, verify_password
 
@@ -33,6 +35,11 @@ class GeminiKeyUpdate(BaseModel):
 
 class GeminiModelUpdate(BaseModel):
     model: str = Field(min_length=1, max_length=100)
+
+
+class ModeloDisponivelOut(BaseModel):
+    nome: str
+    nome_exibicao: str
 
 
 def _user_out(user: User) -> UserOut:
@@ -104,3 +111,14 @@ def remover_modelo_gemini(user: User = Depends(get_current_user), db: Session = 
     user.gemini_model = None
     db.commit()
     return _user_out(user)
+
+
+@router.get("/me/gemini-models", response_model=list[ModeloDisponivelOut])
+def listar_modelos_gemini_disponiveis(user: User = Depends(get_current_user)):
+    """Consulta a própria API do Gemini pelos modelos que a chave em uso (pessoal ou
+    compartilhada) tem acesso de verdade — usado pra popular o seletor em Minha conta."""
+    try:
+        modelos = listar_modelos_texto(resolve_api_key(user))
+    except Exception as exc:  # noqa: BLE001 - qualquer erro da chamada ao Gemini vira 502 com mensagem acionável
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, interpretar_erro_gemini(exc))
+    return [ModeloDisponivelOut(nome=m.nome, nome_exibicao=m.nome_exibicao) for m in modelos]

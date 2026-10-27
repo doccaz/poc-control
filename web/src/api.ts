@@ -91,6 +91,11 @@ export interface Fonte {
   url: string;
 }
 
+export interface ModeloGemini {
+  nome: string;
+  nome_exibicao: string;
+}
+
 export interface Classificacao {
   flag: FlagClassificacao;
   origem: OrigemClassificacao;
@@ -228,6 +233,7 @@ export const api = {
   salvarModeloGemini: (model: string) =>
     request<User>("/api/auth/me/gemini-model", { method: "PUT", body: JSON.stringify({ model }) }),
   removerModeloGemini: () => request<User>("/api/auth/me/gemini-model", { method: "DELETE" }),
+  listarModelosGemini: () => request<ModeloGemini[]>("/api/auth/me/gemini-models"),
 
   listarProcedimentos: () => request<ProcedimentoListItem[]>("/api/procedimentos"),
   obterProcedimento: (id: string) => request<ProcedimentoDetail>(`/api/procedimentos/${id}`),
