@@ -1080,10 +1080,14 @@ function renderProjectsList(){
     + rows.map(p => '<div class="flex justify-between items-center" style="padding:8px 0;border-top:1px solid var(--gray-100);">'
         + '<div><div style="font-weight:'+(p.cur?'900':'700')+';font-size:13px;">' + esc(p.name) + (p.cur ? ' <span class="pill pill-ok">'+tr('projects.current')+'</span>' : '') + '</div>'
         + '<div class="text-xs text-muted">' + (p.cur ? esc(state.project.clientOrganization||'') + ' · ' + nProducts + ' ' + unit : tr('projects.updated') + ' ' + fmtTime(p.updatedAt)) + '</div></div>'
-        + (p.cur ? '' : '<div class="flex gap-2">'
-          + '<button class="btn btn-outline btn-sm" onclick="P.switchProject(\''+p.id+'\')">' + Icon('chevronR') + ' ' + tr('projects.open') + '</button>'
+        /* O projeto atual não tinha NENHUM botão aqui (nem abrir, que não faz sentido pra quem
+           já está aberto, nem excluir) -- pedido explícito do usuário: poder excluir o projeto
+           atual também, não só os outros. P.deleteProject já sabe trocar pra outro projeto (ou
+           criar um novo em branco) quando o excluído é o que está ativo. */
+        + '<div class="flex gap-2">'
+          + (p.cur ? '' : '<button class="btn btn-outline btn-sm" onclick="P.switchProject(\''+p.id+'\')">' + Icon('chevronR') + ' ' + tr('projects.open') + '</button>')
           + '<button class="btn btn-ghost btn-sm" title="'+tr('projects.delete')+'" onclick="P.deleteProject(\''+p.id+'\')">' + Icon('trash') + '</button>'
-        + '</div>')
+        + '</div>'
       + '</div>').join('')
   + '</div>';
 }

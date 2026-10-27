@@ -37,7 +37,17 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--gray-50);
   color: var(--gray-900);
+  /* #planner-root por si só só tem a altura do próprio conteúdo (auto); .app-shell abaixo usa
+     min-height:100% pra cobrir pelo menos a tela toda em etapas curtas (ex.: dashboard de
+     projetos), mas porcentagem de altura só resolve contra um ancestral de altura definida --
+     sem isso aqui e em #app, a cadeia quebra em "auto" e vira "sem mínimo nenhum". Resultado:
+     em telas curtas, o fundo de #planner-root (--gray-50) parava onde o conteúdo acabava, e o
+     resto da página (dentro do <main class="page-flush">, que tem altura fixa de
+     calc(100vh - 56px) -- ver .page-flush em web/src/styles.css) mostrava o fundo do app
+     (--color-bg), criando o corte de duas cores na metade da tela. */
+  height: 100%;
 }
+#planner-root #app { height: 100%; }
 #planner-root .app-shell { min-height: 100%; display: flex; flex-direction: column; padding-bottom: 110px; }
 /* Estático (não sticky) e na mesma cor da topbar real do app (var(--color-pine), de
    web/src/styles.css) -- o header original tinha cor/gradiente próprios e position:sticky com
