@@ -1,12 +1,21 @@
 import path from "node:path";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(path.resolve(__dirname, "package.json"), "utf-8"));
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Rodapé do app (Layout.tsx) mostra isto pra dar pra confirmar visualmente se um deploy
+    // pegou -- calculado agora, no momento do `vite build` (dentro do container, no build da
+    // imagem), não em runtime no navegador.
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   resolve: {
     alias: {
       // Alias estável p/ imports entre features (web/src/features/*) sem depender da

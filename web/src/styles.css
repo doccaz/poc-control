@@ -31,6 +31,44 @@
   color-scheme: light;
 }
 
+/* Modo noturno: alterna via atributo data-theme na <html>, trocado pelo botão no topbar
+   (Layout.tsx) e persistido na mesma chave de localStorage que o motor do Planejar PoC já usava
+   internamente (engine/plannerEngine.js, THEME_KEY) -- os dois lados ficam em sincronia de
+   graça, sem precisar que um avise o outro. --color-pine continua só pra fundo escuro (topbar/
+   sidebar/cabeçalho de POC); --color-primary é a cor de marca usada como texto/borda, por isso
+   muda pra um verde mais claro aqui -- ver também o ajuste de .chip-suse abaixo, que usava
+   --color-pine (pensada só pra fundo) como cor de texto. */
+:root[data-theme="dark"] {
+  --color-bg: #0b1512;
+  --color-surface: #13241f;
+  --color-border: #28392f;
+  --color-text: #eaf3ee;
+  --color-text-muted: #9bb3a9;
+
+  --color-pine: #15372f;
+  --color-pine-hover: #1c4339;
+  --color-primary: #2bbf7a;
+  --color-primary-hover: #35d58b;
+  --color-primary-contrast: #06140f;
+  --color-primary-soft: #1a4535;
+
+  --color-success: #3ecf87;
+  --color-success-soft: #123523;
+  --color-warning: #f0b23c;
+  --color-warning-soft: #3a2a0d;
+  --color-danger: #ef6a5a;
+  --color-danger-soft: #3a1512;
+  --color-info: #6fa1ff;
+  --color-info-soft: #12213a;
+
+  --head-ink: #ffffff;
+  --head-muted: #a9c7bc;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 10px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -155,6 +193,40 @@ h2 {
   background: rgba(255, 255, 255, 0.14);
   color: var(--head-ink);
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--head-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--head-ink);
+}
+
+.build-info {
+  position: fixed;
+  left: 10px;
+  bottom: 6px;
+  z-index: 15;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  opacity: 0.8;
+  white-space: nowrap;
 }
 
 .sidebar-backdrop {
@@ -582,8 +654,8 @@ textarea.input {
 }
 
 .chip-suse {
-  border: 1px solid var(--color-pine);
-  color: var(--color-pine);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
   border-style: solid;
 }
 
