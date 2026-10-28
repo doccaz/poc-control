@@ -24,10 +24,12 @@ def upgrade() -> None:
     origem_classificacao_enum = postgresql.ENUM(
         "auto", "manual", name="origem_classificacao", create_type=False
     )
+    # Tipo novo (sem create_type=False) -- diferente dos dois reaproveitados acima, este ainda
+    # não existe no banco; create_table abaixo já emite o CREATE TYPE pra ele uma única vez
+    # (mesmo padrão de 0004/0005 pro primeiro uso de status_extracao/flag_classificacao).
     veredito_rfi_enum = postgresql.ENUM(
         "atende", "atende_parcial", "nao_atende", "sem_evidencia", name="veredito_rfi"
     )
-    veredito_rfi_enum.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
         "rfis",
