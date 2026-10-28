@@ -109,7 +109,7 @@ export function PocUpload() {
                 <input
                   id="arquivo"
                   type="file"
-                  accept=".pdf,.json,.txt,.md,application/pdf,application/json,text/plain,text/markdown"
+                  accept=".pdf,.json,.txt,.md,.xlsx,.csv,application/pdf,application/json,text/plain,text/markdown,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
                 />
                 <p className="field-hint">

@@ -109,7 +109,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     "pocs.erroExtracao": "erro",
 
     "pocUpload.titulo": "Nova POC",
-    "pocUpload.erroSelecione": "Selecione o PDF, ou o JSON/texto do plano de testes",
+    "pocUpload.erroSelecione": "Selecione o PDF, a planilha (XLSX/CSV) ou o JSON/texto do plano de testes",
     "pocUpload.erroCole": "Cole o plano de testes (texto ou JSON)",
     "pocUpload.erroCriar": "Não foi possível criar a POC",
     "pocUpload.labelTitulo": "Título",
@@ -122,7 +122,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     "pocUpload.hintArquivo1": "PDF da POC, ou o JSON exportado em ",
     "pocUpload.hintArquivoPath": "Planejar PoC → Resumo → Exportar Projeto",
     "pocUpload.hintArquivo2":
-      " (ou um .txt/.md com o plano de testes). O Gemini extrai o plano de testes (fases, itens e pré-requisitos) em segundo plano.",
+      " (ou um .txt/.md/.xlsx/.csv com o plano de testes). O Gemini extrai o plano de testes (fases, itens e pré-requisitos) em segundo plano.",
     "pocUpload.textoPlaceholder":
       "Cole aqui o plano de testes em texto, ou o JSON exportado em Planejar PoC → Resumo → Exportar Projeto",
     "pocUpload.hintTexto1": "Cole o texto do plano de testes do cliente, ou o conteúdo do JSON exportado em ",
@@ -397,7 +397,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     "pocs.erroExtracao": "error",
 
     "pocUpload.titulo": "New PoC",
-    "pocUpload.erroSelecione": "Select the PDF, or the test plan JSON/text",
+    "pocUpload.erroSelecione": "Select the PDF, the spreadsheet (XLSX/CSV), or the test plan JSON/text",
     "pocUpload.erroCole": "Paste the test plan (text or JSON)",
     "pocUpload.erroCriar": "Could not create the PoC",
     "pocUpload.labelTitulo": "Title",
@@ -410,7 +410,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     "pocUpload.hintArquivo1": "The PoC's PDF, or the JSON exported from ",
     "pocUpload.hintArquivoPath": "Plan a PoC → Summary → Export Project",
     "pocUpload.hintArquivo2":
-      " (or a .txt/.md file with the test plan). Gemini extracts the test plan (phases, items and prerequisites) in the background.",
+      " (or a .txt/.md/.xlsx/.csv file with the test plan). Gemini extracts the test plan (phases, items and prerequisites) in the background.",
     "pocUpload.textoPlaceholder":
       "Paste the test plan as text here, or the JSON exported from Plan a PoC → Summary → Export Project",
     "pocUpload.hintTexto1": "Paste the client's test plan text, or the content of the JSON exported from ",
@@ -685,7 +685,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     "pocs.erroExtracao": "error",
 
     "pocUpload.titulo": "Nueva POC",
-    "pocUpload.erroSelecione": "Seleccione el PDF, o el JSON/texto del plan de pruebas",
+    "pocUpload.erroSelecione": "Seleccione el PDF, la planilla (XLSX/CSV), o el JSON/texto del plan de pruebas",
     "pocUpload.erroCole": "Pegue el plan de pruebas (texto o JSON)",
     "pocUpload.erroCriar": "No se pudo crear la POC",
     "pocUpload.labelTitulo": "Título",
@@ -698,7 +698,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     "pocUpload.hintArquivo1": "El PDF de la POC, o el JSON exportado en ",
     "pocUpload.hintArquivoPath": "Planificar PoC → Resumen → Exportar Proyecto",
     "pocUpload.hintArquivo2":
-      " (o un .txt/.md con el plan de pruebas). Gemini extrae el plan de pruebas (fases, ítems y prerrequisitos) en segundo plano.",
+      " (o un .txt/.md/.xlsx/.csv con el plan de pruebas). Gemini extrae el plan de pruebas (fases, ítems y prerrequisitos) en segundo plano.",
     "pocUpload.textoPlaceholder":
       "Pegue aquí el plan de pruebas en texto, o el JSON exportado en Planificar PoC → Resumen → Exportar Proyecto",
     "pocUpload.hintTexto1": "Pegue el texto del plan de pruebas del cliente, o el contenido del JSON exportado en ",

@@ -32,6 +32,7 @@ from app.models import (
 )
 from app.pocs.apresentacao import montar_apresentacao_html
 from app.pocs.export import montar_export_html
+from app.pocs.planilha_import import texto_de_planilha
 from app.pocs.planner_import import extrair_parametros_tecnicos
 from app.procedimentos.router import _criar_procedimento
 from app.procedimentos.schemas import ProcedimentoListItem as ProcedimentoListItemOut
@@ -112,11 +113,14 @@ def criar_poc(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Entrada aceita PDF (upload original) OU texto/JSON — este último cobre tanto colar o
-    # plano de testes em texto quanto subir o JSON exportado pelo "Planejar PoC" (botão
-    # "Exportar Projeto" na etapa Resumo), já que o Gemini sabe interpretar os dois formatos
-    # (ver prompt em app/gemini.py).
+    # Entrada aceita PDF (upload original, lido nativamente pelo Gemini) OU texto/JSON/XLSX/CSV
+    # — este último grupo cobre colar o plano de testes em texto, subir o JSON exportado pelo
+    # "Planejar PoC" (botão "Exportar Projeto" na etapa Resumo), ou subir uma planilha de
+    # caderno de testes (convertida para texto tabular em app/pocs/planilha_import.py antes de
+    # ir pro Gemini, que não lê XLSX nativamente como lê PDF). O Gemini sabe interpretar todos
+    # esses formatos (ver prompt em app/gemini.py).
     pdf_bytes: bytes | None = None
+    planilha_bytes: bytes | None = None
     nome_arquivo: str | None = None
     texto_arquivo: str | None = None
 
@@ -125,15 +129,25 @@ def criar_poc(
         if not conteudo:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Arquivo vazio")
         nome_arquivo = arquivo.filename
-        if nome_arquivo.lower().endswith(".pdf"):
+        extensao = pathlib.Path(nome_arquivo).suffix.lower()
+        if extensao == ".pdf":
             pdf_bytes = conteudo
+        elif extensao in (".xlsx", ".csv"):
+            try:
+                texto_arquivo = texto_de_planilha(conteudo, extensao)
+            except ValueError as exc:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
+            # Guarda os bytes originais da planilha (não o texto convertido) pra salvar em
+            # disco com a extensão real — ver bloco de persistência abaixo.
+            planilha_bytes = conteudo
         else:
             try:
                 texto_arquivo = conteudo.decode("utf-8")
             except UnicodeDecodeError:
                 raise HTTPException(
                     status.HTTP_400_BAD_REQUEST,
-                    "Não foi possível ler o arquivo como texto; envie um PDF ou um arquivo de texto/JSON em UTF-8",
+                    "Não foi possível ler o arquivo como texto; envie um PDF, uma planilha XLSX/CSV, "
+                    "ou um arquivo de texto/JSON em UTF-8",
                 )
 
     texto_final = (texto or "").strip() or texto_arquivo
@@ -159,6 +173,10 @@ def criar_poc(
         nome = nome_arquivo or "poc.pdf"
         caminho = poc_dir / nome
         caminho.write_bytes(pdf_bytes)
+    elif planilha_bytes:
+        nome = nome_arquivo or "plano-importado.xlsx"
+        caminho = poc_dir / nome
+        caminho.write_bytes(planilha_bytes)
     else:
         nome = nome_arquivo or "plano-importado.txt"
         caminho = poc_dir / nome
@@ -225,8 +243,14 @@ def reextrair_poc(
 
     pdf_bytes: bytes | None = None
     texto: str | None = None
-    if caminho.suffix.lower() == ".pdf":
+    extensao = caminho.suffix.lower()
+    if extensao == ".pdf":
         pdf_bytes = caminho.read_bytes()
+    elif extensao in (".xlsx", ".csv"):
+        try:
+            texto = texto_de_planilha(caminho.read_bytes(), extensao)
+        except ValueError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
     else:
         texto = caminho.read_text(encoding="utf-8")
 

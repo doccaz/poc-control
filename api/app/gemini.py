@@ -182,6 +182,16 @@ como cliente sugerido; agrupe os itens por produto (as chaves marcadas `true` em
 como fases; cada entrada de `testCases[<produto>]` é um item, com `titulo` a partir de `text`, \
 `categoria` a partir do nome do produto, e `criterio_aceite` inferido do próprio `text` (esse formato \
 não tem um campo de critério separado).
+- Uma planilha (XLSX/CSV) convertida em texto tabular, com linhas no formato "coluna1 | coluna2 | ...", \
+geralmente com uma linha de cabeçalho. É comum ser um caderno de testes/checklist comparando um produto \
+de referência (ex. "VMware vCenter") com o produto avaliado, com colunas como categoria/tópico, nome da \
+funcionalidade, se o concorrente suporta, se o produto avaliado suporta (S/N ou similar) e uma observação/ \
+justificativa. Os nomes exatos das colunas variam de planilha para planilha — identifique pelo conteúdo, \
+não por nomes fixos. Trate cada linha de dado (não a de cabeçalho) como um item: `titulo` a partir da \
+coluna de funcionalidade/requisito; `categoria` a partir da coluna de tópico/agrupamento (já vem repetida \
+em todas as linhas do grupo); `criterio_aceite` enunciando a funcionalidade como requisito de aceite (ex.: \
+"Suportar <funcionalidade>"); `descricao` a partir da coluna de observação/justificativa, se houver (senão \
+repita o critério de aceite de forma mais detalhada). Agrupe os itens em fases a partir das categorias.
 
 Devolva:
 - titulo_sugerido: título curto da PoC (produto/tecnologia principal).
