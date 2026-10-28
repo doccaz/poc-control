@@ -102,23 +102,14 @@ def listar_pocs(db: Session = Depends(get_db)):
     return [_list_item(db, poc) for poc in pocs]
 
 
-@router.post("", response_model=PocListItem, status_code=status.HTTP_201_CREATED)
-def criar_poc(
-    background_tasks: BackgroundTasks,
-    titulo: str = Form(...),
-    cliente: str = Form(...),
-    escopo: str = Form(""),
-    arquivo: UploadFile | None = File(None),
-    texto: str | None = Form(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    # Entrada aceita PDF (upload original, lido nativamente pelo Gemini) OU texto/JSON/XLSX/CSV
-    # — este último grupo cobre colar o plano de testes em texto, subir o JSON exportado pelo
-    # "Planejar PoC" (botão "Exportar Projeto" na etapa Resumo), ou subir uma planilha de
-    # caderno de testes (convertida para texto tabular em app/pocs/planilha_import.py antes de
-    # ir pro Gemini, que não lê XLSX nativamente como lê PDF). O Gemini sabe interpretar todos
-    # esses formatos (ver prompt em app/gemini.py).
+def _criar_poc_de_entrada(
+    db: Session, *, titulo: str, cliente: str, escopo: str, arquivo: UploadFile | None, texto: str | None
+) -> tuple[Poc, bytes | None, str | None]:
+    """Resolve a entrada (PDF/XLSX/CSV/texto/JSON — lida nativamente pelo Gemini no caso do \
+    PDF; os demais formatos são convertidos a texto antes, incluindo planilhas via \
+    app/pocs/planilha_import.py), cria a `Poc` e grava o documento original em disco. \
+    Compartilhado por `criar_poc` e `importar_planejador`, que só diferem em título/cliente \
+    (já conhecidos vs. a extrair) e em qual extração o background task vai rodar."""
     pdf_bytes: bytes | None = None
     planilha_bytes: bytes | None = None
     nome_arquivo: str | None = None
@@ -185,8 +176,63 @@ def criar_poc(
     db.add(PocDocumento(poc_id=poc.id, nome_arquivo=nome, caminho_arquivo=str(caminho)))
     db.commit()
 
+    return poc, pdf_bytes, texto_final
+
+
+@router.post("", response_model=PocListItem, status_code=status.HTTP_201_CREATED)
+def criar_poc(
+    background_tasks: BackgroundTasks,
+    titulo: str = Form(...),
+    cliente: str = Form(...),
+    escopo: str = Form(""),
+    arquivo: UploadFile | None = File(None),
+    texto: str | None = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Entrada aceita PDF (upload original, lido nativamente pelo Gemini) OU texto/JSON/XLSX/CSV
+    # — este último grupo cobre colar o plano de testes em texto, subir o JSON exportado pelo
+    # "Planejar PoC" (botão "Exportar Projeto" na etapa Resumo), ou subir uma planilha de
+    # caderno de testes. O Gemini sabe interpretar todos esses formatos (ver prompt em
+    # app/gemini.py). Ver também importar_planejador, abaixo, pra importação a partir do
+    # próprio planejador (sem título/cliente ainda definidos).
+    poc, pdf_bytes, texto_final = _criar_poc_de_entrada(
+        db, titulo=titulo, cliente=cliente, escopo=escopo, arquivo=arquivo, texto=texto
+    )
+
     background_tasks.add_task(
         processar_extracao, poc.id, pdf_bytes, texto_final, resolve_api_key(current_user), resolve_model(current_user)
+    )
+
+    return _list_item(db, poc)
+
+
+@router.post("/importar-planejador", response_model=PocListItem, status_code=status.HTTP_201_CREATED)
+def importar_planejador(
+    background_tasks: BackgroundTasks,
+    arquivo: UploadFile | None = File(None),
+    texto: str | None = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Importação de documento a partir do assistente "Planejar PoC" (tela inicial do app, \
+    botão "Importar documento do cliente", ou o botão "Habilitar execução desta PoC" no \
+    Resumo, que manda o próprio JSON exportado do estado em andamento). Ao contrário de \
+    `criar_poc`, título/cliente ainda não existem -- o Gemini sugere os dois (ver \
+    hidratar_planejador em app/pocs/tasks.py), que também preenche \
+    `parametros_tecnicos["hidratacao_planejador"]` pro front aplicar no estado do assistente."""
+    poc, pdf_bytes, texto_final = _criar_poc_de_entrada(
+        db, titulo="", cliente="", escopo="", arquivo=arquivo, texto=texto
+    )
+
+    background_tasks.add_task(
+        processar_extracao,
+        poc.id,
+        pdf_bytes,
+        texto_final,
+        resolve_api_key(current_user),
+        resolve_model(current_user),
+        hidratar_planejador=True,
     )
 
     return _list_item(db, poc)
@@ -259,7 +305,16 @@ def reextrair_poc(
     db.commit()
 
     background_tasks.add_task(
-        processar_extracao, poc.id, pdf_bytes, texto, resolve_api_key(current_user), resolve_model(current_user)
+        processar_extracao,
+        poc.id,
+        pdf_bytes,
+        texto,
+        resolve_api_key(current_user),
+        resolve_model(current_user),
+        # Só importar_planejador cria a Poc com título vazio -- se a primeira extração falhou
+        # antes de sugerir um, título continua vazio e o reprocessamento precisa hidratar de
+        # novo (senão o título/produtos/rede do assistente nunca chegam a ser preenchidos).
+        hidratar_planejador=not poc.titulo,
     )
     return {"status": "extraindo"}
 

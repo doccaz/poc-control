@@ -4,7 +4,6 @@ import { api, User } from "./api";
 import { LanguageProvider } from "./i18n";
 import { Login } from "./pages/Login";
 import { Layout } from "./pages/Layout";
-import { Dashboard } from "./pages/Dashboard";
 import { Usuarios } from "./pages/Usuarios";
 import { MinhaConta } from "./pages/MinhaConta";
 import { Procedimentos } from "./features/executar-poc/pages/Procedimentos";
@@ -36,7 +35,7 @@ export function App() {
       ) : (
         <Routes>
           <Route element={<Layout user={user} onLogout={() => setUser(null)} />}>
-            <Route index element={<Dashboard user={user} />} />
+            <Route index element={<PlanPoc />} />
             <Route path="procedimentos" element={<Procedimentos />} />
             <Route path="procedimentos/novo" element={<ProcedimentoUpload />} />
             <Route path="procedimentos/:id" element={<ProcedimentoView />} />
@@ -45,7 +44,7 @@ export function App() {
             <Route path="pocs/:id" element={<PocDetail />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="minha-conta" element={<MinhaConta user={user} onUserAtualizado={setUser} />} />
-            <Route path="plan" element={<PlanPoc />} />
+            <Route path="plan" element={<Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

@@ -300,6 +300,78 @@ def extrair_itens_poc(
     return ExtracaoPoc.model_validate_json(response.text)
 
 
+class HidratacaoPlanejador(BaseModel):
+    responsavel_sugerido: str = ""
+    email_responsavel_sugerido: str = ""
+    produtos_detectados: list[str] = []
+    rede_cidr_gerenciamento: str = ""
+    rede_gateway: str = ""
+    rede_vip_cluster: str = ""
+    rede_pool_ip_inicio: str = ""
+    rede_pool_ip_fim: str = ""
+
+
+class ExtracaoProjetoPlanejador(ExtracaoPoc):
+    hidratacao: HidratacaoPlanejador
+
+
+_HIDRATACAO_PROMPT = """\
+
+Além da estrutura acima, extraia também dados para pré-popular o assistente de planejamento de PoC \
+("SUSE PoC Planner") com o resultado em `hidratacao`:
+- responsavel_sugerido: nome da pessoa responsável técnica pela PoC (ex.: Solutions Architect, engenheiro \
+líder), só se estiver explícito no documento (senão string vazia — nunca invente um nome).
+- email_responsavel_sugerido: e-mail dessa pessoa, só se estiver explícito (senão string vazia).
+- produtos_detectados: quais dos produtos abaixo são mencionados ou claramente fazem parte do escopo do \
+documento. Use só os ids exatos desta lista (nunca invente outro id):
+  - virtualization: SUSE Virtualization (também chamado Harvester)
+  - rancher: Rancher Prime
+  - security: SUSE Security (também chamado NeuVector)
+  - storage: SUSE Storage (também chamado Longhorn)
+  - observability: SUSE Observability (também chamado StackState)
+  - registry: SUSE Private Registry
+  - appcollection: SUSE Application Collection
+  - manager: SUSE Multi-Linux Manager
+- rede_cidr_gerenciamento, rede_gateway, rede_vip_cluster, rede_pool_ip_inicio, rede_pool_ip_fim: valores \
+de rede/IP, só se estiverem explicitamente definidos no documento (CIDR de gerência, gateway, VIP do \
+cluster, início/fim do pool de IPs) — string vazia pra qualquer um que não esteja explícito. Nunca \
+infira ou estime um IP que não esteja escrito no documento.
+
+Nunca inclua nem infira nenhuma credencial, senha, token ou chave de API — isso não faz parte do que é \
+pedido aqui.
+"""
+
+
+def extrair_projeto_planejador(
+    pdf_bytes: bytes | None = None,
+    texto: str | None = None,
+    api_key: str | None = None,
+    model: str | None = None,
+) -> ExtracaoProjetoPlanejador:
+    if pdf_bytes:
+        conteudo: list = [types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")]
+    elif texto:
+        conteudo = [texto]
+    else:
+        raise ValueError("Informe pdf_bytes ou texto")
+    conteudo.append(_EXTRACAO_PROMPT + _HIDRATACAO_PROMPT)
+
+    response = _gerar_com_retry(
+        api_key=api_key,
+        contexto="extrair_projeto_planejador",
+        model=model or _TEXT_MODEL,
+        contents=conteudo,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ExtracaoProjetoPlanejador,
+        ),
+    )
+    parsed = response.parsed
+    if isinstance(parsed, ExtracaoProjetoPlanejador):
+        return parsed
+    return ExtracaoProjetoPlanejador.model_validate_json(response.text)
+
+
 class CandidatoProcedimento(BaseModel):
     titulo_procedimento: str
     heading_title: str

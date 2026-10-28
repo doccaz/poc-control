@@ -51,21 +51,21 @@ const T = {
 pt: {
   brand:'SUSE PoC Planner', tagline:'Planejador Enterprise de PoC',
   nav:{home:'Início',dashboard:'Painel',project:'Projeto',products:'Produtos',infra:'Infraestrutura',network:'Rede & IPs',credentials:'Credenciais',ports:'Portas',install:'Checklist de Instalação',tests:'Testes',summary:'Resumo'},
-  common:{home:'Início',back:'Voltar',next:'Avançar',finish:'Finalizar',save:'Salvar',cancel:'Cancelar',add:'Adicionar',remove:'Remover',required:'Obrigatório',optional:'Opcional',step:'Etapa',of:'de',yes:'Sim',no:'Não',edit:'Editar',export:'Exportar Projeto',import:'Importar Projeto',print:'Imprimir / PDF',newProject:'Novo Projeto',loadProject:'Carregar Projeto',warning:'Atenção',note:'Nota',officialDocs:'Documentação oficial',unverified:'Não confirmado na pesquisa — valide na documentação oficial antes de usar em produção.',savedAt:'Salvo às',resetStep:'Limpar esta etapa',resetStepConfirm:'Limpar todos os dados desta etapa? Esta ação não pode ser desfeita.',copyToAll:'Copiar para todas',invalidFile:'Arquivo JSON inválido.',missingBadge:'pendente(s) nesta etapa'},
+  common:{home:'Início',back:'Voltar',next:'Avançar',finish:'Finalizar',save:'Salvar',cancel:'Cancelar',add:'Adicionar',remove:'Remover',required:'Obrigatório',optional:'Opcional',step:'Etapa',of:'de',yes:'Sim',no:'Não',edit:'Editar',export:'Exportar Projeto',import:'Importar Projeto',print:'Imprimir / PDF',newProject:'Novo Projeto',loadProject:'Carregar Projeto',warning:'Atenção',note:'Nota',officialDocs:'Documentação oficial',unverified:'Não confirmado na pesquisa — valide na documentação oficial antes de usar em produção.',savedAt:'Salvo às',resetStep:'Limpar esta etapa',resetStepConfirm:'Limpar todos os dados desta etapa? Esta ação não pode ser desfeita.',copyToAll:'Copiar para todas',invalidFile:'Arquivo JSON inválido.',missingBadge:'pendente(s) nesta etapa',importDoc:'Importar documento do cliente',importingDoc:'Processando documento...',importDocError:'Não foi possível importar o documento. Tente novamente.',enableExecution:'Habilitar execução desta PoC',openExecution:'Abrir plano de testes (execução)'},
   dashboard:{title:'Planejador de PoC — Ecossistema SUSE',subtitle:'Monte o plano de hardware, rede, credenciais, portas e arquitetura integrada para sua Prova de Conceito.',start:'Iniciar Nova PoC',continue:'Continuar Planejamento',resetWarn:'Criar um novo projeto em branco? O projeto atual continua salvo e pode ser reaberto na lista de projetos.'},
   projects:{title:'Meus Projetos',open:'Abrir',delete:'Excluir',deleteConfirm:'Excluir este projeto permanentemente? Esta ação não pode ser desfeita.',updated:'Atualizado em',current:'Atual',empty:'Nenhum outro projeto salvo.',missingData:'Este projeto estava na lista, mas os dados dele não foram encontrados (provavelmente apagados do armazenamento do navegador). Removido da lista.'},
 },
 en: {
   brand:'SUSE PoC Planner', tagline:'Enterprise PoC Planner',
   nav:{home:'Home',dashboard:'Dashboard',project:'Project',products:'Products',infra:'Infrastructure',network:'Network & IPs',credentials:'Credentials',ports:'Ports',install:'Install Checklist',tests:'Tests',summary:'Summary'},
-  common:{home:'Home',back:'Back',next:'Next',finish:'Finish',save:'Save',cancel:'Cancel',add:'Add',remove:'Remove',required:'Required',optional:'Optional',step:'Step',of:'of',yes:'Yes',no:'No',edit:'Edit',export:'Export Project',import:'Import Project',print:'Print / PDF',newProject:'New Project',loadProject:'Load Project',warning:'Warning',note:'Note',officialDocs:'Official documentation',unverified:'Not confirmed in research — validate against official docs before production use.',savedAt:'Saved at',resetStep:'Clear this step',resetStepConfirm:'Clear all data in this step? This cannot be undone.',copyToAll:'Copy to all',invalidFile:'Invalid JSON file.',missingBadge:'pending in this step'},
+  common:{home:'Home',back:'Back',next:'Next',finish:'Finish',save:'Save',cancel:'Cancel',add:'Add',remove:'Remove',required:'Required',optional:'Optional',step:'Step',of:'of',yes:'Yes',no:'No',edit:'Edit',export:'Export Project',import:'Import Project',print:'Print / PDF',newProject:'New Project',loadProject:'Load Project',warning:'Warning',note:'Note',officialDocs:'Official documentation',unverified:'Not confirmed in research — validate against official docs before production use.',savedAt:'Saved at',resetStep:'Clear this step',resetStepConfirm:'Clear all data in this step? This cannot be undone.',copyToAll:'Copy to all',invalidFile:'Invalid JSON file.',missingBadge:'pending in this step',importDoc:'Import client document',importingDoc:'Processing document...',importDocError:'Could not import the document. Please try again.',enableExecution:'Enable execution for this PoC',openExecution:'Open test plan (execution)'},
   dashboard:{title:'PoC Planner — SUSE Ecosystem',subtitle:'Plan hardware, network, credentials, ports and integrated architecture for your Proof of Concept.',start:'Start New PoC',continue:'Continue Planning',resetWarn:'Create a new blank project? The current project stays saved and can be reopened from the project list.'},
   projects:{title:'My Projects',open:'Open',delete:'Delete',deleteConfirm:'Permanently delete this project? This cannot be undone.',updated:'Updated',current:'Current',empty:'No other saved projects.',missingData:'This project was in the list, but its data could not be found (likely cleared from browser storage). Removed from the list.'},
 },
 es: {
   brand:'SUSE PoC Planner', tagline:'Planificador Enterprise de PoC',
   nav:{home:'Inicio',dashboard:'Panel',project:'Proyecto',products:'Productos',infra:'Infraestructura',network:'Red & IPs',credentials:'Credenciales',ports:'Puertos',install:'Checklist de Instalación',tests:'Pruebas',summary:'Resumen'},
-  common:{home:'Inicio',back:'Atrás',next:'Siguiente',finish:'Finalizar',save:'Guardar',cancel:'Cancelar',add:'Agregar',remove:'Eliminar',required:'Obligatorio',optional:'Opcional',step:'Paso',of:'de',yes:'Sí',no:'No',edit:'Editar',export:'Exportar Proyecto',import:'Importar Proyecto',print:'Imprimir / PDF',newProject:'Nuevo Proyecto',loadProject:'Cargar Proyecto',warning:'Atención',note:'Nota',officialDocs:'Documentación oficial',unverified:'No confirmado en la investigación — valide en la documentación oficial antes de usar en producción.',savedAt:'Guardado a las',resetStep:'Limpiar este paso',resetStepConfirm:'¿Limpiar todos los datos de este paso? Esta acción no se puede deshacer.',copyToAll:'Copiar a todas',invalidFile:'Archivo JSON inválido.',missingBadge:'pendiente(s) en este paso'},
+  common:{home:'Inicio',back:'Atrás',next:'Siguiente',finish:'Finalizar',save:'Guardar',cancel:'Cancelar',add:'Agregar',remove:'Eliminar',required:'Obligatorio',optional:'Opcional',step:'Paso',of:'de',yes:'Sí',no:'No',edit:'Editar',export:'Exportar Proyecto',import:'Importar Proyecto',print:'Imprimir / PDF',newProject:'Nuevo Proyecto',loadProject:'Cargar Proyecto',warning:'Atención',note:'Nota',officialDocs:'Documentación oficial',unverified:'No confirmado en la investigación — valide en la documentación oficial antes de usar en producción.',savedAt:'Guardado a las',resetStep:'Limpiar este paso',resetStepConfirm:'¿Limpiar todos los datos de este paso? Esta acción no se puede deshacer.',copyToAll:'Copiar a todas',invalidFile:'Archivo JSON inválido.',missingBadge:'pendiente(s) en este paso',importDoc:'Importar documento del cliente',importingDoc:'Procesando documento...',importDocError:'No se pudo importar el documento. Intente de nuevo.',enableExecution:'Habilitar ejecución de esta PoC',openExecution:'Abrir plan de pruebas (ejecución)'},
   dashboard:{title:'Planificador de PoC — Ecosistema SUSE',subtitle:'Arme el plan de hardware, red, credenciales, puertos y arquitectura integrada para su Prueba de Concepto.',start:'Iniciar Nueva PoC',continue:'Continuar Planificación',resetWarn:'¿Crear un nuevo proyecto en blanco? El proyecto actual sigue guardado y puede reabrirse en la lista de proyectos.'},
   projects:{title:'Mis Proyectos',open:'Abrir',delete:'Eliminar',deleteConfirm:'¿Eliminar este proyecto permanentemente? Esta acción no se puede deshacer.',updated:'Actualizado',current:'Actual',empty:'No hay otros proyectos guardados.',missingData:'Este proyecto estaba en la lista, pero no se encontraron sus datos (probablemente borrados del almacenamiento del navegador). Eliminado de la lista.'},
 }
@@ -750,6 +750,11 @@ function defaultState(){
     lang:'pt',
     view:'dashboard',
     lastStep:'',   // última etapa do wizard aberta: o botão Continuar do painel volta para ela
+    // Id da PoC em execução no poc-control (backend), quando este projeto já foi importado/
+    // habilitado por lá -- precisa estar aqui dentro (não só atribuído em memória) porque
+    // deepMerge() só preserva chaves que já existem no default; qualquer outra é descartada
+    // a cada reload/switchProject/importProject.
+    pocControlId:'',
     project:{ projectName:'', leadEngineer:'', leadEmail:'', organization:'', clientOrganization:'', contacts:[{name:'',role:'',email:'',phone:''}], startDate:todayISO(), targetDate:'', presalesUseCase:'', businessIssue:'', targetInfrastructure:'' },
     selectedProducts:{ virtualization:true, rancher:true, security:false, storage:false, observability:false, registry:false, appcollection:false, manager:false },
     infra:{
@@ -845,6 +850,46 @@ function initState(){
 
 let state = initState();
 lastSavedAt = Date.now();
+
+/* ---------------- IMPORTAR DOCUMENTO / HABILITAR EXECUÇÃO (poc-control) ----------------
+   Estado efêmero (não entra no localStorage do projeto): status da chamada ao backend que
+   cria/hidrata a PoC de execução a partir de um documento ou do estado atual exportado. */
+let importandoExecucao = false;
+let erroExecucao = '';
+
+function _pollExecucao(pocId, aplicarHidratacao){
+  fetch('/api/pocs/'+pocId, { credentials:'include' })
+    .then(res => { if(!res.ok) throw new Error('http '+res.status); return res.json(); })
+    .then(poc => {
+      if(poc.status_extracao === 'extraindo'){ setTimeout(()=>_pollExecucao(pocId, aplicarHidratacao), 3000); return; }
+      importandoExecucao = false;
+      if(poc.status_extracao === 'erro'){
+        erroExecucao = poc.erro_extracao || tr('common.importDocError');
+        render();
+        return;
+      }
+      if(aplicarHidratacao){
+        const hid = (poc.parametros_tecnicos && poc.parametros_tecnicos.hidratacao_planejador) || {};
+        const parcial = {
+          project:{ projectName: poc.titulo||'', clientOrganization: poc.cliente||'', leadEngineer: hid.responsavel||'', leadEmail: hid.email||'' },
+          selectedProducts: hid.produtos || {},
+          network: hid.rede || {},
+        };
+        const novo = normalizeLoadedState(JSON.stringify({schema:2, planner:parcial}));
+        if(novo) state = novo;
+      }
+      state.pocControlId = pocId;
+      go('summary');
+    })
+    .catch(() => { importandoExecucao = false; erroExecucao = tr('common.importDocError'); render(); });
+}
+function _importarParaExecucao(form, aplicarHidratacao){
+  importandoExecucao = true; erroExecucao = ''; render();
+  fetch('/api/pocs/importar-planejador', { method:'POST', credentials:'include', body:form })
+    .then(res => { if(!res.ok) throw new Error('http '+res.status); return res.json(); })
+    .then(criado => _pollExecucao(criado.id, aplicarHidratacao))
+    .catch(() => { importandoExecucao = false; erroExecucao = tr('common.importDocError'); render(); });
+}
 function saveState(){
   localStorage.setItem(projectKey(activeProjectId), JSON.stringify(state));
   const idx = loadProjectsIndex();
@@ -1068,10 +1113,14 @@ function renderDashboard(){
           ? '<button class="btn btn-primary" style="padding:16px 32px;font-size:14px;" onclick="P.go(\''+resume+'\')">' + Icon('chevronR') + ' ' + tr('dashboard.continue') + '</button>'
           : '<button class="btn btn-primary" style="padding:16px 32px;font-size:14px;" onclick="P.go(\'project\')">' + Icon('plus') + ' ' + tr('dashboard.start') + '</button>')
     + '</div>'
-    + '<div class="flex gap-3 mt-4" style="justify-content:center;">'
+    + '<div class="flex gap-3 mt-4" style="justify-content:center;flex-wrap:wrap;">'
       + '<label class="btn btn-outline btn-sm" style="cursor:pointer;">' + Icon('upload') + ' ' + tr('common.import') + '<input type="file" accept=".json" style="display:none" onchange="P.importProject(this)"></label>'
+      + (importandoExecucao
+          ? '<span class="btn btn-outline btn-sm" style="opacity:.7;">' + tr('common.importingDoc') + '</span>'
+          : '<label class="btn btn-outline btn-sm" style="cursor:pointer;">' + Icon('doc') + ' ' + tr('common.importDoc') + '<input type="file" accept=".pdf,.xlsx,.csv,.json" style="display:none" onchange="P.importarDocumentoCliente(this)"></label>')
       + (inProgress ? '<button class="btn btn-outline btn-sm" onclick="P.newProject()">' + Icon('plus') + ' ' + tr('common.newProject') + '</button>' : '')
     + '</div>'
+    + (erroExecucao ? '<div class="alert alert-danger mt-3" style="text-align:left;">' + Icon('alert') + ' ' + esc(erroExecucao) + '</div>' : '')
     + renderProjectsList()
   + '</div>';
 }
@@ -2439,12 +2488,26 @@ function summaryTestsOverview(L,g,sp){
   return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">'+fitCard+ledCard+'</div><div class="mt-2" style="overflow-x:auto;">'+matrix+'</div>'
     + '<div class="mt-3" style="font-weight:900;font-size:11px;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;">'+g('Detalhamento','Breakdown','Detalle')+'</div>';
 }
+/* Abre a execução real desta PoC (semáforo, procedimento, notas por sessão, Andamento,
+   Apresentação, roteiro do dia) numa aba do navegador -- esse mundo é todo do poc-control
+   (Postgres), nunca sincronizado de volta pro localStorage do assistente (ver CLAUDE.md,
+   seção "Integração com o planejador de PoC"). Só uma coisa atravessa: o id da Poc criada,
+   guardado em state.pocControlId. */
+function renderExecucaoBlock(){
+  const acao = state.pocControlId
+    ? '<a class="btn btn-primary btn-sm" href="/pocs/'+esc(state.pocControlId)+'" target="_blank" rel="noreferrer">' + Icon('chevronR') + ' ' + tr('common.openExecution') + '</a>'
+    : (importandoExecucao
+        ? '<span class="btn btn-outline btn-sm" style="opacity:.7;">' + tr('common.importingDoc') + '</span>'
+        : '<button class="btn btn-outline btn-sm" onclick="P.habilitarExecucao()">' + Icon('zap') + ' ' + tr('common.enableExecution') + '</button>');
+  return '<div class="flex justify-between items-center no-print mb-3">' + acao + '</div>'
+    + (erroExecucao ? '<div class="alert alert-danger no-print mb-3">' + Icon('alert') + ' ' + esc(erroExecucao) + '</div>' : '');
+}
 function summaryTestsSection(L,g,sp){
   const active = PRODUCTS.filter(p=>sp[p.id] && state.testCases[p.id] && state.testCases[p.id].length);
-  if(!active.length) return '<p class="text-xs text-muted">—</p>';
+  if(!active.length) return renderExecucaoBlock() + '<p class="text-xs text-muted">—</p>';
   const st = testStats(sp), cov = (b) => b.pass+'/'+b.total;
   const resPill = (r) => { const w = TEST_STATUS[r] ? r : 'pending'; return '<span class="pill" style="background:'+TEST_STATUS[w].color+';color:#fff;white-space:nowrap;letter-spacing:.04em;">'+resultWord(w,L)+'</span>'; };
-  let html = summaryTestsOverview(L,g,sp)
+  let html = renderExecucaoBlock() + summaryTestsOverview(L,g,sp)
     + '<div class="flex gap-2 flex-wrap mt-2 mb-2"><span class="pill pill-warn">must-have '+cov(st.must)+'</span>'+(st.nice.total?'<span class="pill pill-off">nice-to-have '+cov(st.nice)+'</span>':'')+''
     + '<span class="pill pill-bad">'+g('não atende','does not meet','no cumple')+' · '+(st.must.fail+st.nice.fail)+'</span><span class="pill pill-warn">'+g('parcial','partial','parcial')+' · '+(st.must.partial+st.nice.partial)+'</span><span class="pill pill-off">'+g('pendentes','pending','pendientes')+' · '+(st.must.pending+st.nice.pending)+'</span>'+(st.na?'<span class="pill pill-off">N/A · '+st.na+'</span>':'')+'</div>';
   active.forEach(p=>{
@@ -2706,6 +2769,17 @@ const _P = {
       }catch(err){ alert(tr('common.invalidFile')); }
     };
     reader.readAsText(file);
+  },
+  importarDocumentoCliente(input){
+    const file = input.files[0]; if(!file) return;
+    const form = new FormData();
+    form.append('arquivo', file);
+    _importarParaExecucao(form, true);
+  },
+  habilitarExecucao(){
+    const form = new FormData();
+    form.append('texto', JSON.stringify(buildExportJson()));
+    _importarParaExecucao(form, false);
   }
 };
 /* Qualquer onclick="P.xyz(...)" quebrado (erro de JS dentro do handler) antes só aparecia como

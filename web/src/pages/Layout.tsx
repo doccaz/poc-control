@@ -10,7 +10,7 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
   const location = useLocation();
   const { lang, setLang, t } = useLanguage();
 
-  const mode = location.pathname.startsWith("/plan") ? "plan" : "run";
+  const isHome = location.pathname === "/";
 
   async function handleLogout() {
     await api.logout();
@@ -42,10 +42,10 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
         </div>
       </header>
 
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} mode={mode} user={user} onLogout={handleLogout} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} onLogout={handleLogout} />
 
-      <main className={mode === "plan" ? "page page-flush" : "page"}>
-        {mode === "run" && !user.tem_gemini_key && (
+      <main className={isHome ? "page page-flush" : "page"}>
+        {!isHome && !user.tem_gemini_key && (
           <p className="alert alert-warning" style={{ marginBottom: 20 }}>
             Você está usando a chave de API do Gemini compartilhada do servidor. Cadastre a sua própria
             chave em <Link to="/minha-conta">Minha conta</Link> para que o uso seja faturado na sua conta.
