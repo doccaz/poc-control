@@ -1,11 +1,14 @@
 # POC Control
 
-Ferramenta pessoal (depois, do time) para conduzir POCs de clientes: lê o PDF da POC, extrai os itens, cruza com uma base de procedimentos já validados e acompanha a execução com notas, status e resumo de sessão.
+Ferramenta pessoal (depois, do time) pra cobrir o ciclo de PoC de cliente de ponta a ponta:
+**planejar** o escopo (tela inicial do app), **executar** com semáforo por item e acompanhamento
+de sessão, e fazer uma **triagem automática de TR/edital (RFI)** contra o portfólio SUSE.
 
 Dono: Gabriel (Solutions Architect, SUSE). Idioma da interface e dos textos gerados: **português (pt-BR)**.
-A casca do app (menu, navbar, dashboard) tem opcionalmente um seletor PT/EN/ES (ver seção "Integração com
-o planejador de PoC" abaixo) — isso não muda a regra acima para o conteúdo gerado pela IA nem para os
-formulários de domínio do Executar PoC, que continuam só em pt-BR.
+A casca do app (menu, navbar, planejador) tem um seletor PT/EN/ES e alternância de tema claro/escuro (ver
+"Tema (claro/escuro) e rodapé de build" e "O planejador como tela inicial" abaixo) — isso não muda a regra
+acima para o conteúdo gerado pela IA nem para os formulários de domínio do Executar PoC/RFI, que continuam
+só em pt-BR.
 
 ## Repositório e ambiente
 
@@ -16,19 +19,28 @@ formulários de domínio do Executar PoC, que continuam só em pt-BR.
 
 ## Organização do repositório (features separadas para múltiplos times)
 
-O front end é dividido por feature para "Executar PoC" e "Planejar PoC" avançarem em paralelo sem
-pisar um no outro:
+O front end é dividido por feature para "Executar PoC", "Planejar PoC" e "RFI" avançarem em
+paralelo sem pisar um no outro:
 
 - `web/src/features/executar-poc/` — páginas desta ferramenta (POCs, Procedimentos). Dono: Gabriel.
-- `web/src/features/planejar-poc/` — wrapper da rota `/plan`; o HTML estático do "SUSE PoC Planner"
-  do colega mora em `web/public/planejar-poc/`. Dono: time do planejador.
-- `web/src/pages/` (Layout, Sidebar, Dashboard, Login, MinhaConta, Usuarios) e `web/src/i18n.tsx` são
-  a casca compartilhada pelas duas features — mudança aqui pede revisão dos dois lados.
-- `api/` é 100% da feature Executar PoC (o planejador não tem backend, guarda tudo em `localStorage`).
+- `web/src/features/planejar-poc/` — o planejador em si: `engine/plannerEngine.js` (motor
+  imperativo porteado do "SUSE PoC Planner" do colega — render-to-string + `innerHTML`, com um
+  `window.P` global pros handlers, não uma árvore de componentes React) + `engine/planner.css`
+  (escopado em `#planner-root`) + o wrapper de página que monta isso na rota `/` (ver "O
+  planejador como tela inicial" abaixo). Deixou de ser um HTML estático num `<iframe>` desde a
+  migração pro motor "schema 2". Dono: time do planejador.
+- `web/src/features/rfi/` — triagem de TR/edital contra o portfólio SUSE (ver seção "RFI"
+  abaixo). Dono: Gabriel.
+- `web/src/pages/` (Layout, Sidebar, Login, MinhaConta, Usuarios) e `web/src/i18n.tsx` são a
+  casca compartilhada pelas três features — mudança aqui pede revisão de todos os lados.
+- `api/` cobre Executar PoC (`api/app/pocs/`, `api/app/classificacao/`, `api/app/procedimentos/`)
+  e RFI (`api/app/rfi/`) — o planejador ainda não tem backend próprio além do que empresta de
+  Executar PoC pra "Importar documento do cliente" (ver abaixo); guarda o resto só em
+  `localStorage`.
 - `.github/CODEOWNERS` mapeia esses caminhos para revisão automática; troque o placeholder pelo
   handle real de quem mantém o planejador.
-- Convenção de branch: `feature/executar-poc/<nome>`, `feature/planejar-poc/<nome>` e
-  `feature/shell/<nome>` para mudanças na casca compartilhada.
+- Convenção de branch: `feature/executar-poc/<nome>`, `feature/planejar-poc/<nome>`,
+  `feature/rfi/<nome>` e `feature/shell/<nome>` para mudanças na casca compartilhada.
 - Alias de import `@/` → `web/src/` (configurado em `vite.config.ts` e `tsconfig.json`), para os
   imports entre features não dependerem da profundidade relativa de cada pasta.
 
@@ -74,7 +86,7 @@ Na carga, **remover ou mascarar** dados específicos do cliente que não devem s
 
 ## POCs
 
-- Upload do PDF (ou texto/JSON colado — ver "Integração com o planejador de PoC") → o Gemini lê nativamente e devolve JSON estruturado (schema fixo): `itens[] { codigo, titulo, descricao, criterio_aceite, categoria }`.
+- Upload do PDF, de uma planilha (XLSX/CSV), ou texto/JSON colado (inclusive o JSON exportado pelo planejador — ver "O planejador como tela inicial") → o Gemini lê nativamente e devolve JSON estruturado (schema fixo): `itens[] { codigo, titulo, descricao, criterio_aceite, categoria }`.
 - O usuário revisa a lista extraída (editar, juntar, remover) antes de rodar a classificação.
 - Cada POC tem **sessões** (data, participantes, agenda).
 - Em cada item: status (`pendente` | `em_andamento` | `concluido` | `bloqueado` | `nao_aplicavel`), notas com data e sessão, anexos e procedimento vinculado.
@@ -82,6 +94,35 @@ Na carga, **remover ou mascarar** dados específicos do cliente que não devem s
 ## Resumo de sessão
 
 Botão "Gerar resumo da sessão": a partir das notas e das mudanças de status daquela sessão, o Gemini monta um texto pronto para colar no e-mail ao cliente ("Hoje realizamos…", "Pendências…", "Próximos passos…"). Tom formal e neutro. **Não envia e-mail**: só exibe com botão de copiar. Também exportar o status da POC inteira como HTML imprimível.
+
+## RFI (triagem de edital/TR contra o portfólio SUSE)
+
+Aba separada no menu lateral (`/rfis`), sem relação com uma PoC — é uma primeira triagem
+automática, feita antes/independente de qualquer execução.
+
+- Upload de PDF (lido nativamente pelo Gemini), Word (`.docx`, via `python-docx`) ou planilha
+  (XLSX/CSV, reaproveitando `app/pocs/planilha_import.py`), ou colar texto.
+- Extração (`extrair_itens_rfi` em `api/app/gemini.py`): o Gemini varre o documento inteiro
+  (qualquer estilo de numeração/estrutura) e extrai só os itens-folha dentro das áreas do
+  portfólio SUSE — lista fixa no prompt (virtualização, Kubernetes/containers, storage,
+  segurança, observabilidade, SO Linux, edge, IA), não configurável na UI — preservando a
+  numeração original do edital (`codigo`) e usando a seção mais próxima como `categoria`. Ignora
+  cláusulas administrativas/jurídicas, penalidades, inventário de hardware e caderno de testes.
+- Assim que a extração termina, dispara **automaticamente** (mesmo background task, sem clique
+  extra — diferente do fluxo "classificar pendentes" do Executar PoC, que é manual) uma busca
+  web item a item com grounding do Google Search, classificando um veredito em **4 estados**:
+  `atende` / `atende_parcial` / `nao_atende` / `sem_evidencia`. "Sem evidência" existe pra nunca
+  afirmar atendimento (ou não-atendimento) sem achar prova — mesma filosofia do semáforo de PoC
+  acima. Mesmo workaround de 2 chamadas Gemini (grounding sem `response_schema` → classificação
+  com `response_schema` sem grounding) pela limitação documentada.
+- Veredito é sugestão: editável manualmente (`origem: auto|manual`), e cada item tem um botão
+  "Reavaliar" individual.
+- Export em HTML imprimível e XLSX (primeira escrita de planilha do projeto — `openpyxl` só lia
+  planilhas de entrada antes).
+- Histórico (`/rfis`) com filtro por usuário e por data, resolvido 100% no front (lista inteira
+  carregada de uma vez — não há endpoint de filtro, a escala não justifica).
+- Tabelas `rfis` (com `criado_por_id` → `users.id` — primeira FK do projeto apontando pra quem
+  criou um registro) e `rfi_itens`. Migração `0015`.
 
 ## Stack
 
@@ -95,9 +136,13 @@ Botão "Gerar resumo da sessão": a partir das notas e das mudanças de status d
 - Busca: similaridade de cosseno no pgvector, top-k por item, depois confirmação pelo Gemini (o match tem que fazer sentido, não só ser parecido).
 - Login: sessão com cookie httpOnly; senha com hash argon2/bcrypt.
 
-## Modelo de dados (inicial)
+## Modelo de dados
 
-`users`, `clientes`, `pocs`, `poc_documentos` (PDF original), `itens`, `classificacoes` (flag, origem auto/manual, justificativa, fontes, data), `procedimentos`, `procedimento_chunks` (texto, embedding), `item_procedimento`, `sessoes`, `notas`, `anexos`, `status_historico`.
+`users`, `pocs`, `poc_documentos` (PDF/planilha original), `itens`, `classificacoes` (flag,
+origem auto/manual, justificativa, fontes, modelo), `poc_prerequisitos`, `procedimentos`,
+`procedimento_chunks` (texto, embedding), `sessoes`, `notas`, `anexos`, `status_historico`,
+`rfis` (dono via `criado_por_id`), `rfi_itens` (veredito de 4 estados, justificativa, fontes).
+Tudo em `api/app/models.py` (arquivo único, não separado por feature).
 
 ## Marcos
 
@@ -109,40 +154,81 @@ Botão "Gerar resumo da sessão": a partir das notas e das mudanças de status d
 6. Resumo de sessão e exportação HTML.
 7. Exposição via cloudflared (+ Cloudflare Access) e backup do volume do Postgres.
 
-## Integração com o planejador de PoC (experimental, ramo `plan-poc-integration`)
+## O planejador como tela inicial
 
-- Objetivo: unir esta ferramenta (execução da PoC) com a do colega que cobre o planejamento/escopo
-  (um app estático, sem backend, chamado "SUSE PoC Planner"). **Ainda não está no `main` nem deployado**
-  — é uma tentativa que pode ser descartada se não fizer sentido.
-- Navegação: menu hamburguer na lateral esquerda escolhe entre "Executar PoC" (este app) e "Planejar PoC".
-  O topo (`.topbar`) só tem a marca "SUSE POC PLANNER" e o seletor de idioma. Os links que antes estavam na
-  navbar (POCs, Procedimentos, Usuários — só admin, Minha conta) agora ficam no menu lateral.
-- O planejador do colega é servido **sem modificação na lógica dele** como
-  `web/public/planejar-poc/plan-poc.html` (estático, copiado de `C:\Users\Gabriel\Downloads\poc-plan.html`)
-  e montado num `<iframe>` em `/plan` (`web/src/features/planejar-poc/pages/PlanPoc.tsx`). Decisão
-  deliberada: não foi reescrito nem teve sua lógica portada — ele tem seu próprio assistente sequencial em
-  10 etapas (projeto → produtos → infra → rede → credenciais → portas → arquitetura → testes → checklist →
-  resumo), que Gabriel achou rígido demais; reescrever isso é um projeto futuro maior, não esta tarefa. Ele
-  guarda estado só no `localStorage` do navegador (sem backend).
-- Seletor de idioma único (`web/src/i18n.tsx`), agora **pt/en/es**: cobre a casca do app e também o
-  planejador. O idioma escolhido no topbar é repassado ao iframe por `postMessage`
-  (`{type:'poc-control:set-lang', lang}`) e por querystring (`?lang=`) na primeira carga; o planejador
-  teve seu próprio seletor PT/EN/ES removido do header (única mudança de UI feita no `plan-poc.html` —
-  a lógica de cada etapa continua intocada) para não duplicar o controle. Isso não muda a regra do topo
-  deste arquivo para o conteúdo gerado pela IA nem para os formulários de domínio do Executar PoC, que
-  continuam só em pt-BR — o planejador já tinha suas próprias traduções prontas nas 3 línguas antes desta
-  integração.
-- Planejar → Executar: a saída do planejador (JSON do botão "Exportar Projeto", na etapa Resumo — inclui
-  a seção "11. Plano de testes e resultados") serve de entrada para criar uma POC em Executar PoC. Em
-  "Nova POC" (`web/src/features/executar-poc/pages/PocUpload.tsx`) dá pra subir esse JSON como arquivo,
-  colar o texto/JSON direto, ou (como antes) subir o PDF do cliente — os três formatos passam pelo mesmo
-  endpoint (`POST /api/pocs`) e pelo mesmo prompt de extração do Gemini (`extrair_itens_poc` em
-  `api/app/gemini.py`), que reconhece o formato do planejador (`project`, `selectedProducts`,
-  `testCases`) e mapeia pros mesmos `itens[]`. Ainda não há ligação automática entre os dois apps (o
-  planejador continua só com `localStorage`) — é import manual, sob demanda.
+Já foi um "modo" trocado no menu hambúrguer (Executar PoC vs. Planejar PoC); hoje é uma
+hierarquia única. A **tela inicial (`/`) é sempre o planejador**; "PoCs", "Procedimentos" e
+"RFI" são links diretos no menu lateral, ao lado de Usuários (admin) e Minha conta — o
+hambúrguer continua existindo, só perdeu a troca de modo.
+
+- Seletor de idioma único (`web/src/i18n.tsx`, pt/en/es) cobre a casca do app e o planejador, que
+  já tinha suas próprias traduções nas 3 línguas antes da integração — não muda a regra do topo
+  deste arquivo para o conteúdo gerado pela IA nem para os formulários de domínio do Executar
+  PoC/RFI, que continuam só em pt-BR.
+- **Importar documento do cliente → ligar à execução real**: no painel inicial do planejador,
+  além de "Novo Projeto" (preenchimento manual) há "Importar documento do cliente"
+  (PDF/XLSX/CSV/JSON). Chama `POST /api/pocs/importar-planejador`, que já cria a `Poc` no
+  backend e dispara a extração normal de itens **mais** uma extração adicional
+  (`extrair_projeto_planejador` em `api/app/gemini.py`, schema `ExtracaoProjetoPlanejador`)
+  tentando pré-popular projeto, produtos e rede do assistente — nunca infra/portas/arquitetura
+  (campos que um documento de escopo quase nunca define com precisão) e nunca credenciais. O
+  resultado fica em `Poc.parametros_tecnicos["hidratacao_planejador"]` (JSONB, sem migração), e o
+  planejador grava o `id` da Poc criada em `state.pocControlId` — campo que **tem que estar
+  dentro** de `defaultState()` (não só atribuído em memória), porque `deepMerge()` só preserva
+  chaves que já existem no default; qualquer chave fora disso é descartada a cada
+  reload/switch/import de projeto.
+- Na etapa Resumo, seção "Plano de testes e resultados": se `pocControlId` existe, um botão abre
+  `/pocs/{id}` **numa aba nova** (a tela de execução real — semáforo, vínculo a procedimento,
+  Andamento, Apresentação, roteiro do dia — tudo inalterado); se não existe (projeto feito do
+  zero), um botão "Habilitar execução desta PoC" cria esse vínculo quando o usuário quiser.
+- A aba "Testes" própria do assistente (local, status `pending/scheduled/running/pass/
+  partial/fail/na`) e a execução real no backend **não são sincronizadas** — são dois mundos
+  independentes, decisão deliberada: sincronizar de verdade só funcionaria dentro do mesmo
+  navegador, e falsearia o aviso de privacidade do assistente de que "nunca é enviado a nenhum
+  servidor".
+
+## Tema (claro/escuro) e rodapé de build
+
+- Alternância clara/escura: botão no topbar (`web/src/pages/Layout.tsx`), ao lado do seletor de
+  idioma. Escreve o atributo `data-theme` na `<html>` e persiste na mesma chave de localStorage
+  que `plannerEngine.js` já usava internamente (`suse_poc_planner_theme`) e nunca tinha exposto
+  um botão pra alternar — os dois lados ficam em sincronia sem se avisar, de graça. CSS escuro:
+  bloco `:root[data-theme="dark"]` em `web/src/styles.css` + bloco
+  `html[data-theme="dark"] #planner-root` em `engine/planner.css` (paleta restaurada do
+  `html[data-theme="dark"]` que o planejador original tinha, removida quando ele foi portado pro
+  bundle).
+- Rodapé (canto inferior esquerdo, em toda tela): versão (`package.json`) + data/hora exata do
+  build, injetadas em build-time via `define` no `vite.config.ts` — não em runtime no navegador
+  — pra dar pra confirmar visualmente se um deploy pegou.
+
+## Publicação no Docker Hub
+
+- Imagens públicas em `gabriellins/poc-control`, duas tags (`:api`, `:web`) — um repositório com
+  duas tags, não dois repositórios (plano free do Docker Hub costuma limitar repositórios
+  privados, não tags; aqui está tudo público, mas a convenção ficou). **ARM64 apenas** — build
+  direto na Raspberry, sem manifesto multi-plataforma.
+- Tutorial completo (como rodar só com as imagens publicadas, sem clonar/buildar nada — inclui
+  como gerar `ADMIN_PASSWORD_HASH` a partir da própria imagem já puxada, e o aviso do `$` do hash
+  argon2 sendo corrompido pelo `docker compose`) em `DOCKER.md`, na raiz do repositório. Mantenha
+  os dois em sincronia se o processo de setup mudar.
+- Scan de vulnerabilidade: pacotes do Alpine (`web/Dockerfile`, bases `node:20-alpine`/
+  `nginx:alpine`) podem precisar de pin manual quando o scanner do Docker Hub reporta um CVE já
+  corrigido no índice do Alpine — `RUN apk add --no-cache <pacote>=<versão-r*>` na stage final
+  (ex.: fix do curl pra `8.23.0-r0`, CVE-2026-92392). `api/Dockerfile` é `python:3.12-slim`
+  (Debian/`apt`, não Alpine/`apk`) — mesmo princípio, sintaxe de pin diferente.
 
 ## Regras para o agente
 
 - Testar cada marco na Raspberry (`ssh rasp`) antes de seguir para o próximo.
 - Nunca commitar `.env`, chaves, PDFs ou HTMLs de cliente com dados reais. Manter `seed/` e `uploads/` no `.gitignore`, salvo os procedimentos já sanitizados.
 - Antes de rodar Postgres na Raspberry, confirmar que o volume está em SSD, não em cartão SD.
+- Documento de descrição do projeto (público, em inglês, com diagramas Mermaid) no Google Docs:
+  https://docs.google.com/document/d/1vR_UaGw8Z1hFAKDKsO_CVcB7iVWkSP2NP0lLHqu52bI/edit — depois
+  de uma mudança relevante (feature nova, reestruturação, remoção), checar se ele precisa de
+  atualização. Não precisa estar sempre em dia, mas não deixar acumular diferença grande o
+  suficiente pra ele parar de refletir a realidade do projeto.
+- Imagens no Docker Hub (`gabriellins/poc-control:api`/`:web`, ver "Publicação no Docker Hub"
+  acima): mesma lógica — não precisam estar sempre atualizadas, mas quando o código já divergiu
+  bastante do que está publicado (feature grande nova, correção de segurança), rebuildar e subir
+  pra lá. Na prática, pelo menos 1x por dia em dia de trabalho ativo no projeto; sem rigidez
+  nenhuma se não houver mudança real pra publicar.
