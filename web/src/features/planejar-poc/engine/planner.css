@@ -2,10 +2,16 @@
    Escopado inteiro sob #planner-root para não colidir com web/src/styles.css (as duas folhas
    definem .btn, .card, .app-shell, body{...} de formas diferentes). Paleta de cor base
    (--suse-dark/--suse-base e as 3 sombras rgba que a usam) alinhada ao verde-pinho do Executar
-   PoC; o modo escuro do planejador (html[data-theme="dark"] na versão original) foi removido —
-   o app não tem alternância de tema. O script (engine/plannerEngine.js) continua verbatim,
-   inclusive onde ele próprio embute a cor original (#30ba78 / rgba(48,186,120,…)) em estilos
-   inline (ex.: ícone do dashboard, diagrama de arquitetura) — só esta folha foi recolorida. */
+   PoC. O script (engine/plannerEngine.js) continua verbatim, inclusive onde ele próprio embute
+   a cor original (#30ba78 / rgba(48,186,120,…)) em estilos inline (ex.: ícone do dashboard,
+   diagrama de arquitetura) — só esta folha foi recolorida.
+   Modo escuro: o motor (plannerEngine.js) já trazia a lógica de alternância pronta (THEME_KEY,
+   loadTheme/applyTheme/toggleTheme, linhas ~936-945/2662) -- ela só nunca tinha CSS correspondente
+   aqui porque foi removida na primeira portagem. O botão de alternância agora mora no topbar do
+   app (Layout.tsx), que escreve o mesmo atributo data-theme na <html> e a mesma chave de
+   localStorage -- os valores abaixo (portados do html[data-theme="dark"] original, só com os
+   nomes --suse-dark/--suse-base já renomeados por esta folha) entram em vigor sem precisar
+   nenhuma outra mudança no JS do motor. */
 #planner-root {
   --suse-dark: #0c322c;
   --suse-base: #1f9a5e;
@@ -47,6 +53,34 @@
      (--color-bg), criando o corte de duas cores na metade da tela. */
   height: 100%;
 }
+html[data-theme="dark"] #planner-root {
+  --gray-50: #101c19;
+  --gray-100: #17251f;
+  --gray-200: #223730;
+  --gray-300: #35524a;
+  --gray-400: #7d968d;
+  --gray-500: #a2b8b0;
+  --gray-700: #d2e3dc;
+  --gray-800: #e3f0ea;
+  --gray-900: #f3faf7;
+  --red-500: #f87171;
+  --red-50: #2c1618;
+  --orange-500: #fb923c;
+  --orange-50: #2c2013;
+  --green-600: #4ade80;
+  --green-50: #122c1f;
+  --blue-500: #7fb0ff;
+  --blue-50: #122236;
+  --surface: #15241f;
+  --ink: #7eecb0;
+  background: #0b1512;
+}
+html[data-theme="dark"] #planner-root .alert-ok { border-color: #1f6b45; color: #9ff0c2; }
+html[data-theme="dark"] #planner-root .alert-warn { border-color: #9a5a1f; color: #ffcb94; }
+html[data-theme="dark"] #planner-root .alert-info { border-color: #3b5a85; color: #a9ccff; }
+html[data-theme="dark"] #planner-root .alert-danger { border-color: #8a3a3f; color: #ffb3b3; }
+html[data-theme="dark"] #planner-root .footer-bar { background: rgba(21, 36, 31, .88); }
+html[data-theme="dark"] #planner-root .card { box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
 #planner-root #app { height: 100%; }
 #planner-root .app-shell { min-height: 100%; display: flex; flex-direction: column; padding-bottom: 110px; }
 /* Estático (não sticky) e na mesma cor da topbar real do app (var(--color-pine), de
@@ -178,6 +212,19 @@
   /* PDF sempre em papel branco, sem a barra do app. As cores dos selos de status e a figura
      da arquitetura continuam — elas carregam significado. */
   #planner-root .no-print, #planner-root .header, #planner-root .footer-bar, #planner-root .test-filters { display: none !important; }
+  /* PDF sempre em papel branco mesmo com o modo escuro ativo na tela. */
+  html[data-theme="dark"] #planner-root {
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-300: #cbd5e1; --gray-400: #94a3b8; --gray-500: #64748b;
+    --gray-700: #334155; --gray-800: #1e293b; --gray-900: #0f172a;
+    --red-500: #ef4444; --red-50: #fef2f2; --orange-500: #f97316; --orange-50: #fff7ed;
+    --green-600: #16a34a; --green-50: #f0fdf4; --blue-500: #3b82f6; --blue-50: #eff6ff;
+    --surface: #ffffff; --ink: var(--suse-dark);
+    background: #fff !important;
+  }
+  html[data-theme="dark"] #planner-root .alert-ok { border-color: #bbf7d0; color: #166534; }
+  html[data-theme="dark"] #planner-root .alert-warn { border-color: #fed7aa; color: #9a3412; }
+  html[data-theme="dark"] #planner-root .alert-info { border-color: #bfdbfe; color: #1e40af; }
+  html[data-theme="dark"] #planner-root .alert-danger { border-color: #fecaca; color: #991b1b; }
   #planner-root .app-shell { padding-bottom: 0; }
   #planner-root .container { padding-top: 0; }
   #planner-root .card { background: transparent; }

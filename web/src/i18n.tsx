@@ -20,6 +20,8 @@ const DICT: Record<Lang, Record<string, string>> = {
     "nav.usuarios": "Usuários",
     "nav.minhaConta": "Minha conta",
     "action.sair": "Sair",
+    "theme.toLight": "Ativar modo claro",
+    "theme.toDark": "Ativar modo escuro",
     "plan.loading": "Carregando o planejador de PoC...",
 
     "common.carregando": "Carregando...",
@@ -300,6 +302,8 @@ const DICT: Record<Lang, Record<string, string>> = {
     "nav.usuarios": "Users",
     "nav.minhaConta": "My account",
     "action.sair": "Log out",
+    "theme.toLight": "Switch to light mode",
+    "theme.toDark": "Switch to dark mode",
     "plan.loading": "Loading the PoC planner...",
 
     "common.carregando": "Loading...",
@@ -580,6 +584,8 @@ const DICT: Record<Lang, Record<string, string>> = {
     "nav.usuarios": "Usuarios",
     "nav.minhaConta": "Mi cuenta",
     "action.sair": "Salir",
+    "theme.toLight": "Activar modo claro",
+    "theme.toDark": "Activar modo oscuro",
     "plan.loading": "Cargando el planificador de PoC...",
 
     "common.carregando": "Cargando...",
