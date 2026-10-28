@@ -220,6 +220,46 @@ export interface ItemUpdatePayload {
   sessao_id?: string | null;
 }
 
+export type VeredictoRfi = "atende" | "atende_parcial" | "nao_atende" | "sem_evidencia";
+
+export interface RfiItemOut {
+  id: string;
+  codigo: string;
+  categoria: string | null;
+  descricao: string;
+  ordem: number;
+  veredito: VeredictoRfi | null;
+  justificativa: string | null;
+  fontes: Fonte[];
+  origem: OrigemClassificacao | null;
+  modelo: string | null;
+  created_at: string;
+}
+
+export interface RfiListItem {
+  id: string;
+  titulo: string;
+  orgao: string;
+  numero_processo: string | null;
+  status_extracao: StatusExtracao;
+  criado_por_email: string;
+  created_at: string;
+  total_itens: number;
+  itens_avaliados: number;
+}
+
+export interface RfiDetail extends RfiListItem {
+  erro_extracao: string | null;
+  modelo_extracao: string | null;
+  nome_arquivo: string;
+  itens: RfiItemOut[];
+}
+
+export interface RfiItemManualPayload {
+  veredito: VeredictoRfi;
+  justificativa?: string | null;
+}
+
 export const api = {
   login: (email: string, password: string) =>
     request<User>("/api/auth/login", {
@@ -320,4 +360,17 @@ export const api = {
 
   sugerirProcedimentos: (pocId: string, itemId: string) =>
     request<ProcedimentoListItem[]>(`/api/pocs/${pocId}/itens/${itemId}/sugestoes-procedimento`),
+
+  listarRfis: () => request<RfiListItem[]>("/api/rfis"),
+  obterRfi: (id: string) => request<RfiDetail>(`/api/rfis/${id}`),
+  criarRfi: (form: FormData) => request<RfiListItem>("/api/rfis", { method: "POST", body: form }),
+  sobrescreverVeredictoRfi: (rfiId: string, itemId: string, payload: RfiItemManualPayload) =>
+    request<RfiItemOut>(`/api/rfis/${rfiId}/itens/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  reavaliarItemRfi: (rfiId: string, itemId: string) =>
+    request<RfiItemOut>(`/api/rfis/${rfiId}/itens/${itemId}/reavaliar`, { method: "POST" }),
+  urlExportarRfi: (rfiId: string) => `/api/rfis/${rfiId}/export`,
+  urlExportarRfiXlsx: (rfiId: string) => `/api/rfis/${rfiId}/export.xlsx`,
 };

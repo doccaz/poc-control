@@ -13,6 +13,9 @@ import { Pocs } from "./features/executar-poc/pages/Pocs";
 import { PocUpload } from "./features/executar-poc/pages/PocUpload";
 import { PocDetail } from "./features/executar-poc/pages/PocDetail";
 import { PlanPoc } from "./features/planejar-poc/pages/PlanPoc";
+import { Rfis } from "./features/rfi/pages/Rfis";
+import { RfiUpload } from "./features/rfi/pages/RfiUpload";
+import { RfiDetail } from "./features/rfi/pages/RfiDetail";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +45,9 @@ export function App() {
             <Route path="pocs" element={<Pocs />} />
             <Route path="pocs/novo" element={<PocUpload />} />
             <Route path="pocs/:id" element={<PocDetail />} />
+            <Route path="rfis" element={<Rfis />} />
+            <Route path="rfis/novo" element={<RfiUpload />} />
+            <Route path="rfis/:id" element={<RfiDetail />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="minha-conta" element={<MinhaConta user={user} onUserAtualizado={setUser} />} />
             <Route path="plan" element={<Navigate to="/" replace />} />

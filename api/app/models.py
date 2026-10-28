@@ -229,6 +229,74 @@ class Classificacao(Base):
     procedimento: Mapped[Procedimento | None] = relationship()
 
 
+class VeredictoRfi(str, enum.Enum):
+    atende = "atende"
+    atende_parcial = "atende_parcial"
+    nao_atende = "nao_atende"
+    sem_evidencia = "sem_evidencia"
+
+
+class Rfi(Base):
+    """Análise de TR/edital contra o portfólio SUSE (ver app/rfi/). Não tem relação com Poc —
+    é uma triagem de requisitos de um documento de licitação, não a execução de uma PoC."""
+
+    __tablename__ = "rfis"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    titulo: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    orgao: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    numero_processo: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    nome_arquivo: Mapped[str] = mapped_column(String(255), nullable=False)
+    caminho_arquivo: Mapped[str] = mapped_column(String(500), nullable=False)
+    # Reaproveita o enum status_extracao (já existe pra Poc) -- cobre só a fase de extração dos
+    # itens; o progresso da busca web item a item é inferido no front a partir de quantos
+    # RfiItem já têm veredito != null (ver RfiItem.veredito), sem precisar de um status novo.
+    status_extracao: Mapped[StatusExtracao] = mapped_column(
+        Enum(StatusExtracao, name="status_extracao"), default=StatusExtracao.extraindo
+    )
+    erro_extracao: Mapped[str | None] = mapped_column(Text, nullable=True)
+    modelo_extracao: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    criado_por_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    criado_por: Mapped["User"] = relationship()
+    itens: Mapped[list["RfiItem"]] = relationship(
+        back_populates="rfi", cascade="all, delete-orphan", order_by="RfiItem.ordem"
+    )
+
+
+class RfiItem(Base):
+    __tablename__ = "rfi_itens"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rfi_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rfis.id", ondelete="CASCADE"), nullable=False
+    )
+    codigo: Mapped[str] = mapped_column(String(50), nullable=False)
+    categoria: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    descricao: Mapped[str] = mapped_column(Text, nullable=False)
+    ordem: Mapped[int] = mapped_column(Integer, default=0)
+    # Nulo até a busca web rodar pra este item (ver app/rfi/service.py::avaliar_item_rfi) -- é
+    # assim que o front sabe que ainda está em processamento, igual ao polling que
+    # classificar_pendentes já faz em app/classificacao/tasks.py.
+    veredito: Mapped[VeredictoRfi | None] = mapped_column(Enum(VeredictoRfi, name="veredito_rfi"), nullable=True)
+    justificativa: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fontes: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    origem: Mapped[OrigemClassificacao | None] = mapped_column(
+        Enum(OrigemClassificacao, name="origem_classificacao"), nullable=True
+    )
+    modelo: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    rfi: Mapped[Rfi] = relationship(back_populates="itens")
+
+
 class Prerequisito(Base):
     __tablename__ = "poc_prerequisitos"
 

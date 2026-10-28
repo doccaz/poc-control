@@ -30,6 +30,9 @@ export function Sidebar({
           <NavLink to="/pocs" className={linkClass} onClick={onClose}>
             {t("nav.pocs")}
           </NavLink>
+          <NavLink to="/rfis" className={linkClass} onClick={onClose}>
+            {t("nav.rfis")}
+          </NavLink>
           <NavLink to="/procedimentos" className={linkClass} onClick={onClose}>
             {t("nav.procedimentos")}
           </NavLink>

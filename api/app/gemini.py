@@ -372,6 +372,98 @@ def extrair_projeto_planejador(
     return ExtracaoProjetoPlanejador.model_validate_json(response.text)
 
 
+class ItemRfiExtraido(BaseModel):
+    codigo: str
+    categoria: str
+    descricao: str
+
+
+class ExtracaoRfi(BaseModel):
+    titulo_sugerido: str
+    orgao_sugerido: str
+    numero_processo_sugerido: str
+    itens: list[ItemRfiExtraido]
+
+
+_EXTRACAO_RFI_PROMPT = """\
+Você é um Solutions Architect da SUSE fazendo uma triagem inicial de um TR (Termo de Referência) ou \
+edital de licitação, pra identificar quais requisitos técnicos dizem respeito ao portfólio da SUSE.
+
+O documento pode ter qualquer estrutura (numeração de 2, 3, 4 ou mais níveis, com ou sem seções \
+nomeadas, em um ou mais lotes/itens de licitação) — varra o documento inteiro, não assuma um formato \
+fixo.
+
+O portfólio SUSE relevante cobre estas áreas (um requisito só entra na triagem se tratar de uma \
+delas):
+- Virtualização de servidores / hipervisor (ex.: SUSE Virtualization / Harvester, HCI, vMotion, DRS, \
+  storage definido por software para VMs).
+- Kubernetes / orquestração de containers (ex.: Rancher, RKE2/K3s, gestão multi-cluster, CNI, Ingress, \
+  GitOps, Helm).
+- Armazenamento definido por software (ex.: Longhorn, CSI, replicação, snapshots).
+- Segurança de containers/cluster (ex.: NeuVector, scan de vulnerabilidade, políticas de rede, \
+  DevSecOps, RBAC).
+- Observabilidade (ex.: métricas, logs, Prometheus/Grafana, alertas).
+- Sistema operacional Linux corporativo (ex.: SUSE Linux Enterprise Server, gestão de patches, \
+  compliance, suporte de fabricante).
+- Edge computing / dispositivos distribuídos.
+- Inteligência artificial / MLOps em infraestrutura on-premise.
+
+Ignore explicitamente: cláusulas administrativas/jurídicas, critérios de habilitação da empresa, \
+prazos, penalidades, garantias contratuais, modelo de pagamento, tabelas de inventário de hardware \
+(specs de servidor/storage físico que não são sobre a camada de software), e cadernos de teste/ \
+validação (são passos de aceite, não requisitos de capacidade).
+
+Para cada requisito-folha (o nível mais específico, não os títulos de agrupamento) dentro dessas \
+áreas, devolva:
+- codigo: a numeração exatamente como aparece no documento original (ex.: "1.1.3.4.3"). Nunca invente \
+  ou renumere — copie literalmente.
+- categoria: o título da seção ou subseção mais próxima que agrupa esse requisito (ex.: "Storage \
+  Definido Por Software (SDS) E Bancos De Dados").
+- descricao: o texto do requisito como está no documento, sem resumir nem reescrever o conteúdo \
+  técnico (pode normalizar quebras de linha e espaçamento).
+
+Também devolva:
+- titulo_sugerido: nome do processo/projeto/edital, se identificável (ex.: nome do pregão ou do \
+  objeto da licitação); senão string vazia.
+- orgao_sugerido: nome do órgão/cliente que publicou o documento, se identificável; senão string \
+  vazia.
+- numero_processo_sugerido: número do processo/edital/pregão, se identificável; senão string vazia.
+
+Responda em português, sem inventar itens que não tenham base no documento. Se nenhum requisito do \
+documento se encaixar nas áreas acima, devolva uma lista de itens vazia.
+"""
+
+
+def extrair_itens_rfi(
+    pdf_bytes: bytes | None = None,
+    texto: str | None = None,
+    api_key: str | None = None,
+    model: str | None = None,
+) -> ExtracaoRfi:
+    if pdf_bytes:
+        conteudo: list = [types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")]
+    elif texto:
+        conteudo = [texto]
+    else:
+        raise ValueError("Informe pdf_bytes ou texto")
+    conteudo.append(_EXTRACAO_RFI_PROMPT)
+
+    response = _gerar_com_retry(
+        api_key=api_key,
+        contexto="extrair_itens_rfi",
+        model=model or _TEXT_MODEL,
+        contents=conteudo,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ExtracaoRfi,
+        ),
+    )
+    parsed = response.parsed
+    if isinstance(parsed, ExtracaoRfi):
+        return parsed
+    return ExtracaoRfi.model_validate_json(response.text)
+
+
 class CandidatoProcedimento(BaseModel):
     titulo_procedimento: str
     heading_title: str
@@ -508,6 +600,94 @@ def classificar_viabilidade(
     if isinstance(parsed, AvaliacaoViabilidade):
         return parsed
     return AvaliacaoViabilidade.model_validate_json(response.text)
+
+
+_ATENDIMENTO_RFI_PROMPT = """\
+Pesquise na web (documentação oficial da SUSE, Rancher, release notes, comparativos técnicos e outras \
+fontes confiáveis) se alguma solução do portfólio SUSE (SUSE Linux Enterprise Server, Rancher Prime, \
+SUSE Virtualization/Harvester, SUSE Storage/Longhorn, SUSE Security/NeuVector, SUSE Observability, \
+SUSE Multi-Linux Manager, SUSE Private Registry, SUSE Application Collection) atende o requisito \
+técnico de edital abaixo. Responda em português, de forma objetiva, citando o que a pesquisa \
+encontrou sobre cada produto SUSE relevante para este requisito específico.
+
+Requisito do edital:
+\"\"\"
+{item}
+\"\"\"
+"""
+
+
+def pesquisar_atendimento_rfi(
+    item_texto: str, api_key: str | None = None, model: str | None = None
+) -> tuple[str, list[FonteEvidencia]]:
+    response = _gerar_com_retry(
+        api_key=api_key,
+        contexto="pesquisar_atendimento_rfi",
+        model=model or _TEXT_MODEL,
+        contents=_ATENDIMENTO_RFI_PROMPT.format(item=item_texto),
+        config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())]),
+    )
+    texto = response.text or ""
+
+    fontes: list[FonteEvidencia] = []
+    candidate = response.candidates[0] if response.candidates else None
+    grounding = getattr(candidate, "grounding_metadata", None) if candidate else None
+    for chunk in getattr(grounding, "grounding_chunks", None) or []:
+        web = getattr(chunk, "web", None)
+        if web is not None and web.uri:
+            fontes.append(FonteEvidencia(titulo=web.title or web.uri, url=web.uri))
+
+    return texto, fontes
+
+
+class AvaliacaoAtendimentoRfi(BaseModel):
+    nao_atende: bool
+    atende_totalmente: bool
+    atende_parcialmente: bool
+    justificativa: str
+
+
+_AVALIACAO_ATENDIMENTO_RFI_PROMPT = """\
+Com base no resultado de pesquisa abaixo sobre o atendimento de um requisito de edital pelo portfólio \
+SUSE, classifique:
+
+Resultado da pesquisa:
+\"\"\"
+{pesquisa}
+\"\"\"
+
+Responda:
+- nao_atende: true SÓ se o resultado trouxer evidência explícita de que nenhuma solução SUSE atende \
+este requisito (ex.: funcionalidade claramente ausente ou incompatível).
+- atende_totalmente: true se o resultado trouxer evidência de que alguma solução SUSE atende o \
+requisito integralmente, sem ressalvas relevantes. Nunca marque isso junto com nao_atende.
+- atende_parcialmente: true se o resultado trouxer evidência de atendimento incompleto, com \
+ressalvas, ou que depende de configuração/produto adicional não óbvio. Nunca marque isso junto com \
+atende_totalmente.
+- justificativa: 1-2 frases curtas, em português, resumindo a evidência encontrada (ou a falta dela \
+e, nesse caso, deixe nao_atende, atende_totalmente e atende_parcialmente todos como false).
+"""
+
+
+def classificar_atendimento_rfi(
+    texto_pesquisa: str, api_key: str | None = None, model: str | None = None
+) -> AvaliacaoAtendimentoRfi:
+    response = _gerar_com_retry(
+        api_key=api_key,
+        contexto="classificar_atendimento_rfi",
+        model=model or _TEXT_MODEL,
+        contents=_AVALIACAO_ATENDIMENTO_RFI_PROMPT.format(
+            pesquisa=texto_pesquisa or "(a pesquisa não retornou texto)"
+        ),
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=AvaliacaoAtendimentoRfi,
+        ),
+    )
+    parsed = response.parsed
+    if isinstance(parsed, AvaliacaoAtendimentoRfi):
+        return parsed
+    return AvaliacaoAtendimentoRfi.model_validate_json(response.text)
 
 
 class ResumoSessaoExtraido(BaseModel):
