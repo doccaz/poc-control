@@ -63,6 +63,8 @@ _STATUS_DO_RESULTADO = {
 }
 _CONDUCAO_DO_LED = {"suse": "suse", "client": "cliente", "partner": "parceiro", "side": "lateral"}
 _RESULTADOS = tuple(_STATUS_DO_RESULTADO)
+# `fitSource` do planejador (de onde a aderência aceita veio) -> `aderencia_origem`; vazio = marcada à mão.
+_ORIGEM_DA_ADERENCIA = {"web": "web", "history": "historico"}
 _ADERENCIAS = ("native", "config", "rancher", "third", "validate", "gap")
 _LIMITE_TESTES = 1000
 
@@ -115,7 +117,7 @@ def itens_do_planejador(texto: str) -> dict[str, Any] | None:
             "status": _STATUS_DO_RESULTADO[resultado],
             "prioridade": t.get("priority") if t.get("priority") in ("must", "nice") else None,
             "aderencia": aderencia,
-            "aderencia_origem": "manual" if aderencia else None,
+            "aderencia_origem": _ORIGEM_DA_ADERENCIA.get(t.get("fitSource"), "manual") if aderencia else None,
             "conducao": _CONDUCAO_DO_LED.get(t.get("led")),
             "responsavel": _s(t.get("owner"), 255) or None,
         })

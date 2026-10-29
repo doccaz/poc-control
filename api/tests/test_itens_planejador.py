@@ -62,3 +62,12 @@ def test_valores_hostis_viram_padrao_ou_sao_cortados():
 def test_sem_nome_de_projeto_usa_titulo_padrao_e_limita_a_quantidade():
     r = itens_do_planejador(json.dumps({"planner": {}, "tests": [_t(id=str(n)) for n in range(1500)]}))
     assert r["titulo"] == "PoC sem título" and r["cliente"] == "" and len(r["itens"]) == 1000
+
+
+def test_origem_da_aderencia_acompanha_o_fitsource():
+    r = itens_do_planejador(_doc([
+        _t(id="a", fit="config", fitSource="web"), _t(id="b", fit="native", fitSource="history"),
+        _t(id="c", fit="gap"), _t(id="d", fit="gap", fitSource="inventada"), _t(id="e", fit="", fitSource="web"),
+    ]))
+    origens = {i["planner_id"]: i["aderencia_origem"] for i in r["itens"]}
+    assert origens == {"a": "web", "b": "historico", "c": "manual", "d": "manual", "e": None}
