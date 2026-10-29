@@ -18,6 +18,12 @@ ORDEM_ADERENCIA = (
 )
 
 
+def _mes_da_execucao(d: date) -> date:
+    """Só o mês da execução é guardado (sempre o dia 1): o histórico é anônimo, e a data exata só ajudaria a ligar uma linha
+    de volta a uma PoC (ADR 1)."""
+    return d.replace(day=1)
+
+
 def item_executado_sem_problemas(db: Session, item: Item) -> bool:
     """`resultado = pass` e nenhuma transição do item para `bloqueado` (definição da ADR 1)."""
     if item.resultado != ResultadoItem.pass_:
@@ -45,10 +51,10 @@ def sincronizar_resultado_catalogo(db: Session, item: Item, resultado_mudou: boo
             db.delete(linha)
         return
     if linha is None:
-        linha = ResultadoCatalogo(poc_id=item.poc_id, catalogo_id=item.catalogo_id, executado_em=hoje or date.today())
+        linha = ResultadoCatalogo(poc_id=item.poc_id, catalogo_id=item.catalogo_id, executado_em=_mes_da_execucao(hoje or date.today()))
         db.add(linha)
     elif resultado_mudou:
-        linha.executado_em = hoje or date.today()
+        linha.executado_em = _mes_da_execucao(hoje or date.today())
     linha.resultado = item.resultado
     linha.aderencia = item.aderencia
     linha.sucesso = item_executado_sem_problemas(db, item)

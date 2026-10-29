@@ -73,6 +73,8 @@ def test_criar_itens_grava_so_resultados_terminais(db, marca):
         linhas = {l.catalogo_id: l for l in db.query(ResultadoCatalogo).filter(ResultadoCatalogo.catalogo_id.like(marca + "%"))}
         assert set(linhas) == {f"{marca}-1", f"{marca}-2"}
         assert linhas[f"{marca}-1"].sucesso is True and linhas[f"{marca}-2"].sucesso is False
+        from datetime import date
+        assert all(l.executado_em == date.today().replace(day=1) for l in linhas.values()), "só o mês é guardado (dia 1)"
     finally:
         _limpa(db, marca)
 

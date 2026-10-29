@@ -477,6 +477,7 @@ class ResultadoCatalogo(Base):
     )
     # "Executado sem problemas": resultado = pass e nenhuma transição do item para `bloqueado`.
     sucesso: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Primeiro dia do mês da execução: só o mês é guardado, pra dificultar ligar a linha anônima a uma PoC (ADR 1).
     executado_em: Mapped[date] = mapped_column(Date, nullable=False)
     poc_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("pocs.id", ondelete="SET NULL"), nullable=True
