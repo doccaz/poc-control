@@ -34,6 +34,7 @@ from app.pocs.apresentacao import montar_apresentacao_html
 from app.pocs.export import montar_export_html
 from app.pocs.planilha_import import texto_de_planilha
 from app.pocs.planner_import import extrair_parametros_tecnicos
+from app.pocs.resultados import sincronizar_resultado_catalogo
 from app.procedimentos.router import _criar_procedimento
 from app.procedimentos.schemas import ProcedimentoListItem as ProcedimentoListItemOut
 from app.pocs.roteiro import montar_roteiro_html
@@ -419,6 +420,7 @@ def atualizar_item(poc_id: uuid.UUID, item_id: uuid.UUID, payload: ItemUpdate, d
     sessao_id = dados.pop("sessao_id", None)
 
     status_anterior = item.status
+    resultado_anterior = item.resultado
     for campo, valor in dados.items():
         setattr(item, campo, valor)
 
@@ -431,6 +433,12 @@ def atualizar_item(poc_id: uuid.UUID, item_id: uuid.UUID, payload: ItemUpdate, d
                 status_novo=item.status,
             )
         )
+
+    # Histórico anônimo por teste do catálogo (ADR 1): reavalia quando o resultado, a aderência ou o status mudam (um
+    # bloqueio depois de um `pass` tira o "sem problemas"). O flush antes garante que a transição acima já vale na consulta.
+    if {"resultado", "aderencia", "status"} & dados.keys():
+        db.flush()
+        sincronizar_resultado_catalogo(db, item, resultado_mudou=item.resultado != resultado_anterior)
 
     db.commit()
     db.refresh(item)

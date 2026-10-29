@@ -153,6 +153,45 @@ class CondicaoItem(str, enum.Enum):
     suse = "suse"
     cliente = "cliente"
     lateral = "lateral"
+    parceiro = "parceiro"
+
+
+# Resultado do teste e aderência, nos mesmos valores do SUSE PoC Planner (poc-planner/docs/adr/ADR-0001).
+# `status` continua sendo o estado do fluxo de execução; `resultado` diz se o teste passou. Os membros usam
+# o valor (não o nome) no banco porque "pass" é palavra reservada do Python (ver values_callable abaixo).
+class ResultadoItem(str, enum.Enum):
+    pending = "pending"
+    scheduled = "scheduled"
+    running = "running"
+    pass_ = "pass"
+    partial = "partial"
+    fail = "fail"
+    na = "na"
+
+
+class PrioridadeItem(str, enum.Enum):
+    must = "must"
+    nice = "nice"
+
+
+class AderenciaItem(str, enum.Enum):
+    native = "native"
+    config = "config"
+    rancher = "rancher"
+    third = "third"
+    validate = "validate"
+    gap = "gap"
+
+
+class AderenciaOrigem(str, enum.Enum):
+    manual = "manual"
+    historico = "historico"
+    web = "web"
+    documento = "documento"
+
+
+def _valores(enum_cls):
+    return [m.value for m in enum_cls]
 
 
 class Item(Base):
@@ -174,6 +213,23 @@ class Item(Base):
     )
     status: Mapped[StatusItem] = mapped_column(Enum(StatusItem, name="status_item"), default=StatusItem.pendente)
     ordem: Mapped[int] = mapped_column(Integer, default=0)
+    # Vindos do planejador (ADR 1). Nulos nos itens criados por Gemini a partir de um PDF/planilha.
+    catalogo_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    planner_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    resultado: Mapped[ResultadoItem | None] = mapped_column(
+        Enum(ResultadoItem, name="resultado_item", values_callable=_valores), nullable=True
+    )
+    prioridade: Mapped[PrioridadeItem | None] = mapped_column(
+        Enum(PrioridadeItem, name="prioridade_item", values_callable=_valores), nullable=True
+    )
+    aderencia: Mapped[AderenciaItem | None] = mapped_column(
+        Enum(AderenciaItem, name="aderencia_item", values_callable=_valores), nullable=True
+    )
+    aderencia_origem: Mapped[AderenciaOrigem | None] = mapped_column(
+        Enum(AderenciaOrigem, name="aderencia_origem", values_callable=_valores), nullable=True
+    )
+    # Texto livre até a ADR 4 trazer o dono de verdade (responsavel_id).
+    responsavel: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -402,3 +458,26 @@ class StatusHistorico(Base):
 
     item: Mapped["Item"] = relationship(back_populates="status_historico")
     sessao: Mapped[Sessao | None] = relationship()
+
+
+class ResultadoCatalogo(Base):
+    """Histórico anônimo de resultados por teste do catálogo do planejador (ADR 1). Uma linha por (PoC, teste do
+    catálogo) com resultado terminal. NÃO é apagada em cascata: `poc_id` vira nulo quando a PoC é excluída e o resultado
+    continua valendo para a viabilidade por histórico. Por isso não guarda cliente, título, dono nem texto livre."""
+
+    __tablename__ = "resultados_catalogo"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    catalogo_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    resultado: Mapped[ResultadoItem] = mapped_column(
+        Enum(ResultadoItem, name="resultado_item", values_callable=_valores), nullable=False
+    )
+    aderencia: Mapped[AderenciaItem | None] = mapped_column(
+        Enum(AderenciaItem, name="aderencia_item", values_callable=_valores), nullable=True
+    )
+    # "Executado sem problemas": resultado = pass e nenhuma transição do item para `bloqueado`.
+    sucesso: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    executado_em: Mapped[date] = mapped_column(Date, nullable=False)
+    poc_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("pocs.id", ondelete="SET NULL"), nullable=True
+    )

@@ -252,3 +252,21 @@ confirmada), a leitura de `/api/procedimentos` (importar procedimentos pra bibli
 
 Contexto e contratos: `poc-planner/docs/design-unification.md` e as ADRs em `poc-planner/docs/adr/` (no repo do
 planejador). A ADR 2 trata de credenciais.
+
+## Itens vindos do planejador e histórico de resultados (`resultados_catalogo`)
+
+Quando o JSON recebido em `/api/pocs/importar-planejador` traz a lista plana `tests` (o planejador vendorizado em
+`/planner/` manda; ver `app/pocs/planner_import.py::itens_do_planejador`), `processar_extracao` cria os itens **direto**,
+sem Gemini: título e resultado esperado já vêm resolvidos, e cada item guarda `catalogo_id` (id do teste no catálogo do
+planejador), `planner_id`, `resultado` (pending/scheduled/running/pass/partial/fail/na, que é *se o teste passou*; o
+`status` continua sendo o estado do fluxo), `prioridade`, `aderencia` e `aderencia_origem`. JSON sem `tests` (o motor
+portado, PDFs, planilhas) segue o fluxo de extração com Gemini de sempre.
+
+`resultados_catalogo` é o histórico **anônimo** por teste do catálogo: uma linha por (PoC, teste) com resultado
+terminal (pass/partial/fail), sem cliente, título, dono nem texto livre, e **sem cascata** (`poc_id` vira nulo quando a PoC
+é excluída). `sucesso` = `resultado = pass` e nenhuma transição do item para `bloqueado`. É mantido por
+`app/pocs/resultados.py::sincronizar_resultado_catalogo` (na criação e em `PATCH /itens/{id}` quando `resultado`,
+`aderencia` ou `status` mudam) e lido por `GET /api/planner/history?ids=...` (quantas execuções, quantas sem problemas e a
+aderência mais nativa entre as com sucesso; só sugestão). Decisões: `poc-planner/docs/adr/ADR-0001-poc-record.md`
+(repo do planejador). Migração `0016` só acrescenta e é reversível. Testes: `cd api && python -m pytest tests`
+(`tests/test_resultados_db.py` precisa de Postgres e roda dentro do container da api).

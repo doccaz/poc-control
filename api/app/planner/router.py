@@ -1,9 +1,11 @@
 import json
 import pathlib
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
+from app.db import get_db
 from app.deps import get_current_user
 from app.gemini import interpretar_erro_gemini
 from app.gemini_key import resolve_api_key, resolve_model
@@ -15,6 +17,7 @@ from app.planner.service import (
     validar_catalogo,
 )
 from app.pocs.planilha_import import texto_de_planilha
+from app.pocs.resultados import historico_por_catalogo
 
 # Recursos do "SUSE PoC Planner" (poc-planner/index.html) que precisam de servidor. Todos sem estado:
 # nada é gravado no banco aqui (o registro único da PoC é a ADR 1 do plano de unificação).
@@ -27,7 +30,7 @@ _LIMITE_ARQUIVO = 25 * 1024 * 1024
 def capabilities():
     """Sem autenticação e sem corpo de entrada: é como o planejador descobre que está servido por um
     poc-control (e só então mostra os controles extras). Não revela nada além da lista de recursos."""
-    return {"kind": "poc-control", "schema": 1, "features": ["hydrate", "feasibility", "procedures", "execution"]}
+    return {"kind": "poc-control", "schema": 1, "features": ["hydrate", "feasibility", "procedures", "execution", "history"]}
 
 
 @router.post("/hydrate")
@@ -105,3 +108,18 @@ def feasibility(payload: AderenciaIn, current_user: User = Depends(get_current_u
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, interpretar_erro_gemini(exc))
     return {"kind": "suse-poc-feasibility", "schema": 1, "results": resultados}
+
+
+@router.get("/history")
+def history(
+    ids: str = Query(..., description="ids de teste do catálogo, separados por vírgula (até 200)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Histórico anônimo de resultados por teste do catálogo do planejador (ADR 1): quantas execuções, quantas sem
+    problemas e a aderência mais nativa entre as que deram certo. Só leitura, sem estado, e SÓ uma sugestão: o planejador
+    mostra e a pessoa confirma."""
+    lista = list(dict.fromkeys(i.strip() for i in ids.split(",") if i.strip()))
+    if not lista or len(lista) > 200 or any(len(i) > 80 for i in lista):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Informe de 1 a 200 ids de teste")
+    return {"kind": "suse-poc-history", "schema": 1, "results": historico_por_catalogo(db, lista)}

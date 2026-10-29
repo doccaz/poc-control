@@ -8,7 +8,20 @@ from app.gemini import (
     interpretar_erro_gemini,
     modelo_efetivo,
 )
-from app.models import Item, Poc, Prerequisito, StatusExtracao
+from app.models import (
+    AderenciaItem,
+    AderenciaOrigem,
+    CondicaoItem,
+    Item,
+    Poc,
+    PrioridadeItem,
+    Prerequisito,
+    ResultadoItem,
+    StatusExtracao,
+    StatusItem,
+)
+from app.pocs.planner_import import itens_do_planejador
+from app.pocs.resultados import sincronizar_resultado_catalogo
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +49,14 @@ def processar_extracao(
     try:
         poc = db.get(Poc, poc_id)
         if poc is None:
+            return
+
+        # JSON do planejador com a lista plana `tests`: os itens já vêm prontos (catalogId, título, resultado esperado,
+        # resultado, aderência), então são criados direto, SEM Gemini -- é o que dá a chave (catalogo_id) do histórico de
+        # resultados e evita mandar o plano pra IA. Qualquer outro formato segue o fluxo de extração de sempre.
+        planejador = itens_do_planejador(texto) if texto else None
+        if planejador is not None:
+            _criar_itens_do_planejador(db, poc, planejador)
             return
 
         poc.modelo_extracao = modelo_efetivo(model)
@@ -112,3 +133,39 @@ def processar_extracao(
         db.commit()
     finally:
         db.close()
+
+
+def _criar_itens_do_planejador(db, poc: Poc, planejador: dict) -> None:
+    poc.modelo_extracao = "planejador (sem IA)"
+    poc.fases = planejador["fases"]
+    if not poc.titulo:
+        poc.titulo = planejador["titulo"]
+    if not poc.cliente:
+        poc.cliente = planejador["cliente"]
+    criados: list[Item] = []
+    for i, d in enumerate(planejador["itens"]):
+        item = Item(
+            poc_id=poc.id,
+            codigo=d["codigo"],
+            titulo=d["titulo"],
+            criterio_aceite=d["criterio_aceite"],
+            categoria=d["categoria"],
+            fase=d["fase"],
+            ordem=i,
+            catalogo_id=d["catalogo_id"],
+            planner_id=d["planner_id"],
+            status=StatusItem(d["status"]),
+            resultado=ResultadoItem(d["resultado"]),
+            prioridade=PrioridadeItem(d["prioridade"]) if d["prioridade"] else None,
+            aderencia=AderenciaItem(d["aderencia"]) if d["aderencia"] else None,
+            aderencia_origem=AderenciaOrigem(d["aderencia_origem"]) if d["aderencia_origem"] else None,
+            conducao=CondicaoItem(d["conducao"]) if d["conducao"] else None,
+            responsavel=d["responsavel"],
+        )
+        db.add(item)
+        criados.append(item)
+    db.flush()  # dá id aos itens; o histórico só grava resultados terminais
+    for item in criados:
+        sincronizar_resultado_catalogo(db, item)
+    poc.status_extracao = StatusExtracao.pronto
+    db.commit()

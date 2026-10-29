@@ -3,7 +3,18 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models import CondicaoItem, FlagClassificacao, OrigemClassificacao, StatusExtracao, StatusItem, StatusPoc
+from app.models import (
+    AderenciaItem,
+    AderenciaOrigem,
+    CondicaoItem,
+    FlagClassificacao,
+    OrigemClassificacao,
+    PrioridadeItem,
+    ResultadoItem,
+    StatusExtracao,
+    StatusItem,
+    StatusPoc,
+)
 
 
 class FaseOut(BaseModel):
@@ -121,6 +132,13 @@ class ItemOut(BaseModel):
     conducao: CondicaoItem | None
     status: StatusItem
     ordem: int
+    catalogo_id: str | None = None
+    planner_id: str | None = None
+    resultado: ResultadoItem | None = None
+    prioridade: PrioridadeItem | None = None
+    aderencia: AderenciaItem | None = None
+    aderencia_origem: AderenciaOrigem | None = None
+    responsavel: str | None = None
     classificacao: ClassificacaoOut | None
     notas: list[NotaOut]
     anexos: list[AnexoOut]
@@ -136,6 +154,11 @@ class ItemUpdate(BaseModel):
     ref: str | None = None
     conducao: CondicaoItem | None = None
     status: StatusItem | None = None
+    resultado: ResultadoItem | None = None
+    prioridade: PrioridadeItem | None = None
+    aderencia: AderenciaItem | None = None
+    aderencia_origem: AderenciaOrigem | None = None
+    responsavel: str | None = None
     sessao_id: uuid.UUID | None = None
 
 
