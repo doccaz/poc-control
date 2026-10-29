@@ -108,6 +108,8 @@ def test_aderencia_nunca_vira_certeza_sem_fonte():
     fonte = [FonteEvidencia(titulo="Docs", url="https://documentation.suse.com/x"), FonteEvidencia(titulo="x", url="javascript:alert(1)")]
     com = service.montar_aderencia("t1", av, fonte, list(service.CATEGORIAS_ADERENCIA))
     assert com["fit"] == "native" and [s["url"] for s in com["sources"]] == ["https://documentation.suse.com/x"]
+    repetidas = [FonteEvidencia(titulo="A", url="https://a.example/x")] * 3 + [FonteEvidencia(titulo="B", url="https://b.example/y")]
+    assert [x["url"] for x in service.montar_aderencia("t1", av, repetidas, ["native", "validate"])["sources"]] == ["https://a.example/x", "https://b.example/y"]
     fora = service.montar_aderencia("t1", service.AvaliacaoAderencia(categoria="inventada", justificativa=""), fonte, ["native", "validate"])
     assert fora["fit"] == "validate"
 

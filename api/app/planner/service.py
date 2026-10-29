@@ -236,5 +236,16 @@ def montar_aderencia(teste_id: str, av: AvaliacaoAderencia, fontes: list[FonteEv
         "id": teste_id,
         "fit": fit,
         "rationale": _texto(av.justificativa, 600),
-        "sources": [{"title": _texto(f.titulo, 150) or f.url, "url": f.url} for f in fontes[:5] if re.match(r"https?://", f.url)],
+        "sources": _fontes_unicas(fontes),
     }
+
+
+def _fontes_unicas(fontes: list[FonteEvidencia]) -> list[dict]:
+    """O grounding do Gemini repete a mesma fonte; mostra cada URL http(s) uma vez, no máximo 5."""
+    vistas: set[str] = set()
+    out = []
+    for f in fontes:
+        if re.match(r"https?://", f.url) and f.url not in vistas:
+            vistas.add(f.url)
+            out.append({"title": _texto(f.titulo, 150) or f.url, "url": f.url})
+    return out[:5]
