@@ -232,3 +232,23 @@ hambúrguer continua existindo, só perdeu a troca de modo.
   bastante do que está publicado (feature grande nova, correção de segurança), rebuildar e subir
   pra lá. Na prática, pelo menos 1x por dia em dia de trabalho ativo no projeto; sem rigidez
   nenhuma se não houver mudança real pra publicar.
+
+## Planejador vendorizado e conector (`/planner/`)
+
+Além do motor portado em `web/src/features/planejar-poc/` (que o app usa na rota `/`), o app serve **uma cópia
+idêntica** do `index.html` do SUSE PoC Planner (repo `FlavioFGM/EIB-SUSE-PoC`, pasta `poc-planner/`) em
+`/planner/`, de `web/public/planner/`. Não é um fork: o arquivo nunca é editado aqui. Pra atualizar, rode
+`scripts/vendor-planner.sh <clone do EIB-SUSE-PoC>` (exige o arquivo commitado lá) e commite o resultado;
+`web/public/planner/SOURCE` guarda o commit e o sha256 de origem. As regras do nginx pra `/planner` e `/planner/`
+ficam em `web/nginx.conf` (sem elas o fallback da SPA engole essas URLs).
+
+Por estar na mesma origem do `/api`, essa cópia usa o cookie de sessão e liga o **conector** quando
+`GET /api/planner/capabilities` responde (rota sem login, em `api/app/planner/`). O conector só envia algo ao
+servidor quando a pessoa aciona: `POST /api/planner/hydrate` (importar documento, com tela de revisão no
+planejador), `POST /api/planner/feasibility` (aderência por pesquisa na web, sempre marcada como externa e não
+confirmada), a leitura de `/api/procedimentos` (importar procedimentos pra biblioteca local) e o
+`/api/pocs/importar-planejador` (habilitar/abrir a execução, com o plano **sem** credenciais). Os endpoints
+`/api/planner/*` não gravam nada no banco. Testes: `cd api && python -m pytest tests`.
+
+Contexto e contratos: `poc-planner/docs/design-unification.md` e as ADRs em `poc-planner/docs/adr/` (no repo do
+planejador). A ADR 2 trata de credenciais.
