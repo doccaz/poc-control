@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     uploads_dir: str = "/app/uploads"
 
+    # ADR 7: na inicialização, marca como `erro` as extrações que ficaram em `extraindo` (a tarefa morreu com o processo).
+    # Desligue se rodar a api com mais de um worker (senão um worker derruba tarefas vivas do outro).
+    extracao_recuperar_no_inicio: bool = True
+
     @property
     def database_url(self) -> str:
         return (

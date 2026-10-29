@@ -270,3 +270,16 @@ terminal (pass/partial/fail), sem cliente, título, dono nem texto livre, e **se
 aderência mais nativa entre as com sucesso; só sugestão). Decisões: `poc-planner/docs/adr/ADR-0001-poc-record.md`
 (repo do planejador). Migração `0016` só acrescenta e é reversível. Testes: `cd api && python -m pytest tests`
 (`tests/test_resultados_db.py` precisa de Postgres e roda dentro do container da api).
+
+## Recuperação de extrações interrompidas (ADR 7)
+
+A extração de itens (PoC) e de requisitos (RFI) roda em `BackgroundTasks`, dentro do processo da api; se o contêiner
+reinicia no meio, a tarefa morre e a linha ficava `extraindo` para sempre (e o "Tentar de novo", `reextrair`, só aceita
+`erro`). Agora `app/main.py` (lifespan) chama `app/recuperacao.py::recuperar_extracoes_interrompidas` na inicialização:
+**toda** linha ainda `extraindo` vira `erro` com a mensagem "interrompida por um reinício do servidor", registrada em log,
+e o botão de nova tentativa volta a funcionar. Pressupõe **um worker** do uvicorn (o compose sobe um): com mais de um, a
+varredura derrubaria tarefas vivas do outro, então desligue com `EXTRACAO_RECUPERAR_NO_INICIO=false`. Uma falha na
+varredura nunca impede a api de subir. Limites conhecidos: uma tarefa travada **sem** reinício (por exemplo uma chamada ao
+Gemini que não volta) continua `extraindo` até o próximo reinício (não há data de início da tarefa para decidir por idade);
+RFIs recuperadas ficam em `erro`, e a RFI ainda não tem "tentar de novo" (só reavaliar item). Testes:
+`tests/test_recuperacao_db.py` (Postgres, dentro do container da api).
