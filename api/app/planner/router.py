@@ -27,7 +27,7 @@ _LIMITE_ARQUIVO = 25 * 1024 * 1024
 def capabilities():
     """Sem autenticação e sem corpo de entrada: é como o planejador descobre que está servido por um
     poc-control (e só então mostra os controles extras). Não revela nada além da lista de recursos."""
-    return {"kind": "poc-control", "schema": 1, "features": ["hydrate", "feasibility", "procedures"]}
+    return {"kind": "poc-control", "schema": 1, "features": ["hydrate", "feasibility", "procedures", "execution"]}
 
 
 @router.post("/hydrate")

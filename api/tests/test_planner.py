@@ -51,7 +51,7 @@ def _extraido(**kw):
 def test_capabilities_sem_autenticacao():
     r = _cliente(autenticado=False).get("/api/planner/capabilities")
     assert r.status_code == 200
-    assert r.json() == {"kind": "poc-control", "schema": 1, "features": ["hydrate", "feasibility", "procedures"]}
+    assert r.json() == {"kind": "poc-control", "schema": 1, "features": ["hydrate", "feasibility", "procedures", "execution"]}
 
 
 def test_hydrate_e_feasibility_exigem_login():
