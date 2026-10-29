@@ -2742,6 +2742,7 @@ function renderTestsView(){
       + '<button class="btn btn-outline btn-sm" onclick="P.testTodayShown()">' + g('Marcar os testes exibidos','Mark the tests shown','Marcar las pruebas mostradas') + '</button>'
       + '<button class="btn btn-ghost btn-sm" '+(dayTests().length?'':'disabled ')+'onclick="P.testTodayClear()">' + g('Limpar seleção','Clear selection','Limpiar selección') + '</button>'
       + '<button class="btn btn-primary btn-sm" '+(dayTests().length?'':'disabled ')+'onclick="P.printDay()">' + Icon('print') + ' ' + g('Imprimir roteiro do dia','Print day script','Imprimir guion del día') + '</button></div>'
+    + historyBarHtml(g)
     + '<p class="text-xs text-muted mt-2">' + testSourcesText(sp, g) + '</p></div>';
   return head + renderTestFilters(g, L, shown, total)
     + (cards || '<div class="card"><div class="alert alert-info">'+Icon('info')+' '+g('Nenhum teste corresponde aos filtros.','No tests match the filters.','Ninguna prueba coincide con los filtros.')+'</div></div>');
@@ -3309,7 +3310,7 @@ function renderSummaryView(){
    Tudo o que volta é tratado como hostil: lista de chaves permitidas, ids conferidos contra o catálogo
    do próprio planner, nada de credenciais, e só entra no projeto depois da tela de revisão (R7). */
 const CONNECTOR_BASE = '/api/planner';
-const CONNECTOR_FEATURES = ['hydrate','feasibility','procedures','execution'];
+const CONNECTOR_FEATURES = ['hydrate','feasibility','procedures','execution','history'];
 let connector = { status:'off', features:[] };
 let connectorIO = (typeof fetch==='function') ? (url,opts)=>fetch(url,opts) : null;   // trocável nos testes
 function connectorEligible(){ return !!connectorIO && typeof location!=='undefined' && (location.protocol==='http:' || location.protocol==='https:'); }
@@ -3450,17 +3451,72 @@ function suggestFitWeb(productId, i){
 }
 function fitSuggestionHtml(p, i, t, g, L){
   const s = t.fitSuggestion, busy = !!fitBusy[t.id];
-  if(!s && !connectorHas('feasibility')) return t.fitSource==='web' ? '<div class="text-xs text-muted">'+webFitPill(g)+'</div>' : '';
+  if(!s && !connectorHas('feasibility')) return fitSourcePill(t.fitSource,g) ? '<div class="text-xs text-muted">'+fitSourcePill(t.fitSource,g)+'</div>' : '';
   if(!s) return '<div class="flex items-center gap-2 flex-wrap text-xs">'
-    + (t.fitSource==='web' ? webFitPill(g) : '')
+    + fitSourcePill(t.fitSource,g)
     + '<button class="btn btn-ghost btn-sm" '+(busy?'disabled ':'')+'onclick="P.fitSuggest(\''+p.id+'\','+i+')">'+Icon('activity')+' '+(busy ? g('Pesquisando…','Researching…','Investigando…') : g('Sugerir aderência (pesquisa na web)','Suggest fit (web research)','Sugerir adherencia (búsqueda web)'))+'</button></div>';
-  return '<div class="alert alert-info" style="margin:0;"><div class="text-xs"><b>'+g('Sugestão externa, não confirmada: ','External suggestion, unconfirmed: ','Sugerencia externa, sin confirmar: ')+esc(testMapLabel(TEST_FIT,s.fit,L))+'</b>'
+  const hist = s.source==='history';
+  return '<div class="alert alert-info" style="margin:0;"><div class="text-xs"><b>'+(hist ? g('Sugestão do histórico, não confirmada: ','Suggestion from history, unconfirmed: ','Sugerencia del historial, sin confirmar: ') : g('Sugestão externa, não confirmada: ','External suggestion, unconfirmed: ','Sugerencia externa, sin confirmar: '))+esc(testMapLabel(TEST_FIT,s.fit,L))+'</b>'
+    + (hist ? ' — '+Number(s.successes)+' '+g('de','of','de')+' '+Number(s.runs)+' '+g('execuções anteriores sem problemas','earlier runs without problems','ejecuciones anteriores sin problemas') : '')
     + (s.rationale ? ' — '+esc(s.rationale) : '')
     + (s.sources.length ? '<br>'+s.sources.map(x=>'<a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">'+esc(x.title)+'</a>').join(' · ') : '')
     + '</div><div class="flex gap-2 mt-2"><button class="btn btn-outline btn-sm" onclick="P.fitAccept(\''+p.id+'\','+i+')">'+g('Aceitar','Accept','Aceptar')+'</button>'
     + '<button class="btn btn-ghost btn-sm" onclick="P.fitDismiss(\''+p.id+'\','+i+')">'+g('Descartar','Dismiss','Descartar')+'</button></div></div>';
 }
+function fitSourcePill(src, g){
+  if(src==='web') return webFitPill(g);
+  if(src==='history') return '<span class="pill pill-ok" title="'+g('Aderência aceita a partir do histórico de execuções anteriores','Fit accepted from the history of earlier runs','Adherencia aceptada desde el historial de ejecuciones anteriores')+'">'+g('histórico','history','historial')+'</span>';
+  return '';
+}
 function webFitPill(g){ return '<span class="pill pill-warn" title="'+g('Aderência aceita a partir de pesquisa na web','Fit accepted from web research','Adherencia aceptada desde búsqueda web')+'">web · '+g('externo','external','externo')+'</span>'; }
+
+/* --- Aderência sugerida pelo histórico (ADR 1): GET /api/planner/history?ids=...
+   Só envia ids de teste do catálogo, e só quando a pessoa clica. Vem antes da pesquisa na web: se este teste já rodou sem
+   problemas em outras PoCs, a categoria mais nativa dessas execuções vira sugestão (nunca é aplicada sozinha, R7). --- */
+let histState = { busy:false, notice:null };
+function historyClean(resp, ids){
+  if(!isPlainObject(resp) || resp.kind!=='suse-poc-history' || resp.schema!==1 || !isPlainObject(resp.results)) return null;
+  const out = {};
+  ids.forEach(id=>{
+    const r = Object.prototype.hasOwnProperty.call(resp.results, id) ? resp.results[id] : null;
+    if(!isPlainObject(r)) return;
+    const runs = Number.isInteger(r.runs) && r.runs>=0 && r.runs<=1000000 ? r.runs : 0;
+    const successes = Number.isInteger(r.successes) && r.successes>=0 && r.successes<=runs ? r.successes : 0;
+    const fit = typeof r.suggestedFit==='string' && TEST_FIT[r.suggestedFit] ? r.suggestedFit : null;
+    out[id] = { runs:runs, successes:successes, fit:successes>0 ? fit : null };
+  });
+  return out;
+}
+function suggestFitHistory(){
+  if(histState.busy || !connectorHas('history')) return;
+  const L = state.lang, g = (pt,en,es)=>({pt,en,es})[L] || en, tests = [];
+  Object.keys(state.testCases).filter(pid=>state.selectedProducts[pid]).forEach(pid=>(state.testCases[pid]||[]).forEach(t=>{ if(t.catalogId && testCounts(t)) tests.push(t); }));
+  const ids = Array.from(new Set(tests.map(t=>t.catalogId))), chunks = [];
+  for(let i=0;i<ids.length;i+=200) chunks.push(ids.slice(i,i+200));
+  histState = { busy:true, notice:null }; render();
+  const found = {};
+  return chunks.reduce((chain,c)=>chain.then(()=>connectorIO('/api/planner/history?ids='+encodeURIComponent(c.join(',')), { credentials:'same-origin', headers:{ Accept:'application/json' } })
+      .then(connectorJson).then(j=>{ const r = historyClean(j,c); if(!r) throw { code:'shape' }; Object.assign(found,r); })), Promise.resolve())
+    .then(()=>{
+      let n = 0;
+      tests.forEach(t=>{
+        const h = found[t.catalogId]; if(!h || !h.fit || t.fit===h.fit) return;
+        t.fitSuggestion = { fit:h.fit, rationale:'', sources:[], source:'history', runs:h.runs, successes:h.successes }; n++;
+      });
+      saveState();
+      histState.notice = n ? { kind:'ok', text:n+' '+g('sugestão(ões) do histórico; confirme ou descarte em cada teste.','suggestion(s) from history; confirm or dismiss on each test.','sugerencia(s) del historial; confirme o descarte en cada prueba.') }
+                           : { kind:'info', text:g('Nenhum teste tem histórico sem problemas que mude a aderência marcada.','No test has a no-problems history that changes the fit already set.','Ninguna prueba tiene un historial sin problemas que cambie la adherencia marcada.') };
+    })
+    .catch(e=>{ histState.notice = { kind:'warn', text:e && e.code==='shape' ? g('Resposta do servidor em formato inesperado.','Unexpected server response.','Respuesta del servidor con formato inesperado.') : connectorErrorText(e,g) }; })
+    .then(()=>{ histState.busy = false; render(); });
+}
+function historyBarHtml(g){
+  if(!connectorHas('history')) return '';
+  const n = histState.notice;
+  return '<div class="flex gap-2 items-center flex-wrap mt-2 no-print"><button class="btn btn-outline btn-sm" '+(histState.busy?'disabled ':'')+'onclick="P.fitHistory()">'+Icon('activity')+' '+(histState.busy ? g('Consultando o histórico…','Checking the history…','Consultando el historial…') : g('Sugerir aderência pelo histórico','Suggest fit from history','Sugerir adherencia por el historial'))+'</button>'
+    + '<span class="text-xs text-muted">'+g('Envia só os ids dos testes do catálogo; devolve resultados anônimos de outras PoCs.','Sends only catalog test ids; returns anonymous results from other PoCs.','Envía solo los ids de las pruebas del catálogo; devuelve resultados anónimos de otras PoC.')+'</span></div>'
+    + (n ? '<div class="alert alert-'+n.kind+' mt-2 no-print">'+Icon(n.kind==='ok'?'check':n.kind==='warn'?'alert':'info')+' '+esc(n.text)+'</div>' : '');
+}
 
 /* --- Sugestão local de usuário (<produto>-<cliente>); nunca IA, nunca para SCC/Application Collection --- */
 const USER_SUGGEST = { 'credentials.privateRegistryAdminUser':'harbor', 'credentials.neuvectorAdminUser':'neuvector', 'credentials.observabilityUser':'observability' };
@@ -3558,7 +3614,20 @@ function executionPayload(){
   ['httpProxy','httpsProxy'].forEach(k=>{ if(urlHasSecret(st.network[k])) st.network[k] = ''; });
   ['sshKeysUrl','configUrl'].forEach(k=>{ if(urlHasSecret(st.virtInstall[k])) st.virtInstall[k] = ''; });
   Object.keys(st.testCases).forEach(pid=>(st.testCases[pid]||[]).forEach(t=>{ t.evidence = ''; t.notes = ''; delete t.fitSuggestion; delete t.originNote; }));
-  return { schema:EXPORT_SCHEMA, planner:st };
+  return { schema:EXPORT_SCHEMA, planner:st, tests:executionTests(st) };
+}
+/* Lista plana dos testes do plano para o servidor criar os itens de execução SEM adivinhar (e sem IA): os testes do
+   catálogo só carregam `catalogId` no estado, então título e resultado esperado vão resolvidos, no idioma da tela.
+   Sem evidências, notas nem nada de credencial. Só entra o que conta no plano (produto selecionado e aplicável). */
+function executionTests(st){
+  const L = state.lang, out = [];
+  PRODUCTS.filter(p=>st.selectedProducts[p.id]).forEach(p=>(st.testCases[p.id]||[]).forEach(t=>{
+    if(!testCounts(t)) return;
+    const title = (testTitle(t,L)||'').trim(); if(!title) return;
+    out.push({ id:t.id, catalogId:t.catalogId||'', product:p.id, productName:p.name, title:procClampStr(title,300), expected:procClampStr(testExpected(t,L),600),
+      priority:testPriority(t), fit:t.fit||'', fitSource:(t.fit && (t.fitSource==='web' || t.fitSource==='history')) ? t.fitSource : '', led:t.led||'', result:TEST_STATUS[t.result] ? t.result : 'pending', owner:procClampStr(t.owner||'',120) });
+  }));
+  return out;
 }
 let execFlow = { busy:false, error:'' };
 function execEnable(){
@@ -3780,7 +3849,8 @@ window.P = {
   impToggle(key){ importFlow.accepted[key] = !importFlow.accepted[key]; render(); },
   impCommit: importCommit,
   fitSuggest(pid,i){ suggestFitWeb(pid,i); },
-  fitAccept(pid,i){ const t=(state.testCases[pid]||[])[i]; if(!t || !t.fitSuggestion || !TEST_FIT[t.fitSuggestion.fit]) return; t.fit=t.fitSuggestion.fit; t.fitSource='web'; delete t.fitSuggestion; saveState(); render(); },
+  fitHistory(){ suggestFitHistory(); },
+  fitAccept(pid,i){ const t=(state.testCases[pid]||[])[i]; if(!t || !t.fitSuggestion || !TEST_FIT[t.fitSuggestion.fit]) return; t.fit=t.fitSuggestion.fit; t.fitSource=t.fitSuggestion.source==='history' ? 'history' : 'web'; delete t.fitSuggestion; saveState(); render(); },
   fitDismiss(pid,i){ const t=(state.testCases[pid]||[])[i]; if(!t) return; delete t.fitSuggestion; saveState(); render(); },
   suggestUser(path){ const v=suggestUsername(path); if(v && USER_SUGGEST[path] && getPath(state,path)==='admin'){ setPath(state,path,v); saveState(); render(); } },
   setTestText(productId,i,value){ state.testCases[productId][i].text=value; saveState(); },
